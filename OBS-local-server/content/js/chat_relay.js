@@ -39,6 +39,25 @@ const createBadgeImages = (tags, parent) => {
   /* <img alt="Broadcaster" aria-label="Broadcaster badge" class="chat-badge" src="https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1" srcset="https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1 1x, https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/2 2x, https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/3 4x"></img> */
 }
 
+const fadeDelete = (chatRecord, duration) => {
+  (function decrement() {
+    if ((chatRecord.style.opacity -= 0.1) < 0) {
+      chatRecord.remove();
+    } else {
+      setTimeout(() => {
+        decrement();
+      }, duration);
+    }
+  })();
+};
+
+const setTimeoutOnRecord = (chatRecord) => {
+  if (fade < 1) return;
+  setTimeout(() => {
+    fadeDelete(chatRecord, 4 * 1000);
+  }, fade * 1000);
+};
+
 const createChatRecord = (channel, tags, message, self) => {
   console.log({ channel, tags, message });
   const chat_box = document.getElementById("chat_box");
@@ -75,6 +94,7 @@ const createChatRecord = (channel, tags, message, self) => {
   chat.appendChild(chatNick);
   chat.appendChild(chatMessage);
   chat_box.appendChild(chatWrapper);
+  document.body.scrollTop = document.body.scrollHeight;
 };
 
 const handleNewChat = (channel, tags, message, self) => {
