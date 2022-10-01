@@ -32,9 +32,72 @@ const createBadgeImages = (tags, parent) => {
   return;
 };
 
-{
-  /* <img alt="Broadcaster" aria-label="Broadcaster badge" class="chat-badge" src="https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1" srcset="https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1 1x, https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/2 2x, https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/3 4x"></img> */
-}
+const replaceWithEmotes = (message, emotes, startOffset = 0) => {
+  console.log("Replacing emotes");
+  const emoteRoot = "https://static-cdn.jtvnw.net/emoticons/v1/{EMOTE_ID}/1.0";
+  const sortedEmotes = [];
+  for (let [emote, position] of Object.entries(emotes)) {
+    const pos = position[0].split("-");
+    const nemote = {};
+    nemote["name"] = emote;
+    nemote["start"] = Number.parseInt(pos[0]);
+    nemote["end"] = Number.parseInt(pos[1]) + 1;
+    sortedEmotes.push(nemote);
+  }
+  sortedEmotes.sort((a, b) => a.start - b.start);
+
+  console.log("Emotes sorted", sortedEmotes);
+
+  let newMessage = message;
+  let offset = startOffset;
+  for (let emoteRec of sortedEmotes) {
+    emote = emoteRec["name"];
+    start = emoteRec["start"];
+    end = emoteRec["end"];
+    const emoteElement = document.createElement("img");
+    console.log(
+      `Start & end for ${emote} ${Number.parseInt(start)}-${Number.parseInt(
+        end
+      )}, offset ${offset}`
+    );
+    let thisEmoteURI = emoteRoot.replace("{EMOTE_ID}", emote);
+    emoteElement.classList.add("emote");
+    emoteElement.src = thisEmoteURI;
+    console.log("New image", emoteElement);
+    console.log("Image html", emoteElement.outerHTML);
+
+    let msgBegin = newMessage.substring(0, start + offset);
+
+    let msgReplace = newMessage.substring(start + offset, end + offset);
+
+    let msgEnd = newMessage.substring(end + offset, newMessage.length);
+
+    console.log(`Begin message ${msgBegin}, 0-${start + offset}`);
+    console.log(
+      `Replace message ${msgReplace}, ${start + offset}-${end + offset}`
+    );
+    console.log(`End message ${msgEnd}, ${end + offset}-${newMessage.length}`);
+
+    let replaceMsg = msgBegin + emoteElement.outerHTML + msgEnd;
+    offset = replaceMsg.length - message.length + startOffset;
+    newMessage = replaceMsg;
+    console.log("Done with a replacement", newMessage);
+  }
+  // console.log(`Done with replacements, returning ${newMessage}`);
+  return newMessage;
+};
+
+const parseMessage = (message, tags) => {
+  let parsedMsg = escapeHTML(message);
+  if (tags.emotes) {
+    parsedMsg = replaceWithEmotes(
+      message,
+      tags.emotes,
+      parsedMsg.length - message.length
+    );
+  }
+  return parsedMsg;
+};
 
 const fadeDelete = (chatRecord, duration) => {
   let fading = true;
@@ -74,6 +137,17 @@ const setTimeoutOnRecord = (chatRecord) => {
   }, fade * 1000);
 };
 
+const escapeHTML = (message) => {
+  let lookup = {
+    "&": "&",
+    '"': '"',
+    "'": "'",
+    "<": "<\\",
+    ">": "\\>;",
+  };
+  return message.replace(/[&"'<>]/g, (c) => lookup[c]);
+};
+
 const createChatRecord = (channel, tags, message, self) => {
   const chat_box = document.getElementById("chat_box");
   const chatWrapper = document.createElement("div");
@@ -89,7 +163,7 @@ const createChatRecord = (channel, tags, message, self) => {
   const chatBadges = document.createElement("span");
   chatBadges.classList.add("badges");
   const chatMessage = document.createElement("span");
-  chatMessage.innerText = message;
+  chatMessage.innerHTML = parseMessage(message, tags);
   chatMessage.classList.add("message");
 
   const chatTail = document.createElement("div");
