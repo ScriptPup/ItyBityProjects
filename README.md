@@ -28,25 +28,33 @@ All of the .html pages within the /OBS-local-server/content folder will be serve
 
 ### Usage Paramaters
     
-Paramaters are added to the end of the URL following the `?` symbol. As mentioned above, the channel should generally be the first, after that each option may be appended with an ampersand `&`.
+Paramaters are added to the end of the URL following the `?` symbol. As mentioned above, the `channel` should generally be the first, after that each option may be appended with an ampersand `&`.
 
 __?channel__
    
-The channel paramater is used to identify the twitch channel when you want to monitor.
+The `channel` paramater is used to identify the twitch channel when you want to monitor.
 
 __&fade__
 
-The fade paramater is used to define (in seconds) how long each chat should remain before fading off-screen.
+The `fade` paramater is used to define (in seconds) how long each chat should remain before fading off-screen.
+
+__&swipe__
+
+The `swipe` paramater is used to choose whether or not to include a swipe towards the right effect when fading messages. Requires the `fade` paramater to be defined to make a difference.
+
+> Default: true
+>
+> Supported values: true/false
 
 __&bot_activity__
 
-~~The bot_activity paramater is used to choose whether to filter out bots of now~~
+~~The `bot_activity` paramater is used to choose whether to filter out bots of now~~
 
 After doing some research it doesn't appear twitch really has a bot marking system. kapchat probably uses an internally maintained list of bots for this functionality, which isn't something I'm interested in. I'm happy to add this functionality later if a method if made known.
 
 __&debug__
 
-The debug paramater is used to choose whether or not to log the data recieved from twitch to the browser console or not. 
+The `debug` paramater is used to choose whether or not to log the data recieved from twitch to the browser console or not. 
 
 > Default: false
 >
