@@ -3,8 +3,9 @@
 const params = new URLSearchParams(window.location.search);
 const channel = params.get("channel"),
   fade = params.get("fade") || 0,
-  bot_activity = params.get("bot_activity") || false;
-debug = params.get("debug") || false;
+  bot_activity = (params.get("bot_activity") || "false") === "true",
+  debug = (params.get("debug") || "false") === "true",
+  swipe = (params.get("swipe") || "true") === "true";
 
 const createBadgeImages = (tags, parent) => {
   if (tags.hasOwnProperty("badgeURIs")) {
@@ -36,21 +37,40 @@ const createBadgeImages = (tags, parent) => {
 }
 
 const fadeDelete = (chatRecord, duration) => {
+  let fading = true;
   (function decrement() {
+    if (!chatRecord.style.opacity) {
+      chatRecord.style.opacity = 1;
+    }
     if ((chatRecord.style.opacity -= 0.1) < 0) {
+      fading = false;
       chatRecord.remove();
     } else {
       setTimeout(() => {
         decrement();
-      }, duration);
+      }, duration / 10);
     }
   })();
+
+  if (swipe == true) {
+    (function swipeaway() {
+      if (fading) {
+        console.log("Swiping away...");
+        if (!chatRecord.style.right) chatRecord.style.right = 0;
+        chatRecord.style.right =
+          Number.parseInt(chatRecord.style.right.replace("px", "")) - 10;
+        setTimeout(() => {
+          swipeaway();
+        }, duration / 40);
+      }
+    })();
+  }
 };
 
 const setTimeoutOnRecord = (chatRecord) => {
   if (fade < 1) return;
   setTimeout(() => {
-    fadeDelete(chatRecord, 4 * 1000);
+    fadeDelete(chatRecord, 500);
   }, fade * 1000);
 };
 
@@ -87,6 +107,7 @@ const createChatRecord = (channel, tags, message, self) => {
   chat.appendChild(chatMessage);
   chat_box.appendChild(chatWrapper);
   document.body.scrollTop = document.body.scrollHeight;
+  setTimeoutOnRecord(chatWrapper);
 };
 
 const setupSockets = () => {
