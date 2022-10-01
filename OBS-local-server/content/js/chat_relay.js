@@ -4,23 +4,19 @@ const params = new URLSearchParams(window.location.search);
 const channel = params.get("channel"),
   fade = params.get("fade") || 0,
   bot_activity = params.get("bot_activity") || false;
-// { channel, fade, bot_activity }
+debug = params.get("debug") || false;
 
 const createBadgeImages = (tags, parent) => {
   if (tags.hasOwnProperty("badgeURIs")) {
-    console.log("We have some badges", tags.badgeURIs);
     for (let i = 0; i < tags.badgeURIs.length; i++) {
       const image_urls = new Array();
       let image_url;
       let image_count = 1;
       for (let [key, uri] of Object.entries(tags.badgeURIs[i])) {
-        console.log(`Starting key loop`);
         if (key.startsWith("image_url")) {
-          console.log(`Looping key ${key}: ${uri}`);
           if (!image_url) image_url = uri;
 
           image_urls.push(uri + ` x${image_count}`);
-          console.log(`Appended key`);
           image_count++;
         }
       }
@@ -59,9 +55,7 @@ const setTimeoutOnRecord = (chatRecord) => {
 };
 
 const createChatRecord = (channel, tags, message, self) => {
-  console.log({ channel, tags, message });
   const chat_box = document.getElementById("chat_box");
-  console.log(chat_box);
   const chatWrapper = document.createElement("div");
   chatWrapper.classList.add("chat_line_wrapper");
   const chat = document.createElement("div");
@@ -83,9 +77,7 @@ const createChatRecord = (channel, tags, message, self) => {
   const chatTailInner = document.createElement("div");
   chatTailInner.classList.add("inner");
 
-  console.log("Creating a bunch of image elements");
   createBadgeImages(tags, chatBadges);
-  console.log("Moving on to appends");
   chatTail.appendChild(chatTailInner);
   chatWrapper.appendChild(chatRecord);
   chatRecord.appendChild(chatTail);
@@ -97,13 +89,6 @@ const createChatRecord = (channel, tags, message, self) => {
   document.body.scrollTop = document.body.scrollHeight;
 };
 
-const handleNewChat = (channel, tags, message, self) => {
-  console.log(channel);
-  console.log(tags);
-  console.log(message);
-  console.log(self);
-};
-
 const setupSockets = () => {
   const socket = io("http://localhost:9000");
   const client = socket.on("connect", () => {});
@@ -111,6 +96,9 @@ const setupSockets = () => {
   client.on("message", (res) => {
     const { channel, tags, message, self } = res;
     createChatRecord(channel, tags, message, self);
+    if (debug) {
+      console.log(res);
+    }
   });
   socket.on("disconnect", () => {});
 };
