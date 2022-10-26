@@ -1,6 +1,6 @@
-# ItyBityProjects
+# TwitchHelpers
 
-Some small projects to solve very specific (but ultimately trivial) problems
+Some small projects to solve very specific things I wanted to be able to stream to Twitch.
 
 # OBS-local-server
 
