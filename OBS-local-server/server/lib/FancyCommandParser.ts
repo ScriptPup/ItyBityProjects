@@ -1,6 +1,6 @@
 /** @format */
 
-import { AceBase } from "acebase";
+import { AceBase, DataSnapshot } from "acebase";
 
 /**
 * Simple typing to explain the expected structure of a next() function
@@ -165,24 +165,14 @@ export class FancyCommandParser {
       }
       
       // If the datatype is numeric, do this
-      if (varBlock.datatype === VarBlockType.NUMBER) {
-        // If shorthand increment/decriment operators are used, convert them to normal ones with 1 as the value
-        if(['--','++'].includes(varBlock.opr)){
-          varBlock.opr = varBlock.opr[0];
-          varBlock.value = 1;
-        }
-
-        this.handleNumericVar(Number.parseFloat(val.toString()),varBlock);
+      if (varBlock.datatype === VarBlockType.NUMBER) {        
+        this.handleNumericVar(Number.parseFloat(val.toString()),varBlock, DataSnapshot);
       }
 
       // If the datatype is an array, do this
       if(varBlock.datatype === VarBlockType.ARRAY)
       {
-        // TODO: Figure out how to parse arrays
-        // Need to account for strings like [abc,xyz]
-        //    or like ["abc","xyz"]
-        //    or like ['abc','xyz']
-        this.handleArrayVar(val as Array<string|number>,varBlock);
+        this.handleArrayVar(val as Array<string|number>,varBlock, DataSnapshot);
       }
 
       // If the datatype is a set, do this
@@ -192,38 +182,76 @@ export class FancyCommandParser {
         // Need to account for strings like (abc,xyz)
         //    or like ("abc","xyz")
         //    or like ('abc','xyz')
-        this.handleSetVar(val as Array<string|number>,varBlock);
+        this.handleSetVar(val as Array<string|number>,varBlock, DataSnapshot);
       }
 
       // If the datatype is a string, do this
       if(varBlock.datatype === VarBlockType.STRING)
       {
-        this.handleStringVar(val as Array<string|number>,varBlock);
+        this.handleStringVar(val as Array<string|number>,varBlock, DataSnapshot);
       }
     });
   }
 
-  private handleNumericVar(curVal: number, varBlock: VarBlock): void {
+  private handleNumericVar(curVal: number, varBlock: VarBlock, dataSnap: DataSnapshot): void {
+    // If shorthand increment/decriment operators are used, convert them to normal ones with 1 as the value
+    if(['--','++'].includes(varBlock.opr)){
+      varBlock.opr = varBlock.opr[0];
+      varBlock.value = 1;
+    }
     try {
-      varBlock.final = eval(`${curVal.toString}${varBlock.opr}${varBlock.value}`);
+      const res = eval(`${curVal.toString}${varBlock.opr}${varBlock.value}`);
+      dataSnap.ref.set(Number.parseFloat(res));
+      varBlock.final = res;
     }
     catch {
-      // TODO: Add some logging to say when things fail and fallback
-      varBlock.doFallback();
+      this.handleEvalFail(varBlock, `Failed to evaluate numeric operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`);
     }
   }
 
-  private handleArrayVar(curVal: Array<string|number>, varBlock: VarBlock): void {
+  private handleArrayVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {    
+    try {
+      const varArry: Array<string|number> = varBlock.value as Array<string|number>;
+      switch(varBlock.opr){
+        case '+': 
+          curVal.push(...varArry);
+          dataSnap.ref.set(curVal);          
+        break;
+
+        case '-':
+          for (const ix in varArry)
+          {
+            curVal.splice(Number.parseInt(ix));
+          }
+          dataSnap.ref.set(curVal);
+        break;
+
+        case '=':
+          curVal = varArry;
+        break;
+
+        default:
+          throw new Error("Operator not supported");
+      }
+      varBlock.final = curVal;
+    }
+    catch (e: unknown) {
+      this.handleEvalFail(varBlock, `Failed to evaluate array operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`, e);
+    }    
+  }
+  private handleSetVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
     // TODO: Implement this
     throw new Error("Not Yet Implemented");
   }
-  private handleSetVar(curVal: Array<string|number>, varBlock: VarBlock): void {
+  private handleStringVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
     // TODO: Implement this
     throw new Error("Not Yet Implemented");
   }
-  private handleStringVar(curVal: Array<string|number>, varBlock: VarBlock): void {
-    // TODO: Implement this
-    throw new Error("Not Yet Implemented");
+
+  private handleEvalFail(varBlock: VarBlock, msg: string, e?: unknown)
+  {
+    varBlock.doFallback();
+    // TODO: Add some logging to say when things failed and fell back
   }
 
 }
@@ -257,7 +285,7 @@ class VarBlock {
   /**
   * final is the end-state of the text which will be returned back to the client
   */
-  public final: string = "";
+  public final: AcceptedVarTypes = "";
 
   constructor(varBlock: string) {
     const reBreakBlock: RegExp = new RegExp(
@@ -327,7 +355,8 @@ type AcceptedVarTypes =
   | number
   | Set<string | number>
   | string[]
-  | number[];
+  | number[]
+  | (string | number)[];
 
 enum VarBlockType {
   NUMBER,
