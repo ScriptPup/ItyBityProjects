@@ -10,6 +10,7 @@ The FancyCommandExecutor relies on the FancyCommandParser to parse the below sho
 - Delete variable: `{varName=null}`
 - Reference variable: `{varName}`
 
+> Note: When deleting a variable, the operator MUST NOT have a space before or after `null`.
 
 ### NUMERIC interfacing
 
@@ -26,10 +27,10 @@ The FancyCommandExecutor relies on the FancyCommandParser to parse the below sho
 ### TEXT interfacing
 
 - Set text value: `{varName=whatever}`
-- Add to text value: `{varName+' happens'|something}`
-   > Note the quotes around happens and the space before. For spaces or special characters quotes are required (unless passing a variable, then it's not really needed)
+- Add to text value: `{varName+ happens|something}`
+   > Note the space before. EVERYTHING to the right of the operator will be included (with the exception of numbers, which will always trim out space around them)
 
-### LIST interfacing
+### LIST (array) interfacing
 
 - Set list value: `{varName=[whatever]}`
 - Add item to list: `{varName+[happens,will]}`
