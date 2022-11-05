@@ -237,11 +237,39 @@ export class FancyCommandParser {
     }
     catch (e: unknown) {
       this.handleEvalFail(varBlock, `Failed to evaluate array operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`, e);
-    }    
+    }
   }
-  private handleSetVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
-    // TODO: Implement this
-    throw new Error("Not Yet Implemented");
+
+  private handleSetVar(curVal: Set<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
+    try {
+      const varSet: Set<string|number> = varBlock.value as Set<string|number>;
+      switch(varBlock.opr){
+        case '+':
+          for(const itm in varSet){
+            curVal.add(itm);
+          }          
+          dataSnap.ref.set(curVal);          
+        break;
+
+        case '-':
+          for(const itm in varSet){
+            curVal.delete(itm);
+          } 
+          dataSnap.ref.set(curVal);
+        break;
+
+        case '=':
+          curVal = varSet;
+        break;
+
+        default:
+          throw new Error("Operator not supported");
+      }
+      varBlock.final = curVal;
+    }
+    catch (e: unknown) {
+      this.handleEvalFail(varBlock, `Failed to evaluate set operation (something??) failed`, e);
+    }
   }
   private handleStringVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
     // TODO: Implement this
