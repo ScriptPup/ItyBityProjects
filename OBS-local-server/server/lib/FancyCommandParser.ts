@@ -83,23 +83,32 @@ class VarBlockMiddleware {
 
 }
 
-/**
-* This is the command parser which takes a command string and extracts data from the command text and converts the variable blocks into the variable value
-*
-*
-* @param cmd - The command string to be converted
-* @param varRef - The acebase database reference where variables will be stored and retrieved
-* @param middlewares - An optional middleware which can be used to alter the parsed variable block BEFORE database lookups occur (current use-case is to replace twitch variables ahead of time)
-* @returns this: FancyCommandParser
-*
-* @class
-*/
-export class FancyCommandParser {
-  public Ready: Promise<string>;
-  public cmdDB: AceBase;
-  public middlewares: VarBlockMiddleware;
 
-  constructor(cmd: string, varRef: AceBase, middlewares: VarBlockMiddleware|undefined) {
+export class FancyCommandParser {
+  /**
+  * Ready is a promise which will evaluate to the new string after all variable blocks have been processed
+  */
+  public Ready: Promise<string>;
+  /**
+  * cmdDB is the AceBase DB which all variables will be saved/retried to and from.
+  */
+  private cmdDB: AceBase;
+  /**
+  * middlewars is a list of middlewars to run anytime parse() is run
+  */
+  private middlewares: VarBlockMiddleware;
+  /**
+  * This is the command parser which takes a command string and extracts data from the command text and converts the variable blocks into the variable value
+  *
+  *
+  * @param cmd - The command string to be converted
+  * @param varRef - The acebase database reference where variables will be stored and retrieved
+  * @param middlewares - An optional middleware which can be used to alter the parsed variable block BEFORE database lookups occur (current use-case is to replace twitch variables ahead of time)
+  * @returns this: FancyCommandParser
+  *
+  * @class
+  */
+  constructor(cmd: string, varRef: AceBase, middlewares?: VarBlockMiddleware|undefined) {
     this.cmdDB = varRef;
     this.middlewares = middlewares || new VarBlockMiddleware();
     this.Ready = new Promise((res, rej) => {
@@ -156,43 +165,61 @@ export class FancyCommandParser {
    *
    */
   private async getVarFromBlock(varBlock: VarBlock): Promise<void> {
-    this.cmdDB.ref(`variables/${varBlock.name}`).get((DataSnapshot) => {
-      const valDataType: AcceptedVarTypes = getAcceptedType(DataSnapshot.val());
-      if(valDataType !== varBlock.datatype){
-        // TODO: Add some logging to show when datatypes don't match and we fail
-        this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Unsupported datatyepe detected: ${valDataType}`));
-        return;
-      }
+    const dataSnapshot: DataSnapshot = await this.cmdDB.ref(`variables/${varBlock.name}`).get();
+    const val = dataSnapshot.val();
+    if(null == val) { 
+      // TODO; Maybe have a debug log for when a variable isn't found and needs an initial set?
+      await this.handleNewVar(varBlock, dataSnapshot);
+      return;
+    }
+    const valDataType: AcceptedVarTypes = getAcceptedType(dataSnapshot.val());
+    if(valDataType !== varBlock.datatype){
+      // TODO: Add some logging to show when datatypes don't match and we fail
+      this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Unsupported datatyepe detected: ${valDataType}`));
+      return;
+    }
 
-      // If the datatype is numeric, then parse as a float
-      if (varBlock.datatype === VarBlockType.NUMBER) {        
-        this.handleNumericVar(varBlock, DataSnapshot);
-        return;
-      }
+    // If the datatype is numeric, then parse as a float
+    if (varBlock.datatype === VarBlockType.NUMBER) {        
+      await this.handleNumericVar(varBlock, dataSnapshot);
+      return;
+    }
 
-      // If the datatype is an array, then parse as an Array
-      else if(varBlock.datatype === VarBlockType.ARRAY)
-      {
-        this.handleArrayVar(varBlock, DataSnapshot);
-        return;
-      }
+    // If the datatype is an array, then parse as an Array
+    else if(varBlock.datatype === VarBlockType.ARRAY)
+    {
+      await this.handleArrayVar(varBlock, dataSnapshot);
+      return;
+    }
 
-      // If the datatype is a string, then parse as a string
-      else if(varBlock.datatype === VarBlockType.STRING)
-      {
-        this.handleStringVar(varBlock, DataSnapshot);
-        return;
-      }
+    // If the datatype is a string, then parse as a string
+    else if(varBlock.datatype === VarBlockType.STRING)
+    {
+      await this.handleStringVar(varBlock, dataSnapshot);
+      return;
+    }
 
-      // If the datatype is a set, then parse as a Set
-      else if(varBlock.datatype === VarBlockType.SET)
-      {
-        this.handleSetVar(varBlock, DataSnapshot);
-        return;
-      }
-    });
+    // If the datatype is a set, then parse as a Set
+    else if(varBlock.datatype === VarBlockType.SET)
+    {
+      await this.handleSetVar(varBlock, dataSnapshot);
+      return;
+    }
   }
 
+
+  /**
+  * Given a variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
+  private async handleNewVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    await dataSnap.ref.set(varBlock.value);
+  }
   /**
   * Given a numerically typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
   *
@@ -420,14 +447,26 @@ class VarBlock {
   }
 }
 
-function getAcceptedType(value: string|AcceptedVarTypes): VarBlockType {
+export function getAcceptedType(value: string|AcceptedVarTypes): VarBlockType {
+  if(null === value){
+    throw Error(`Cannot parse NULL value type. Value provided ${value}`);
+  }
+  const valType = typeof(value);
+  if(valType != "string"){
+    if (value instanceof Array)
+    { return VarBlockType.ARRAY; }
+    else if (value instanceof Set){
+      return VarBlockType.SET;
+    }
+  }
+  
   // Parse array
-  if (value.toString()[0] == "[" && value.toString()[-1] == "]") {
+  if (value.toString()[0] == "[" && value.toString()[value.toString().length - 1] == "]") {
     return VarBlockType.ARRAY;
   }
 
   // Parse set
-  if (value.toString()[0] == "(" && value.toString()[-1] == ")") {
+  if (value.toString()[0] == "(" && value.toString()[value.toString().length - 1] == ")") {
     return VarBlockType.SET;
   }
 
@@ -439,7 +478,7 @@ function getAcceptedType(value: string|AcceptedVarTypes): VarBlockType {
   return VarBlockType.STRING;
 }
 
-type AcceptedVarTypes =
+export type AcceptedVarTypes =
   | string
   | number
   | Set<string | number>
@@ -447,7 +486,7 @@ type AcceptedVarTypes =
   | number[]
   | (string | number)[];
 
-enum VarBlockType {
+export enum VarBlockType {
   NUMBER,
   STRING,
   ARRAY,
