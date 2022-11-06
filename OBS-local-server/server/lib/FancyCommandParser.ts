@@ -165,15 +165,18 @@ export class FancyCommandParser {
   private async getVarFromBlock(varBlock: VarBlock): Promise<void> {
     const dataSnapshot: DataSnapshot = await this.cmdDB.ref(`variables/${varBlock.name}`).get();
     const val = dataSnapshot.val();
-    if(null == val) { 
+
+    // If the variable doesn't exist yet, OR the operator is a simple equals, then set the variable without additional checks
+    if(null === val || varBlock.opr === '=') { 
       // TODO; Maybe have a debug log for when a variable isn't found and needs an initial set?
       await this.handleNewVar(varBlock, dataSnapshot);
       return;
     }
+
     const valDataType: AcceptedVarTypes = getAcceptedType(dataSnapshot.val());
     if(valDataType !== varBlock.datatype){
       // TODO: Add some logging to show when datatypes don't match and we fail
-      this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Unsupported datatyepe detected: ${valDataType}`));
+      this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Incompatable datatyepe detected: ${valDataType}, expected ${varBlock.datatype}`));
       return;
     }
 
@@ -216,7 +219,7 @@ export class FancyCommandParser {
   *
   */
   private async handleNewVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
-    await dataSnap.ref.set(varBlock.value);
+    await dataSnap.ref.set(varBlock.final);
   }
   /**
   * Given a numerically typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
@@ -364,6 +367,7 @@ export class FancyCommandParser {
   */
   private handleEvalFail(varBlock: VarBlock, msg: string, e?: unknown)
   {
+    console.log("Falling back due to failure", msg, e||'');
     varBlock.doFallback();
     // TODO: Add some logging to say when things failed and fell back
   }
@@ -386,7 +390,8 @@ class VarBlock {
   /**
    * fallback is the default value to set the variable as in the case of an error
    */
-  public fallback: AcceptedVarTypes;
+  public fallback: AcceptedVarTypes | null;
+
   /**
    * datatype is the datatype detected from the block text expression
    */
@@ -408,40 +413,63 @@ class VarBlock {
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
     this.origin = varBlock;
-    this.name = breakout[0][1] ? breakout[0][1] : breakout[0][6];
-    this.opr = breakout[0][2] ? breakout[0][2] : breakout[0][7];
-    this.setValueAndType(breakout[0][3] ? breakout[0][3] : "1");
-    this.fallback = breakout[0][5] ? breakout[0][5] : 1;
+    this.name = breakout[0][1] || breakout[0][6];
+    this.opr = breakout[0][2] || breakout[0][7];        
+    // calculate type-correct value (and type) of `value`
+    const [_val,_type] = this.setValueAndType(breakout[0][3] || "1");
+      this.value = _val as AcceptedVarTypes;
+      this.datatype = _type as VarBlockType;
+    // calculate type-correct value (and type) of `fallback`
+    const [_fbval,_fbtype] = this.setValueAndType(breakout[0][5] || "1");
+      this.fallback = _fbval;
+
+    console.log("varBlock parsed", this);
   }
 
   public doFallback(): void {
+    if(null === this.fallback){
+      this.final = this.fallbackDefault();
+      return;
+    }    
     this.final = this.fallback.toString();
   }
 
-  private setValueAndType(value: string): void {
+  private fallbackDefault()
+  {
+    if(this.datatype === VarBlockType.ARRAY)
+    {
+      return [] as Array<string|number>;
+    }
+    if(this.datatype === VarBlockType.SET)
+    {
+      return new Set() as Set<string|number>;
+    }
+    if(this.datatype === VarBlockType.NUMBER) 
+    {
+      return 0;
+    }
+    return "";
+    
+  }
+
+  private setValueAndType(value: string): Array<AcceptedVarTypes|VarBlockType> {
     // Parse array
-    if (this.value.toString()[0] == "[" && this.value.toString()[-1] == "]") {
-      this.value = value.replace(/\[|\]/g, "").split(",");
-      this.datatype = VarBlockType.ARRAY;
-      return;
+    if (value.toString()[0] == "[" && value.toString()[-1] == "]") {
+      const arr: Array<string|number> = value.replace(/\[|\]/g, "").split(",");
+      return [arr, VarBlockType.ARRAY]
     }
     // Parse set
-    if (this.value.toString()[0] == "(" && this.value.toString()[-1] == ")") {
+    if (value.toString()[0] == "(" && value.toString()[-1] == ")") {
       const lst = value.replace(/\(|\)/g, "").split(",");
       const nSet: Set<string | number> = new Set(lst);
-      this.value = nSet;
-      this.datatype = VarBlockType.SET;
-      return;
+      return [nSet, VarBlockType.SET];
     }
     // Parse number
-    if (Number.isInteger(this.value)) {
-      this.value = Number.parseFloat(this.value.toString());
-      this.datatype = VarBlockType.NUMBER;
-      return;
+    if (value.toString().match(/[0-9\.]+/)) {
+      return [Number.parseFloat(value.toString()), VarBlockType.NUMBER];
     }
     // If nothing else matched up, then it's a string
-    this.value = this.value.toString();
-    this.datatype = VarBlockType.STRING;
+    return [value.toString(), VarBlockType.STRING];
   }
 }
 
@@ -469,7 +497,7 @@ export function getAcceptedType(value: string|AcceptedVarTypes): VarBlockType {
   }
 
   // Parse number
-  if (Number.isInteger(value)) {
+  if (value.toString().match(/[0-9\.]+/)) {
     return VarBlockType.NUMBER;
   }
 
