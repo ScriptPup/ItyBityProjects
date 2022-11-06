@@ -157,43 +157,53 @@ export class FancyCommandParser {
    */
   private async getVarFromBlock(varBlock: VarBlock): Promise<void> {
     this.cmdDB.ref(`variables/${varBlock.name}`).get((DataSnapshot) => {
-      const val: AcceptedVarTypes = DataSnapshot.val();
-      if(getAcceptedType(val) !== varBlock.datatype){
+      const valDataType: AcceptedVarTypes = getAcceptedType(DataSnapshot.val());
+      if(valDataType !== varBlock.datatype){
         // TODO: Add some logging to show when datatypes don't match and we fail
-        varBlock.doFallback();
+        this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Unsupported datatyepe detected: ${valDataType}`));
         return;
       }
-      
-      // If the datatype is numeric, do this
+
+      // If the datatype is numeric, then parse as a float
       if (varBlock.datatype === VarBlockType.NUMBER) {        
-        this.handleNumericVar(Number.parseFloat(val.toString()),varBlock, DataSnapshot);
+        this.handleNumericVar(varBlock, DataSnapshot);
+        return;
       }
 
-      // If the datatype is an array, do this
-      if(varBlock.datatype === VarBlockType.ARRAY)
+      // If the datatype is an array, then parse as an Array
+      else if(varBlock.datatype === VarBlockType.ARRAY)
       {
-        this.handleArrayVar(val as Array<string|number>,varBlock, DataSnapshot);
+        this.handleArrayVar(varBlock, DataSnapshot);
+        return;
       }
 
-      // If the datatype is a set, do this
-      if(varBlock.datatype === VarBlockType.SET)
+      // If the datatype is a string, then parse as a string
+      else if(varBlock.datatype === VarBlockType.STRING)
       {
-        // TODO: Figure out how to parse arrays
-        // Need to account for strings like (abc,xyz)
-        //    or like ("abc","xyz")
-        //    or like ('abc','xyz')
-        this.handleSetVar(val as Array<string|number>,varBlock, DataSnapshot);
+        this.handleStringVar(varBlock, DataSnapshot);
+        return;
       }
 
-      // If the datatype is a string, do this
-      if(varBlock.datatype === VarBlockType.STRING)
+      // If the datatype is a set, then parse as a Set
+      else if(varBlock.datatype === VarBlockType.SET)
       {
-        this.handleStringVar(val as Array<string|number>,varBlock, DataSnapshot);
+        this.handleSetVar(varBlock, DataSnapshot);
+        return;
       }
     });
   }
 
-  private handleNumericVar(curVal: number, varBlock: VarBlock, dataSnap: DataSnapshot): void {
+  /**
+  * Given a numerically typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
+  private async handleNumericVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    const curVal: number = dataSnap.val();
     // If shorthand increment/decriment operators are used, convert them to normal ones with 1 as the value
     if(['--','++'].includes(varBlock.opr)){
       varBlock.opr = varBlock.opr[0];
@@ -201,15 +211,25 @@ export class FancyCommandParser {
     }
     try {
       const res = eval(`${curVal.toString}${varBlock.opr}${varBlock.value}`);
-      dataSnap.ref.set(Number.parseFloat(res));
+      await dataSnap.ref.set(Number.parseFloat(res));
       varBlock.final = res;
     }
-    catch {
-      this.handleEvalFail(varBlock, `Failed to evaluate numeric operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`);
+    catch (e) {
+      this.handleEvalFail(varBlock, `Failed to evaluate numeric operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`, e);
     }
   }
 
-  private handleArrayVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {    
+  /**
+  * Given a Array typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
+  private async handleArrayVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {    
+    let curVal: Array<string|number> = dataSnap.val();
     try {
       const varArry: Array<string|number> = varBlock.value as Array<string|number>;
       switch(varBlock.opr){
@@ -223,7 +243,7 @@ export class FancyCommandParser {
           {
             curVal.splice(Number.parseInt(ix));
           }
-          dataSnap.ref.set(curVal);
+          await dataSnap.ref.set(curVal);
         break;
 
         case '=':
@@ -240,7 +260,17 @@ export class FancyCommandParser {
     }
   }
 
-  private handleSetVar(curVal: Set<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
+  /**
+  * Given a Set typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
+  private async handleSetVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    let curVal: Set<string|number> = dataSnap.val();
     try {
       const varSet: Set<string|number> = varBlock.value as Set<string|number>;
       switch(varBlock.opr){
@@ -255,7 +285,7 @@ export class FancyCommandParser {
           for(const itm in varSet){
             curVal.delete(itm);
           } 
-          dataSnap.ref.set(curVal);
+          await dataSnap.ref.set(curVal);
         break;
 
         case '=':
@@ -271,11 +301,42 @@ export class FancyCommandParser {
       this.handleEvalFail(varBlock, `Failed to evaluate set operation (something??) failed`, e);
     }
   }
-  private handleStringVar(curVal: Array<string|number>, varBlock: VarBlock, dataSnap: DataSnapshot): void {
-    // TODO: Implement this
-    throw new Error("Not Yet Implemented");
+
+  /**
+  * Given a string typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
+  private async handleStringVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    let curVal: string = dataSnap.val();
+    switch(varBlock.opr){
+      case '+':         
+        curVal = curVal + varBlock.value.toString();
+      break;
+
+      case '=':
+        curVal = varBlock.value.toString();
+      break;
+
+      default:
+        throw new Error("Operator not supported");
+    }
+    await dataSnap.ref.set(curVal);
   }
 
+  /**
+  * Given a numerically typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
   private handleEvalFail(varBlock: VarBlock, msg: string, e?: unknown)
   {
     varBlock.doFallback();
