@@ -63,3 +63,7 @@ describe("FancyCommandExector storage operations", () => {
     expect(contents.length).to.equal(keyCount - 1);
   });
 });
+
+describe("FancyCommandExector command evaluations", () => {
+  it("'@username has been bonked {@username/bonk} times' should evaluate to ''", async () => {});
+});
