@@ -111,9 +111,7 @@ export class FancyCommandParser {
   constructor(cmd: string, varRef: AceBase, middlewares?: VarBlockMiddleware|undefined) {
     this.cmdDB = varRef;
     this.middlewares = middlewares || new VarBlockMiddleware();
-    this.Ready = new Promise((res, rej) => {
-      return this.parse(cmd);
-    });
+    this.Ready = this.parse(cmd);
   }
 
   /**
