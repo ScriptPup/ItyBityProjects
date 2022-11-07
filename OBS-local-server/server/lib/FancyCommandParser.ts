@@ -1,6 +1,9 @@
 /** @format */
 
 import { AceBase, DataSnapshot } from "acebase";
+import { pino } from "pino";
+
+const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/logs/FancyCommandParser.log`}));
 
 /**
 * Simple typing to explain the expected structure of a next() function
@@ -23,9 +26,15 @@ type FancyMiddleware = (context: VarBlock, next: Next) => void;
 *
 */
 function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[]): void {
-  if (!middlewares.length) return;
+  logger.debug(`Middleware evoke started with ${middlewares.length} to evaluate`);
+  if (!middlewares.length) {
+    logger.debug(`No middlewares provides, skipping evaluations`);
+    return;
+  }
   const mw = middlewares[0];
+  logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion starting...`);
   return mw(context, () => {
+      logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
       invokeFancyMiddlewares(context, middlewares.slice(1));
   });
 }
@@ -127,30 +136,39 @@ export class FancyCommandParser {
    *
    */
   private async parse(cmd: string): Promise<string> {
+    logger.debug(`Parsing ${cmd}`);
     const toParse: RegExp = new RegExp("({.+?})", "igm");
     const toRepl: IterableIterator<RegExpMatchArray> | null =
       cmd.matchAll(toParse);
     // Run through all replacements
+    logger.debug({"blocks": toRepl},`Var blocks to parse`);
     const repReady = [];
     for (const rawMatch of toRepl) {
+      logger.debug({"block": rawMatch},`Parse VarBlock`);
       const varBlock: VarBlock = new VarBlock(rawMatch[0]);
+      logger.debug({"block": varBlock},`Parsed VarBlock`);
       this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
-      await this.getVarFromBlock(varBlock);
+      logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
+      await this.getVarFromBlock(varBlock);    
       
       repReady.unshift({
         start: rawMatch.index || 0,
         end: rawMatch.index || 0 + rawMatch[0].length,
         block: varBlock,
       });
+      logger.debug({"parsed": repReady},`VarBlock execution results resolved, block parsing complete`);
     }
-
+    logger.debug(`Var blocks parsed`);
     let ncmd = cmd;
-    for (const repItm of repReady) {
+    logger.debug(`Replacing var block strings with parsed results`);
+    for (const repItm of repReady) {      
       ncmd =
         ncmd.substring(0, Math.max(repItm.start, 0)) +
         repItm.block.final +
         ncmd.substring(repItm.end, repItm.end);
+      logger.debug(`Processed ${cmd} -> ${ncmd}`);
     }
+    logger.debug(`Parse complete`);
     return ncmd;
   }
 
@@ -163,12 +181,15 @@ export class FancyCommandParser {
    *
    */
   private async getVarFromBlock(varBlock: VarBlock): Promise<void> {
+    logger.debug({"varName": varBlock.name},`Starting variable DB lookup and replacement`);
     const dataSnapshot: DataSnapshot = await this.cmdDB.ref(`variables/${varBlock.name}`).get();
     const val = dataSnapshot.val();
+    logger.debug({"dbVal": val},`Variable retrieved from DB (or nothing)`);
 
     // If the variable doesn't exist yet, OR the operator is a simple equals, then set the variable without additional checks
     if(null === val || varBlock.opr === '=') { 
       // TODO; Maybe have a debug log for when a variable isn't found and needs an initial set?
+      logger.debug({"dbVal": val},`Variable being set to value without mutation`);
       await this.handleNewVar(varBlock, dataSnapshot);
       return;
     }
@@ -176,12 +197,14 @@ export class FancyCommandParser {
     const valDataType: AcceptedVarTypes = getAcceptedType(dataSnapshot.val());
     if(valDataType !== varBlock.datatype){
       // TODO: Add some logging to show when datatypes don't match and we fail
+      logger.debug({"dbVal": val, "varBlockType": VarBlockType[varBlock.datatype], "dbVarType": VarBlockType[valDataType]},`DB variable datatype doesn't match varBlock datatype`);
       this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Incompatable datatyepe detected: ${valDataType}, expected ${varBlock.datatype}`));
       return;
     }
 
     // If the datatype is numeric, then parse as a float
-    if (varBlock.datatype === VarBlockType.NUMBER) {        
+    if (varBlock.datatype === VarBlockType.NUMBER) {
+      logger.debug({"varName": varBlock.name},`Parsing variable as a numeric`);
       await this.handleNumericVar(varBlock, dataSnapshot);
       return;
     }
@@ -189,6 +212,7 @@ export class FancyCommandParser {
     // If the datatype is an array, then parse as an Array
     else if(varBlock.datatype === VarBlockType.ARRAY)
     {
+      logger.debug({"varName": varBlock.name},`Parsing variable as a numeric`);
       await this.handleArrayVar(varBlock, dataSnapshot);
       return;
     }
@@ -196,6 +220,7 @@ export class FancyCommandParser {
     // If the datatype is a string, then parse as a string
     else if(varBlock.datatype === VarBlockType.STRING)
     {
+      logger.debug({"varName": varBlock.name},`Parsing variable as a string`);
       await this.handleStringVar(varBlock, dataSnapshot);
       return;
     }
@@ -203,6 +228,7 @@ export class FancyCommandParser {
     // If the datatype is a set, then parse as a Set
     else if(varBlock.datatype === VarBlockType.SET)
     {
+      logger.debug({"varName": varBlock.name},`Parsing variable as a set`);
       await this.handleSetVar(varBlock, dataSnapshot);
       return;
     }
@@ -219,6 +245,7 @@ export class FancyCommandParser {
   *
   */
   private async handleNewVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    logger.debug({"varName": varBlock.name},`Handling as new variable`);
     await dataSnap.ref.set(varBlock.final);
   }
   /**
@@ -231,16 +258,23 @@ export class FancyCommandParser {
   *
   */
   private async handleNumericVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    logger.debug({"varName": varBlock.name},`Handling as numeric variable`);
     const curVal: number = dataSnap.val();
     // If shorthand increment/decriment operators are used, convert them to normal ones with 1 as the value
     if(['--','++'].includes(varBlock.opr)){
+      logger.debug({"varName": varBlock.name},`Shorthand operator used, converting block options for clean evaluation`);
       varBlock.opr = varBlock.opr[0];
       varBlock.value = 1;
+      logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Operator conversion complete`);
     }
-    try {
-      const res = eval(`${curVal.toString}${varBlock.opr}${varBlock.value}`);
+    try {      
+      const oprToEval = `${curVal.toString}${varBlock.opr}${varBlock.value}`;
+      logger.debug({"varName": varBlock.name},`Evaluating numeric operation`);
+      const res = eval(oprToEval);
+      logger.debug({"varName": varBlock.name, "result": res},`Saving result to DB`);
       await dataSnap.ref.set(Number.parseFloat(res));
       varBlock.final = res;
+      logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Result saved to DB and set varBlock final result`);
     }
     catch (e) {
       this.handleEvalFail(varBlock, `Failed to evaluate numeric operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`, e);
@@ -256,32 +290,41 @@ export class FancyCommandParser {
   * @returns void
   *
   */
-  private async handleArrayVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {    
+  private async handleArrayVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    logger.debug({"varName": varBlock.name},`Handling as array variable`);
     let curVal: Array<string|number> = dataSnap.val();
     try {
       const varArry: Array<string|number> = varBlock.value as Array<string|number>;
       switch(varBlock.opr){
         case '+': 
-          curVal.push(...varArry);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling array addition`);
+          curVal.push(...varArry);          
           dataSnap.ref.set(curVal);          
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled array addition`);
         break;
 
         case '-':
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling array subtraction`);
           for (const ix in varArry)
-          {
+          {            
             curVal.splice(Number.parseInt(ix));
           }
           await dataSnap.ref.set(curVal);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled array addition`);
         break;
 
         case '=':
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigning array value`);
           curVal = varArry;
+          await dataSnap.ref.set(curVal);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigned array value`);
         break;
 
         default:
           throw new Error("Operator not supported");
-      }
+      }      
       varBlock.final = curVal;
+      logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Array operation complete`);
     }
     catch (e: unknown) {
       this.handleEvalFail(varBlock, `Failed to evaluate array operation (${curVal.toString}${varBlock.opr}${varBlock.value}) failed`, e);
@@ -298,32 +341,41 @@ export class FancyCommandParser {
   *
   */
   private async handleSetVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    logger.debug({"varName": varBlock.name},`Handling as Set variable`);
     let curVal: Set<string|number> = dataSnap.val();
     try {
       const varSet: Set<string|number> = varBlock.value as Set<string|number>;
       switch(varBlock.opr){
         case '+':
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling Set addition`);
           for(const itm in varSet){
             curVal.add(itm);
           }          
-          dataSnap.ref.set(curVal);          
+          dataSnap.ref.set(curVal);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled Set addition`);
         break;
 
         case '-':
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling Set subtraction`);
           for(const itm in varSet){
             curVal.delete(itm);
           } 
           await dataSnap.ref.set(curVal);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled Set subtraction`);
         break;
 
         case '=':
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigning Set value`);
           curVal = varSet;
+          await dataSnap.ref.set(curVal);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigned Set value`);
         break;
 
         default:
           throw new Error("Operator not supported");
       }
       varBlock.final = curVal;
+      logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Set operation complete`);
     }
     catch (e: unknown) {
       this.handleEvalFail(varBlock, `Failed to evaluate set operation (something??) failed`, e);
@@ -340,20 +392,27 @@ export class FancyCommandParser {
   *
   */
   private async handleStringVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+    logger.debug({"varName": varBlock.name},`Handling as string variable`);
     let curVal: string = dataSnap.val();
     switch(varBlock.opr){
-      case '+':         
+      case '+':
+        logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling string addition`);
         curVal = curVal + varBlock.value.toString();
+        logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled string addition`);
       break;
 
       case '=':
+        logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling string subtraction`);
         curVal = varBlock.value.toString();
+        logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled string subtraction`);
       break;
 
       default:
         throw new Error("Operator not supported");
     }
     await dataSnap.ref.set(curVal);
+    varBlock.final = curVal;
+    logger.debug({"varName": varBlock.name, "varBlock": varBlock},`String operation complete`);    
   }
 
   /**
@@ -367,9 +426,8 @@ export class FancyCommandParser {
   */
   private handleEvalFail(varBlock: VarBlock, msg: string, e?: unknown)
   {
-    console.log("Falling back due to failure", msg, e||'');
+    logger.warn({"varName": varBlock.name, "varBlock": varBlock, "stacktrace": e}, msg);
     varBlock.doFallback();
-    // TODO: Add some logging to say when things failed and fell back
   }
 
 }
@@ -407,11 +465,13 @@ class VarBlock {
   public final: AcceptedVarTypes = "";
 
   constructor(varBlock: string) {
+    logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
       /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])(\w+)(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}/,
       "igm"
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
+    logger.debug({"cmd": varBlock,"matches": breakout},`Boken out matches with regex`);
     this.origin = varBlock;
     this.name = breakout[0][1] || breakout[0][6];
     this.opr = breakout[0][2] || breakout[0][7];        
@@ -423,52 +483,65 @@ class VarBlock {
     const [_fbval,_fbtype] = this.setValueAndType(breakout[0][5] || "1");
       this.fallback = _fbval;
 
+      logger.debug({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
     console.log("varBlock parsed", this);
   }
 
   public doFallback(): void {
+    logger.debug({"cmd": this.name},`Setting final value to fallbacks`);
     if(null === this.fallback){
       this.final = this.fallbackDefault();
+      logger.debug({"cmd": this.name, "varBlock": this},`Fallbacks null, using defaults instead`);
       return;
-    }    
+    }   
     this.final = this.fallback.toString();
+    logger.debug({"cmd": this.name, "varBlock": this},`Final set to fallback`);
   }
 
   private fallbackDefault()
   {
     if(this.datatype === VarBlockType.ARRAY)
     {
+      logger.debug({"fallback": []},`Default array fallback found`);
       return [] as Array<string|number>;
     }
     if(this.datatype === VarBlockType.SET)
     {
+      logger.debug({"fallback": new Set()},`Default Set fallback found`);
       return new Set() as Set<string|number>;
     }
     if(this.datatype === VarBlockType.NUMBER) 
     {
+      logger.debug({"fallback": 0},`Default number fallback found`);
       return 0;
     }
+    logger.debug({"fallback": ""},`Default string fallback found`);
     return "";
     
   }
 
   private setValueAndType(value: string): Array<AcceptedVarTypes|VarBlockType> {
     // Parse array
+    logger.debug({"varVal": value},`Detect VarBlock value type`);
     if (value.toString()[0] == "[" && value.toString()[-1] == "]") {
       const arr: Array<string|number> = value.replace(/\[|\]/g, "").split(",");
+      logger.debug({"varVal": value},`Detected array`);
       return [arr, VarBlockType.ARRAY]
     }
     // Parse set
     if (value.toString()[0] == "(" && value.toString()[-1] == ")") {
       const lst = value.replace(/\(|\)/g, "").split(",");
       const nSet: Set<string | number> = new Set(lst);
+      logger.debug({"varVal": value},`Detected Set`);
       return [nSet, VarBlockType.SET];
     }
     // Parse number
     if (value.toString().match(/[0-9\.]+/)) {
+      logger.debug({"varVal": value},`Detected number`);
       return [Number.parseFloat(value.toString()), VarBlockType.NUMBER];
     }
     // If nothing else matched up, then it's a string
+    logger.debug({"varVal": value},`Detected string`);
     return [value.toString(), VarBlockType.STRING];
   }
 }
