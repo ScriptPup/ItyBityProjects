@@ -1,6 +1,8 @@
+# Database files
+*.db
 # Built server files
-/server/*.js
-
+*.js
+!/OBS-local-server/content/*.js
 # Logs
 logs
 *.log
