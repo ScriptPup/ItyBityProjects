@@ -3,7 +3,7 @@
 import { AceBase, DataSnapshot } from "acebase";
 import { pino } from "pino";
 
-const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/logs/FancyCommandParser.log`}));
+const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/../logs/FancyCommandParser.log`}));
 
 /**
 * Simple typing to explain the expected structure of a next() function
@@ -141,7 +141,7 @@ export class FancyCommandParser {
     const toRepl: IterableIterator<RegExpMatchArray> | null =
       cmd.matchAll(toParse);
     // Run through all replacements
-    logger.debug({"blocks": toRepl},`Var blocks to parse`);
+    logger.debug(`Start parsing varblocks`);
     const repReady = [];
     for (const rawMatch of toRepl) {
       logger.debug({"block": rawMatch},`Parse VarBlock`);
@@ -158,7 +158,6 @@ export class FancyCommandParser {
       });
       logger.debug({"parsed": repReady},`VarBlock execution results resolved, block parsing complete`);
     }
-    logger.debug(`Var blocks parsed`);
     let ncmd = cmd;
     logger.debug(`Replacing var block strings with parsed results`);
     for (const repItm of repReady) {      
@@ -188,7 +187,6 @@ export class FancyCommandParser {
 
     // If the variable doesn't exist yet, OR the operator is a simple equals, then set the variable without additional checks
     if(null === val || varBlock.opr === '=') { 
-      // TODO; Maybe have a debug log for when a variable isn't found and needs an initial set?
       logger.debug({"dbVal": val},`Variable being set to value without mutation`);
       await this.handleNewVar(varBlock, dataSnapshot);
       return;
@@ -245,7 +243,8 @@ export class FancyCommandParser {
   *
   */
   private async handleNewVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
-    logger.debug({"varName": varBlock.name},`Handling as new variable`);
+    varBlock.final = varBlock.value;
+    logger.debug({"varName": varBlock.name},`Handling as ${'new' ? varBlock.opr != '=': 'set'} variable`);    
     await dataSnap.ref.set(varBlock.final);
   }
   /**
@@ -471,19 +470,21 @@ class VarBlock {
       "igm"
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
-    logger.debug({"cmd": varBlock,"matches": breakout},`Boken out matches with regex`);
+    logger.debug({"cmd": varBlock,"matches": breakout},`Broke out matches with regex`);
     this.origin = varBlock;
     this.name = breakout[0][1] || breakout[0][6];
     this.opr = breakout[0][2] || breakout[0][7];        
     // calculate type-correct value (and type) of `value`
+    logger.debug(`calculate type-correct value (and type) of value`);
     const [_val,_type] = this.setValueAndType(breakout[0][3] || "1");
       this.value = _val as AcceptedVarTypes;
       this.datatype = _type as VarBlockType;
     // calculate type-correct value (and type) of `fallback`
+    logger.debug(`calculate type-correct value (and type) of fallback`);
     const [_fbval,_fbtype] = this.setValueAndType(breakout[0][5] || "1");
       this.fallback = _fbval;
 
-      logger.debug({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
+      logger.info({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
     console.log("varBlock parsed", this);
   }
 
