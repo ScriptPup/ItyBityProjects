@@ -70,6 +70,7 @@ describe("FancyParser Evaluation", () => {
         expect(replacedCmd).is.equal("This is a test");
       });
       it("Should have added database variable string entry", async () => {
+        await parsedBlock.Ready;
         const variableVal: AcceptedVarTypes = (
           await contextDB.ref("variables/stringVAR").get()
         ).val();
@@ -118,7 +119,7 @@ describe("FancyParser Evaluation", () => {
       let stringVarBlockTxt: string;
       let parsedBlock: FancyCommandParser;
       before(async () => {
-        stringVarBlockTxt = `I like: {${varName}=("fruit","dogs","women","money","dogs")}`;
+        stringVarBlockTxt = `I like: {${varName}=(fruit,dogs,women,money,dogs)}`;
         parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
         await parsedBlock.Ready; // Wait for the parser to finish before running tests
       });
@@ -130,13 +131,16 @@ describe("FancyParser Evaluation", () => {
         expect(replacedCmd).is.equal("I like: fruit,dogs,women,money");
       });
       it("Should have added database variable set entry", async () => {
+        await parsedBlock.Ready;
         const variableVal: AcceptedVarTypes = (
           await contextDB.ref(`variables/${varName}`).get()
         ).val();
-        expect(variableVal).to.be.a("set");
-        expect(variableVal).is.equal(
-          new Set(["fruit", "dogs", "women", "money", "dogs"])
-        );
+        expect(variableVal).to.be.an("array");
+        // Because AceBase doesn't support Sets, what we're doing is passing the set to an array
+        // and saving that array. So it *should* be unique, which is really what we're concerned with. The typing isn't very important.
+        expect(variableVal).deep.equal([
+          ...new Set(["fruit", "dogs", "women", "money", "dogs"]),
+        ]);
       });
     });
 
@@ -160,11 +164,12 @@ describe("FancyParser Evaluation", () => {
         expect(replacedCmd).is.equal("I like: fruit,dogs,women,money,dogs");
       });
       it("Should have added database variable set entry", async () => {
+        await parsedBlock.Ready;
         const variableVal: AcceptedVarTypes = (
           await contextDB.ref(`variables/${varName}`).get()
         ).val();
         expect(variableVal).to.be.an("array");
-        expect(variableVal).is.equal([
+        expect(variableVal).deep.equal([
           "fruit",
           "dogs",
           "women",
