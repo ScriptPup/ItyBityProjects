@@ -223,7 +223,7 @@ describe("FancyParser Evaluation", () => {
       ).val();
       expect(variableVal).to.not.be.null;
 
-      new FancyCommandParser(`{${varName}=null}`, contextDB);
+      await new FancyCommandParser(`{${varName}=null}`, contextDB).Ready;
       variableVal = (await contextDB.ref(`variables/${varName}`).get()).val();
       expect(variableVal).to.be.null;
     });
@@ -235,7 +235,7 @@ describe("FancyParser Evaluation", () => {
       ).val();
       expect(variableVal).to.not.be.null;
 
-      new FancyCommandParser(`{${varName}=null}`, contextDB);
+      await new FancyCommandParser(`{${varName}=null}`, contextDB).Ready;
       variableVal = (await contextDB.ref(`variables/${varName}`).get()).val();
       expect(variableVal).to.be.null;
     });
@@ -247,7 +247,7 @@ describe("FancyParser Evaluation", () => {
       ).val();
       expect(variableVal).to.not.be.null;
 
-      new FancyCommandParser(`{${varName}=null}`, contextDB);
+      await new FancyCommandParser(`{${varName}=null}`, contextDB).Ready;
       variableVal = (await contextDB.ref(`variables/${varName}`).get()).val();
       expect(variableVal).to.be.null;
     });
@@ -257,9 +257,9 @@ describe("FancyParser Evaluation", () => {
       let variableVal: AcceptedVarTypes = (
         await contextDB.ref(`variables/${varName}`).get()
       ).val();
-      expect(variableVal).to.not.be.null;
+      expect(variableVal).to.not.be.empty;
 
-      new FancyCommandParser(`{${varName}=null}`, contextDB);
+      await new FancyCommandParser(`{${varName}=null}`, contextDB).Ready;
       variableVal = (await contextDB.ref(`variables/${varName}`).get()).val();
       expect(variableVal).to.be.null;
     });
