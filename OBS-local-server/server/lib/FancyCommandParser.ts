@@ -160,10 +160,11 @@ export class FancyCommandParser {
     }
     let ncmd = cmd;
     logger.debug(`Replacing var block strings with parsed results`);
-    for (const repItm of repReady) {      
+    for (const repItm of repReady) {
+      let repWith: AcceptedVarTypes = repItm.block.final;
       ncmd =
         ncmd.substring(0, Math.max(repItm.start, 0)) +
-        repItm.block.final +
+        repWith + 
         ncmd.substring(repItm.end, repItm.end);
       logger.debug(`Processed ${cmd} -> ${ncmd}`);
     }
@@ -193,7 +194,10 @@ export class FancyCommandParser {
     }
 
     const valDataType: AcceptedVarTypes = getAcceptedType(dataSnapshot.val());
-    if(valDataType !== varBlock.datatype){
+    // If the varblock and DB types don't match, then consider this a failure and use the fallback (or default)
+    // If the varblock is a Set and the DB is an array, consider them the same thing
+    // AceBase doesn't support sets, so we'll de-duplicate with a Set and then save an array, so they're essentially the same thing
+    if(valDataType !== varBlock.datatype && (valDataType !== VarBlockType.ARRAY && varBlock.datatype === VarBlockType.SET)){
       // TODO: Add some logging to show when datatypes don't match and we fail
       logger.debug({"dbVal": val, "varBlockType": VarBlockType[varBlock.datatype], "dbVarType": VarBlockType[valDataType]},`DB variable datatype doesn't match varBlock datatype`);
       this.handleEvalFail(varBlock, "Failed to parse datatype", Error(`Incompatable datatyepe detected: ${valDataType}, expected ${varBlock.datatype}`));
@@ -244,7 +248,7 @@ export class FancyCommandParser {
   */
   private async handleNewVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
     varBlock.final = varBlock.value;
-    logger.debug({"varName": varBlock.name},`Handling as ${'new' ? varBlock.opr != '=': 'set'} variable`);    
+    logger.debug({"varName": varBlock.name},`Handling as ${varBlock.opr != '=' ? 'new' : 'reassign'} variable`);    
     await dataSnap.ref.set(varBlock.final);
   }
   /**
@@ -341,7 +345,8 @@ export class FancyCommandParser {
   */
   private async handleSetVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
     logger.debug({"varName": varBlock.name},`Handling as Set variable`);
-    let curVal: Set<string|number> = dataSnap.val();
+    let startVal: Array<string|number>  = dataSnap.val();
+    let curVal: Set<string|number> = new Set(startVal);
     try {
       const varSet: Set<string|number> = varBlock.value as Set<string|number>;
       switch(varBlock.opr){
@@ -350,7 +355,7 @@ export class FancyCommandParser {
           for(const itm in varSet){
             curVal.add(itm);
           }          
-          dataSnap.ref.set(curVal);
+          dataSnap.ref.set([...curVal]);
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled Set addition`);
         break;
 
@@ -359,14 +364,14 @@ export class FancyCommandParser {
           for(const itm in varSet){
             curVal.delete(itm);
           } 
-          await dataSnap.ref.set(curVal);
+          await dataSnap.ref.set([...curVal]);
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled Set subtraction`);
         break;
 
         case '=':
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigning Set value`);
           curVal = varSet;
-          await dataSnap.ref.set(curVal);
+          await dataSnap.ref.set([...curVal]);
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigned Set value`);
         break;
 
@@ -466,7 +471,7 @@ class VarBlock {
   constructor(varBlock: string) {
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
-      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])(\w+)(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}/,
+      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])(\w+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}/,
       "igm"
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
@@ -485,7 +490,6 @@ class VarBlock {
       this.fallback = _fbval;
 
       logger.info({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
-    console.log("varBlock parsed", this);
   }
 
   public doFallback(): void {
@@ -524,17 +528,18 @@ class VarBlock {
   private setValueAndType(value: string): Array<AcceptedVarTypes|VarBlockType> {
     // Parse array
     logger.debug({"varVal": value},`Detect VarBlock value type`);
-    if (value.toString()[0] == "[" && value.toString()[-1] == "]") {
+    if (value.toString()[0] == "[" && value.toString()[value.toString().length - 1] == "]") {
       const arr: Array<string|number> = value.replace(/\[|\]/g, "").split(",");
-      logger.debug({"varVal": value},`Detected array`);
+      logger.debug({"varVal": value, "values": arr, value, "newValue": arr},`Detected array`);
       return [arr, VarBlockType.ARRAY]
     }
     // Parse set
-    if (value.toString()[0] == "(" && value.toString()[-1] == ")") {
-      const lst = value.replace(/\(|\)/g, "").split(",");
-      const nSet: Set<string | number> = new Set(lst);
-      logger.debug({"varVal": value},`Detected Set`);
-      return [nSet, VarBlockType.SET];
+    if (value.toString()[0] == "(" && value.toString()[value.toString().length - 1] == ")") {
+      const lst: Array<string|number> = value.replace(/\(|\)/g, "").split(",");
+      const nSet: Set<string | number> = new Set();
+      lst.forEach(itm=>nSet.add(itm));
+      logger.debug({"varVal": value, "values": lst, "newValue": nSet },`Detected Set`);
+      return [[...nSet], VarBlockType.SET];
     }
     // Parse number
     if (value.toString().match(/[0-9\.]+/)) {
