@@ -186,6 +186,12 @@ export class FancyCommandParser {
     const val = dataSnapshot.val();
     logger.debug({"dbVal": val},`Variable retrieved from DB (or nothing)`);
 
+    if(varBlock.opr === '=' && varBlock.value === 'null')
+    {
+      this.handleRemoveVar(varBlock, dataSnapshot);
+      return;
+    }
+
     // If the variable doesn't exist yet, OR the operator is a simple equals, then set the variable without additional checks
     if(null === val || varBlock.opr === '=') { 
       logger.debug({"dbVal": val},`Variable being set to value without mutation`);
@@ -251,6 +257,24 @@ export class FancyCommandParser {
     logger.debug({"varName": varBlock.name},`Handling as ${varBlock.opr != '=' ? 'new' : 'reassign'} variable`);    
     await dataSnap.ref.set(varBlock.final);
   }
+
+
+  /**
+  * Given a variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
+  *
+  *
+  * @param varBlock - The variable block being passed to update the DB
+  * @param dataSnap - The AceBase DB datasnap retrieved for the requested variable
+  * @returns void
+  *
+  */
+ private async handleRemoveVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
+  logger.debug({"varName": varBlock.name},`Handling variable removal`);
+  await dataSnap.ref.remove();
+  varBlock.final = "";
+  logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Variable has been removed from DB`);
+ }
+
   /**
   * Given a numerically typed variable, perform evaluation and DB read/writes on AceDB for specific varBlock and set the "final" value of the varBlcok to the `result` property
   *
