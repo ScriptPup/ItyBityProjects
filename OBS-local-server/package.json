@@ -10,7 +10,9 @@
     "watch:server": "nodemon --watch",
     "start": "npm-run-all clean build --parallel watch:build watch:server --print-label",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
-    "logs": "Type .\\server\\logs\\FancyCommandParser.log | pino-pretty"
+    "logs": "Type .\\server\\logs\\FancyCommandParser.log | pino-pretty",
+    "clear-logs": "del .\\server\\logs\\FancyCommandParser.log",
+    "build-test": "npm-run-all build clear-logs test"
   },
   "repository": {
     "type": "git",
