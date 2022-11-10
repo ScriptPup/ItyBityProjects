@@ -295,7 +295,7 @@ export class FancyCommandParser {
       logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Operator conversion complete`);
     }
     try {      
-      const oprToEval = `${curVal.toString}${varBlock.opr}${varBlock.value}`;
+      const oprToEval = `${curVal.toString()}${varBlock.opr}${varBlock.value}`;
       logger.debug({"varName": varBlock.name},`Evaluating numeric operation`);
       const res = eval(oprToEval);
       logger.debug({"varName": varBlock.name, "result": res},`Saving result to DB`);
@@ -495,7 +495,7 @@ class VarBlock {
   constructor(varBlock: string) {
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
-      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])(\w+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}/,
+      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}/,
       "igm"
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
