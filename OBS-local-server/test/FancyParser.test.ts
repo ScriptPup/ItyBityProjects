@@ -363,7 +363,9 @@ describe("FancyParser Evaluation", () => {
           `I like: {${varName}+[cats]}`,
           contextDB
         ).Ready;
-        expect(newParsedBlock).is.equal("I like: fruit,dogs,women,money,cats");
+        expect(newParsedBlock).is.equal(
+          "I like: fruit,dogs,women,money,dogs,cats"
+        );
         const variableVal: AcceptedVarTypes = (
           await contextDB.ref(`variables/${varName}`).get()
         ).val();
