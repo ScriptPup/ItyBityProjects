@@ -190,7 +190,7 @@ describe("FancyParser Evaluation", () => {
 
   // **********************************
   // * TEST VARIABLE ADDITION
-  // * Able to make assignment via an equals operator {var+$something}
+  // * Able to make assignment via + operator {var+$something}
   // **********************************
   describe("Addition Assigments", async () => {
     // **********************************
@@ -381,6 +381,114 @@ describe("FancyParser Evaluation", () => {
       });
     });
   }); // End testing addition assignments {var+$something}
+
+  // **********************************
+  // * TEST VARIABLE SUBTRACTION
+  // * Able to make assignment via - operator {var-$something}
+  // **********************************
+  describe("Addition Assigments", async () => {
+    // **********************************
+    // * TEST NUMERIC SUBTRACTION
+    // **********************************
+    describe("Numeric addition", async () => {
+      let varName: string = "numberVAR";
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = `This is a {${varName}-5}`;
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      after(async () => {
+        await contextDB.ref(`variables/${varName}`).remove();
+      });
+      it("Should return command with variable blocks replaced", async () => {
+        const replacedCmd: string = await parsedBlock.Ready;
+        expect(replacedCmd).is.equal("This is a -5");
+      });
+      it("Should have added database variable numeric entry", async () => {
+        await parsedBlock.Ready;
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.a("number");
+        expect(variableVal).is.equal(-5);
+      });
+      it("Should be able to decrement the number", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          `This is a {${varName}-2}`,
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("This is a -7");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.a("number");
+        expect(variableVal).is.equal(-7);
+      });
+    });
+
+    // **********************************
+    // * TEST SET SUBTRACTION
+    // **********************************
+    describe("Set addition", async () => {
+      let varName: string = "setVAR";
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = `I like: {${varName}=(fruit,dogs,women,money,dogs)}`;
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      after(async () => {
+        await contextDB.ref(`variables/${varName}`).remove();
+      });
+      it("Should be able to remove from the set", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          `I like: {${varName}-(money,fruit,dogs)}`,
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("I like: women");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.an("array");
+        expect(variableVal).deep.equal([...new Set(["women"])]);
+      });
+    });
+
+    // **********************************
+    // * TEST ARRAY SUBTRACTION
+    // **********************************
+    describe("Array assignment", async () => {
+      let varName: string = "arrayVAR";
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = `I like: {${varName}=[fruit,dogs,women,money,dogs]}`;
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      after(async () => {
+        await contextDB.ref(`variables/${varName}`).remove();
+      });
+      it("Should be able to remove from the array", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          `I like: {${varName}-[0,1,3,4]}`,
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("I like: women");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.an("array");
+        expect(variableVal).deep.equal(["women"]);
+      });
+    });
+  }); // End testing addition assignments {var-$something}
 
   // **********************************
   // * TEST VARIABLE DELETION
