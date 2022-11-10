@@ -294,6 +294,10 @@ export class FancyCommandParser {
       varBlock.value = 1;
       logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Operator conversion complete`);
     }
+    // Make sure that for the INITIAL number, we use the fallback
+    if(null !== varBlock.fallback && null === curVal){ 
+      varBlock.value = varBlock.fallback;
+    }
     try {      
       const oprToEval = `${curVal.toString()}${varBlock.opr}${varBlock.value}`;
       logger.debug({"varName": varBlock.name},`Evaluating numeric operation`);
@@ -510,9 +514,10 @@ class VarBlock {
       this.datatype = _type as VarBlockType;
     // calculate type-correct value (and type) of `fallback`
     logger.debug(`calculate type-correct value (and type) of fallback`);
-    const [_fbval,_fbtype] = this.setValueAndType(breakout[0][5] || "1");
+    if(1 !== (breakout[0][5] || 1)){
+      const [_fbval,_fbtype] = this.setValueAndType(breakout[0][5]);
       this.fallback = _fbval;
-
+    } else { this.fallback = null; }
       logger.info({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
   }
 
@@ -536,8 +541,8 @@ class VarBlock {
     }
     if(this.datatype === VarBlockType.SET)
     {
-      logger.debug({"fallback": new Set()},`Default Set fallback found`);
-      return new Set() as Set<string|number>;
+      logger.debug({"fallback": []},`Default Set fallback found`);
+      return [] as Array<string|number>;;
     }
     if(this.datatype === VarBlockType.NUMBER) 
     {
