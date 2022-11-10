@@ -372,21 +372,21 @@ export class FancyCommandParser {
     let startVal: Array<string|number>  = dataSnap.val();
     let curVal: Set<string|number> = new Set(startVal);
     try {
-      const varSet: Set<string|number> = varBlock.value as Set<string|number>;
+      const varSet: Array<string|number> = varBlock.value as Array<string|number>;
       switch(varBlock.opr){
         case '+':
-          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling Set addition`);
+          logger.debug({"varName": varBlock.name, "dbArray": startVal},`Handling Set addition`);
           for(const itm in varSet){
-            curVal.add(itm);
+            curVal.add(varSet[itm]);
           }          
           dataSnap.ref.set([...curVal]);
-          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled Set addition`);
+          logger.debug({"varName": varBlock.name, "dbArray": [...curVal]},`Handled Set addition`);
         break;
 
         case '-':
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling Set subtraction`);
           for(const itm in varSet){
-            curVal.delete(itm);
+            curVal.delete(varSet[itm]);
           } 
           await dataSnap.ref.set([...curVal]);
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled Set subtraction`);
@@ -394,7 +394,7 @@ export class FancyCommandParser {
 
         case '=':
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigning Set value`);
-          curVal = varSet;
+          curVal = new Set(varSet);
           await dataSnap.ref.set([...curVal]);
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Assigned Set value`);
         break;
@@ -402,7 +402,7 @@ export class FancyCommandParser {
         default:
           throw new Error("Operator not supported");
       }
-      varBlock.final = curVal;
+      varBlock.final = [...curVal];
       logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Set operation complete`);
     }
     catch (e: unknown) {
