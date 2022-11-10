@@ -253,7 +253,12 @@ export class FancyCommandParser {
   *
   */
   private async handleNewVar(varBlock: VarBlock, dataSnap: DataSnapshot): Promise<void> {
-    varBlock.final = varBlock.value;
+    if(varBlock.datatype === VarBlockType.NUMBER && ['-','+'].includes(varBlock.opr)){
+      varBlock.final = Number.parseFloat(`${varBlock.opr}${varBlock.value}`);
+    }
+    else {
+      varBlock.final = varBlock.value;
+    }
     logger.debug({"varName": varBlock.name},`Handling as ${varBlock.opr != '=' ? 'new' : 'reassign'} variable`);    
     await dataSnap.ref.set(varBlock.final);
   }
@@ -336,12 +341,15 @@ export class FancyCommandParser {
 
         case '-':
           logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handling array subtraction`);
+          varArry.sort().reverse();
           for (const ix in varArry)
           {            
-            curVal.splice(Number.parseInt(ix));
+            logger.debug({"varName": varBlock.name, "removeIndex": varArry[ix].toString(), "startArray": curVal},`Removing array member`);
+            curVal.splice(Number.parseInt(varArry[ix].toString()), 1);
+            logger.debug({"varName": varBlock.name, "modifiedArray": curVal},`Array member removed`);
           }
           await dataSnap.ref.set(curVal);
-          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled array addition`);
+          logger.debug({"varName": varBlock.name, "dbArray": curVal},`Handled array subtraction`);
         break;
 
         case '=':
