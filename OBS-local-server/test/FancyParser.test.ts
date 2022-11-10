@@ -20,6 +20,11 @@ describe("FancyParser Evaluation", () => {
   before(async () => {
     return contextDB.ready;
   });
+
+  // **********************************
+  // * TEST TYPE PARSING
+  // * Parse both string into a type and already typed data
+  // **********************************
   describe("Accepted Type Parsing", () => {
     const someString: AcceptedVarTypes = "Some string";
     const someNumber: AcceptedVarTypes = 1;
@@ -52,7 +57,10 @@ describe("FancyParser Evaluation", () => {
     });
   });
 
-  // Start testing equal assignments {var=$something}
+  // **********************************
+  // * TEST VARIABLE ASSIGNMENT
+  // * Able to make assignment via an equals operator {var=$something}
+  // **********************************
   describe("Equals Assigments", async () => {
     // **********************************
     // * TEST STRING ASSIGNMENT
@@ -179,6 +187,198 @@ describe("FancyParser Evaluation", () => {
       });
     });
   }); // End testing equal assignments {var=$something}
+
+  // **********************************
+  // * TEST VARIABLE ADDITION
+  // * Able to make assignment via an equals operator {var+$something}
+  // **********************************
+  describe("Addition Assigments", async () => {
+    // **********************************
+    // * TEST STRING ASSIGNMENT
+    // **********************************
+    describe("String addition", async () => {
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = "This is a {stringVAR+test}";
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      it("Should return command with variable blocks replaced", async () => {
+        const replacedCmd: string = await parsedBlock.Ready;
+        expect(replacedCmd).is.equal("This is a test");
+      });
+      it("Should have added database variable string entry", async () => {
+        await parsedBlock.Ready;
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref("variables/stringVAR").get()
+        ).val();
+        expect(variableVal).to.be.string;
+        expect(variableVal).is.equal("test");
+      });
+      it("Should be able to append to the message", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          "This is a {stringVAR+ string}",
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("This is a test string");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref("variables/stringVAR").get()
+        ).val();
+        expect(variableVal).to.be.string;
+        expect(variableVal).is.equal("test string");
+      });
+      after(async () => {
+        await contextDB.ref("variables/stringVAR").remove();
+      });
+    });
+
+    // **********************************
+    // * TEST NUMERIC ASSIGNMENT
+    // **********************************
+    describe("Numeric addition", async () => {
+      let varName: string = "numberVAR";
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = `This is a {${varName}+5}`;
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      after(async () => {
+        await contextDB.ref(`variables/${varName}`).remove();
+      });
+      it("Should return command with variable blocks replaced", async () => {
+        const replacedCmd: string = await parsedBlock.Ready;
+        expect(replacedCmd).is.equal("This is a 5");
+      });
+      it("Should have added database variable numeric entry", async () => {
+        await parsedBlock.Ready;
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.a("number");
+        expect(variableVal).is.equal(5);
+      });
+      it("Should be able to add to increment the number", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          `This is a {${varName}+1}`,
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("This is a 6");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.a("number");
+        expect(variableVal).is.equal(6);
+      });
+    });
+
+    // **********************************
+    // * TEST SET ASSIGNMENT
+    // **********************************
+    describe("Set addition", async () => {
+      let varName: string = "setVAR";
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = `I like: {${varName}+(fruit,dogs,women,money,dogs)}`;
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      after(async () => {
+        await contextDB.ref(`variables/${varName}`).remove();
+      });
+      it("Should return command with variable blocks replaced", async () => {
+        const replacedCmd: string = await parsedBlock.Ready;
+        expect(replacedCmd).is.equal("I like: fruit,dogs,women,money");
+      });
+      it("Should have added database variable set entry", async () => {
+        await parsedBlock.Ready;
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.an("array");
+        // Because AceBase doesn't support Sets, what we're doing is passing the set to an array
+        // and saving that array. So it *should* be unique, which is really what we're concerned with. The typing isn't very important.
+        expect(variableVal).deep.equal([
+          ...new Set(["fruit", "dogs", "women", "money", "dogs"]),
+        ]);
+      });
+      it("Should be able to add to the set", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          `I like: {${varName}+(cats)}`,
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("I like: fruit,dogs,women,money,cats");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.an("array");
+        expect(variableVal).deep.equal([
+          ...new Set(["fruit", "dogs", "women", "money", "dogs", "cats"]),
+        ]);
+      });
+    });
+
+    // **********************************
+    // * TEST ARRAY ASSIGNMENT
+    // **********************************
+    describe("Array assignment", async () => {
+      let varName: string = "arrayVAR";
+      let stringVarBlockTxt: string;
+      let parsedBlock: FancyCommandParser;
+      before(async () => {
+        stringVarBlockTxt = `I like: {${varName}=[fruit,dogs,women,money,dogs]}`;
+        parsedBlock = new FancyCommandParser(stringVarBlockTxt, contextDB);
+        await parsedBlock.Ready; // Wait for the parser to finish before running tests
+      });
+      after(async () => {
+        await contextDB.ref(`variables/${varName}`).remove();
+      });
+      it("Should return command with variable blocks replaced", async () => {
+        const replacedCmd: string = await parsedBlock.Ready;
+        expect(replacedCmd).is.equal("I like: fruit,dogs,women,money,dogs");
+      });
+      it("Should have added database variable array entry", async () => {
+        await parsedBlock.Ready;
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.an("array");
+        expect(variableVal).deep.equal([
+          "fruit",
+          "dogs",
+          "women",
+          "money",
+          "dogs",
+        ]);
+      });
+      it("Should be able to add to the array", async () => {
+        await parsedBlock.Ready;
+        const newParsedBlock: string = await new FancyCommandParser(
+          `I like: {${varName}+[cats]}`,
+          contextDB
+        ).Ready;
+        expect(newParsedBlock).is.equal("I like: fruit,dogs,women,money,cats");
+        const variableVal: AcceptedVarTypes = (
+          await contextDB.ref(`variables/${varName}`).get()
+        ).val();
+        expect(variableVal).to.be.an("array");
+        expect(variableVal).deep.equal([
+          "fruit",
+          "dogs",
+          "women",
+          "money",
+          "dogs",
+          "cats",
+        ]);
+      });
+    });
+  }); // End testing addition assignments {var+$something}
 
   // **********************************
   // * TEST VARIABLE DELETION
