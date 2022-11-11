@@ -55,3 +55,11 @@ All variable assignemnts support a fallback.
 Fallbacks are what a variable will default to if something goes wrong. For example, if a variable that you're trying to multiply doesn't exist yet, or trying to divide by 0. 
 
 By default, the fallback value is 1.
+
+
+# Middlewares
+
+FancyCommandParser supports middleware, currently the following middlewares are supported:
+
+- TwitchFancyPreParse - Will replace specific @variables with values from a twitch message object
+- TestFancyPrePare - Is just a simple test middleware that makes sure it works as expected. Only really intended to be used in the test suite to validate the middleware feature of the FancyCommandParser itself.
