@@ -8,7 +8,6 @@ import {
 
 import { expect } from "chai";
 import "mocha";
-import { DataSnapshot } from "acebase";
 
 describe("FancyCommandExector storage operations", () => {
   let addedCMDKey: string;
