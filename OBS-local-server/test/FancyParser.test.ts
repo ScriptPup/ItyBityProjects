@@ -574,4 +574,22 @@ describe("FancyParser Evaluation", () => {
       expect(variableVal).to.be.null;
     });
   });
+
+  describe("Array reference", async () => {
+    const stringVar = "stringVar";
+    before(async () => {
+      await contextDB.ref(`variables/${stringVar}`).set("Test");
+    });
+    after(async () => {
+      await contextDB.ref(`variables/${stringVar}`).remove();
+    });
+    it("Should be able to reference an array", async () => {
+      const val = await new FancyCommandParser(
+        `Retrieving a variable: {${stringVar}}`,
+        contextDB
+      ).Ready;
+      expect(val).is.a("string");
+      expect(val).to.equal("Retrieving a variable: Test");
+    });
+  });
 });
