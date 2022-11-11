@@ -186,8 +186,14 @@ export class FancyCommandParser {
     const val = dataSnapshot.val();
     logger.debug({"dbVal": val},`Variable retrieved from DB (or nothing)`);
 
+    if("*" === varBlock.opr){
+      varBlock.final = dataSnapshot.val();
+      logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Handling variable reference by sending the var back`);
+      return;
+    }
+
     if(varBlock.opr === '=' && varBlock.value === 'null')
-    {
+    {      
       this.handleRemoveVar(varBlock, dataSnapshot);
       return;
     }
@@ -507,14 +513,14 @@ class VarBlock {
   constructor(varBlock: string) {
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
-      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}/,
+      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}|{(\w+)}/,
       "igm"
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
     logger.debug({"cmd": varBlock,"matches": breakout},`Broke out matches with regex`);
     this.origin = varBlock;
-    this.name = breakout[0][1] || breakout[0][6];
-    this.opr = breakout[0][2] || breakout[0][7];        
+    this.name = breakout[0][1] || breakout[0][6] || breakout[0][8];
+    this.opr = breakout[0][2] || breakout[0][7] || "*";        
     // calculate type-correct value (and type) of `value`
     logger.debug(`calculate type-correct value (and type) of value`);
     const [_val,_type] = this.setValueAndType(breakout[0][3] || "1");
