@@ -5,12 +5,11 @@ import {
   AcceptedVarTypes,
   getAcceptedType,
   VarBlockType,
-} from "../server/lib/FancyCommandParser";
+} from "../server/lib/FancyCommandParser/FancyCommandParser";
 import { DataReference } from "acebase";
 import { expect } from "chai";
 import "mocha";
 import { AceBase } from "acebase";
-import { parse } from "path";
 
 describe("FancyParser Evaluation", () => {
   let contextDB: AceBase = new AceBase("test_variables", {

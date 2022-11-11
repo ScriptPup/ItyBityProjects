@@ -5,8 +5,8 @@ import {
   Next,
   FancyCommandParser,
   VarBlockType,
-} from "./FancyCommandParser";
-import { TwitchMessage } from "./TwitchObjects";
+} from "../FancyCommandParser";
+import { TwitchMessage } from "../../../obj/TwitchObjects";
 
 /**
  * FancyCommandParser middleware which will replace some variables with data from a twitch message
