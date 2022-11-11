@@ -9,12 +9,12 @@ const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writabl
 * Simple typing to explain the expected structure of a next() function
 *
 */
-type Next = () => void;
+export type Next = () => void;
 /**
 * Simple typing to explain the expected structure of a FancyMiddleware function or lambda
 *
 */
-type FancyMiddleware = (context: VarBlock, next: Next) => void;
+export type FancyMiddleware = (context: VarBlock, next: Next) => void;
 
 /**
 * Invoker function for the VarBlockMiddleware which accepts any callable following the FancyMiddleware type
@@ -117,11 +117,29 @@ export class FancyCommandParser {
   *
   * @class
   */
-  constructor(cmd: string, varRef: AceBase, middlewares?: VarBlockMiddleware|undefined) {
+  constructor(cmd: string|null, varRef: AceBase, middlewares?: VarBlockMiddleware|undefined) {
     this.cmdDB = varRef;
     this.middlewares = middlewares || new VarBlockMiddleware();
-    this.Ready = this.parse(cmd);
+    if(null !== cmd)
+    {
+      this.Ready = this.parse(cmd as string);
+    }
+    else {
+      this.Ready = new Promise<string>(()=>"Initialized without command, parse using FCP.Parse(). Add middlewares using `use()`");
+    }
   }
+
+  /**
+  * Use is a convinience function that allows adding a middleware to an initialized FancyCommandParser without having to pre-prepare them
+  *
+  * @remarks
+  * additional details
+  *
+  * @param FancyMiddleware[] - An array of functions implementing FancyMiddleware
+  * @returns void
+  *
+  */
+  public use(...middleware: FancyMiddleware[]): void { this.middlewares.use(...middleware); };
 
   /**
    * Root method which begins the parsing process of a command
@@ -135,7 +153,7 @@ export class FancyCommandParser {
    * @returns returned value explanation
    *
    */
-  private async parse(cmd: string): Promise<string> {
+  public async parse(cmd: string): Promise<string> {
     logger.debug(`Parsing ${cmd}`);
     const toParse: RegExp = new RegExp("({.+?})", "igm");
     const toRepl: IterableIterator<RegExpMatchArray> | null =
@@ -478,7 +496,7 @@ export class FancyCommandParser {
 
 }
 
-class VarBlock {
+export class VarBlock {
   /**
    * name is the variable name and how it will be saved to the DB
    */
