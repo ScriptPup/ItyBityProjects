@@ -1,11 +1,6 @@
 /** @format */
 
-import {
-  VarBlock,
-  Next,
-  FancyCommandParser,
-  VarBlockType,
-} from "../FancyCommandParser";
+import { Next, FancyCommandParser } from "../FancyCommandParser";
 import { TwitchMessage } from "../../../obj/TwitchObjects";
 
 /**
@@ -23,19 +18,12 @@ export function TwitchFancyPreParser(
   FCP: FancyCommandParser,
   tmsg: TwitchMessage
 ): FancyCommandParser {
-  const twitchFancyPreParse = (context: VarBlock, next: Next): void => {
-    context.name = context.name.replace("@channel", tmsg.channel);
-    context.name = context.name.replace("@user", tmsg.channel);
-
-    if (context.datatype === VarBlockType.STRING) {
-      context.value = context.value
-        .toString()
-        .replace("@channel", tmsg.channel);
-      context.value = context.name.replace("@user", tmsg.tags["display-name"]);
-      context.value = context.name.replace("@message", tmsg.message);
-    }
+  const twitchFancyPreParse = (context: { val: string }, next: Next): void => {
+    context.val = context.val.replace(/\@channel/i, tmsg.channel);
+    context.val = context.val.replace(/\@user/i, tmsg.tags["display-name"]);
+    context.val = context.val.replace(/\@message/i, tmsg.message);
     next();
   };
-  FCP.use(twitchFancyPreParse);
+  FCP.preParse(twitchFancyPreParse);
   return FCP;
 }
