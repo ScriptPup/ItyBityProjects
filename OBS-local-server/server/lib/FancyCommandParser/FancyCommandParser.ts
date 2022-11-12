@@ -15,6 +15,7 @@ export type Next = () => void;
 *
 */
 export type FancyMiddleware = (context: VarBlock, next: Next) => void;
+export type FancyPreBlockMiddleware = (context: {val: string}, next: Next) => void;
 
 /**
 * Invoker function for the VarBlockMiddleware which accepts any callable following the FancyMiddleware type
@@ -36,6 +37,20 @@ function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[
   return mw(context, () => {
       logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
       invokeFancyMiddlewares(context, middlewares.slice(1));
+  });
+}
+
+function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPreBlockMiddleware[]): void {
+  logger.debug(`Middleware evoke started with ${middlewares.length} to evaluate`);
+  if (!middlewares.length) {
+    logger.debug(`No middlewares provides, skipping evaluations`);
+    return;
+  }
+  const mw = middlewares[0];
+  logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion starting...`);
+  return mw(context, () => {
+      logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
+      invokeFancyPreMiddlewares(context, middlewares.slice(1));
   });
 }
 
@@ -89,7 +104,58 @@ class VarBlockMiddleware {
     if(this.middlewares.length > 0)
     return invokeFancyMiddlewares(context, this.middlewares);
   }
+}
 
+/**
+* Class used to add and then run middlewars for FancyCommandParser
+*
+*
+* @class
+*/
+class PreBlockMiddleware {
+  private middlewares: FancyPreBlockMiddleware[];
+  constructor(){
+    this.middlewares = new Array<FancyPreBlockMiddleware>;
+  }
+  
+  /**
+  * Add a middleware which will be run when dispatch is called
+  *
+  * @remarks
+  * Usage is like
+  * const vbm = new VarBlockMiddleware();
+  * vbm.use((context,next)=>{
+  *   // Do stuff
+  *   return next();
+  * });
+  * 
+  * FCP: FancyCommandParser = new FancyCommandParser(myCommdand,aceDB,vbm);
+  * FCP.Ready.then((parsedCMD)=>{
+  *   // Do stuff with the parsed command
+  * });
+  * 
+  * @param middleware - One or more middlewares
+  * @returns void
+  *
+  */
+  public use(...middleware: FancyPreBlockMiddleware[]): void {
+    this.middlewares.push(...middleware);
+  };
+
+  /**
+  * Runs the added middlewares in order
+  *
+  * @remarks
+  * additional details
+  *
+  * @param context - The starting variable block to run in-context
+  * @returns void
+  *
+  */
+  public dispatch(context: {val: string}): void {
+    if(this.middlewares.length > 0)
+    return invokeFancyPreMiddlewares(context, this.middlewares);
+  }
 }
 
 
@@ -103,9 +169,17 @@ export class FancyCommandParser {
   */
   private cmdDB: AceBase;
   /**
-  * middlewars is a list of middlewars to run anytime parse() is run
+  * middlewars is a list of middlewares to run anytime before each database lookup occurs
+  * I don't actually have a usecase for this... It's how I did the initial design before I realized it probably made more sense to modify the raw string
+  * So... Yeah. I just didn't want to toss it out in case it was useful later. Maybe it's bloat? We'll see
   */
   private middlewares: VarBlockMiddleware;
+  
+  /**
+  * preMiddlewares is a list of middlewares to run BEFORE parse() is run
+  */
+  private preMiddlewares: PreBlockMiddleware = new PreBlockMiddleware();
+  
   /**
   * This is the command parser which takes a command string and extracts data from the command text and converts the variable blocks into the variable value
   *
@@ -130,16 +204,29 @@ export class FancyCommandParser {
   }
 
   /**
-  * Use is a convinience function that allows adding a middleware to an initialized FancyCommandParser without having to pre-prepare them
+  * preDBLkp is a convinience function that allows adding a middleware to an initialized FancyCommandParser without having to pre-prepare them
   *
   * @remarks
-  * additional details
+  * This middleware's context is a VarBlock BEFORE it's modified by any variable replacements from the DB
   *
-  * @param FancyMiddleware[] - An array of functions implementing FancyMiddleware
+  * @param middleware - An array of functions implementing FancyMiddleware
   * @returns void
   *
   */
-  public use(...middleware: FancyMiddleware[]): void { this.middlewares.use(...middleware); };
+  public preDBLkp(...middleware: FancyMiddleware[]): void { this.middlewares.use(...middleware); };
+
+  /**
+  * preParse is a convinience function that allows adding a middleware to an initialized FancyCommandParser without having to pre-prepare them
+  *
+  * @remarks
+  * This middleware's context is a string BEFORE parse is run at all (comes BEFORE preDBLkp)
+  *
+  * @param middleware - An array of functions implementing FancyMiddleware
+  * @returns void
+  *
+  * @alpha
+  */
+  public preParse(...middleware: FancyPreBlockMiddleware[]): void { this.preMiddlewares.use(...middleware); };
 
   /**
    * Root method which begins the parsing process of a command
@@ -154,6 +241,9 @@ export class FancyCommandParser {
    *
    */
   public async parse(cmd: string): Promise<string> {
+    const ctxt = {val: cmd};
+    this.preMiddlewares.dispatch(ctxt);
+    cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);
     const toParse: RegExp = new RegExp("({.+?})", "igm");
     const toRepl: IterableIterator<RegExpMatchArray> | null =

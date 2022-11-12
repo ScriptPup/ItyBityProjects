@@ -5,6 +5,8 @@ import {
   AcceptedVarTypes,
   getAcceptedType,
   VarBlockType,
+  VarBlock,
+  Next,
 } from "../server/lib/FancyCommandParser/FancyCommandParser";
 import { DataReference } from "acebase";
 import { expect } from "chai";
@@ -589,6 +591,27 @@ describe("FancyParser Evaluation", () => {
       ).Ready;
       expect(val).is.a("string");
       expect(val).to.equal("Retrieving a variable: Test");
+    });
+  });
+});
+
+describe("FancyParser Middleware", () => {
+  let contextDB: AceBase = new AceBase("test_variables", {
+    sponsor: true,
+    logLevel: "error",
+  });
+  before(async () => {
+    return contextDB.ready;
+  });
+  describe("FancyParser Pre", () => {
+    it("Should apply changes before parsing", async () => {
+      const FCP: FancyCommandParser = new FancyCommandParser(null, contextDB);
+      const testMiddleware = (context: { val: string }, next: Next): void => {
+        context.val = context.val.replace("brownies", "salad");
+      };
+      FCP.preParse(testMiddleware);
+      const res: string = await FCP.parse("I really enjoy brownies");
+      expect(res).to.equal("I really enjoy salad");
     });
   });
 });
