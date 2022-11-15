@@ -1,5 +1,8 @@
 # Database files
 *.db
+# Built client files
+*.css
+*.css.map
 # Built server files
 *.js
 !OBS-local-server/content/**/*.js
