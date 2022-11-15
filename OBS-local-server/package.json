@@ -12,7 +12,8 @@
     "test": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
     "logs": "Type .\\server\\logs\\FancyCommandParser.log | pino-pretty",
     "clear-logs": "del .\\server\\logs\\FancyCommandParser.log",
-    "build-test": "npm-run-all build clear-logs test"
+    "build-test": "npm-run-all build clear-logs test",
+    "build-css": "node-sass --recursive --watch content/scss --output content/style"
   },
   "repository": {
     "type": "git",
