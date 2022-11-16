@@ -1,17 +1,25 @@
 $background: #2f3437;
 $background-accent: #576a75;
+$hr-gradient-inner: #222f34;
+$hr-gradient-outter: #576a75a6;
+
+$main-font-color: white;
+$accent-font-color: #b0cdef;
+$tertiary-font-color: silver;
 
 body {
     background-color: $background;
     width: 99%;
     height: 98%;
     display: flex;
-    justify-content: space-between;
     flex-direction: column;
-    align-items: center;
     position: absolute;
     column-gap: 0px;
     row-gap: 10px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    & > * {
+        margin: auto;        
+    }
 }
 
 .main{
@@ -20,6 +28,9 @@ body {
     min-height: 80%;
     margin-left: auto;
     margin-right: auto;
+    display: flex;
+    flex-direction: row;
+    row-gap: 10px;    
 }
 #content { 
     &-main {
@@ -28,8 +39,57 @@ body {
 
     &-head, &-foot {
         border-radius: 8px;
-        width: 95%;
-        height: 70px;
+        width: 95%;        
         background-color: $background-accent;
+        position: relative;
     }
+    &-head {
+        min-height: 70px;
+    }
+    &-foot {
+        min-height: 30px;
+    }
+}
+.panel {
+    &-left, &-right {
+        h2 {
+            color: $accent-font-color;
+        }
+        margin-left: 20px;
+        hr {
+            // border-top: 1px solid #222f34;
+            border: 0;
+            height: 1px;
+            background: $hr-gradient-inner;
+            background-image: linear-gradient(to right, $hr-gradient-outter, $hr-gradient-inner, $hr-gradient-outter);            
+            width: 100%;
+            margin-left: 0px; 
+        }
+    }
+    &-left {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+    &-right {
+        flex-grow: 0.8;
+    }
+
+}
+.right-align{
+    text-align: right;
+    right: 20;
+}
+.bottom-align {
+    position: absolute;
+    bottom: 3px;
+}
+
+
+#page-title {
+    color: $main-font-color;
+    margin-left: 20px;
+}
+#created-by {
+    text-align: right;
+    color: $tertiary-font-color;
 }
