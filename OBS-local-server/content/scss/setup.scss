@@ -5,9 +5,10 @@ $hr-gradient-outter: #576a75a6;
 
 $main-font-color: white;
 $accent-font-color: #b0cdef;
-$tertiary-font-color: silver;
+$tertiary-font-color: rgb(235, 235, 235);
 
 $button-background: #583e98;
+
 
 body {
     background-color: $background;
@@ -58,6 +59,8 @@ body {
     &-left, &-right {
         h2 {
             color: $accent-font-color;
+            font-size: 1.8em;
+            margin-bottom: 2px;    
         }
         margin-left: 20px;
         hr {
@@ -69,21 +72,25 @@ body {
             width: 100%;
             margin-left: 0px; 
         }
-        
+        overflow-y: auto;                
     }
     &-left {
         flex-grow: 1;
+        flex-shrink: 0;
         margin-right: 10px;
     }
     &-right {
         flex-grow: 0.8;
+        max-width: calc(100%/2);
+        & > h2 {
+            margin-bottom: 12px;
+        }
     }
     &-header {
         display: flex;
         flex-direction: row;
         & > h2 {
             flex-grow: 90;
-            margin-bottom: 2px;
         }
         & > span {
             flex-grow: 10;
@@ -154,4 +161,41 @@ body {
     'wght' 600,
     'GRAD' 0,
     'opsz' 48;
+}
+
+
+.markdown {
+    color: $tertiary-font-color;
+    font-weight: lighter;
+    & h1,& h2,& h3,& h4 {
+        color: $main-font-color;
+    }
+    & h1 {
+        font-size: 1.5em;
+    }
+    & h2 {
+        font-size: 1em;
+    }
+    & h3 {
+        font-size: 0.8em;
+    }
+    & h4 {
+        font-size: 0.6em;
+    }
+    code {        
+        background: rgb(172 229 255 / 44%);
+        font-family: monospace;
+        color: black;
+    }
+    pre > code {
+        padding: 4px;
+        word-wrap: break-word;
+        box-decoration-break: clone;
+        padding: .1rem .3rem .2rem;
+        border-radius: .2rem;
+    }
+    p > code {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
 }
