@@ -7,6 +7,8 @@ $main-font-color: white;
 $accent-font-color: #b0cdef;
 $tertiary-font-color: silver;
 
+$button-background: #583e98;
+
 body {
     background-color: $background;
     width: 99%;
@@ -35,10 +37,12 @@ body {
 #content { 
     &-main {
         border-radius: 8px;
+        min-width: 600px;
     }
 
     &-head, &-foot {
         border-radius: 8px;
+        min-width: 600px;
         width: 95%;        
         background-color: $background-accent;
         position: relative;
@@ -65,6 +69,7 @@ body {
             width: 100%;
             margin-left: 0px; 
         }
+        
     }
     &-left {
         flex-grow: 1;
@@ -73,8 +78,57 @@ body {
     &-right {
         flex-grow: 0.8;
     }
-
+    &-header {
+        display: flex;
+        flex-direction: row;
+        & > h2 {
+            flex-grow: 90;
+            margin-bottom: 2px;
+        }
+        & > span {
+            flex-grow: 10;
+        }
+    }    
+    &-button {
+        &:hover {
+            box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+            -webkit-box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+            -moz-box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+            cursor: pointer;
+        }
+        color: $main-font-color;
+        width: fit-content;
+        height: fit-content;
+        margin-top: 20px;
+        margin-bottom: 2px;
+        display: flex;
+        flex-direction: row;
+        column-gap: 8px;
+        border-radius: 4px;
+        line-height: 1.35;
+        border-style: solid;
+        background-color: $button-background;
+        border-color: $button-background;
+        box-shadow: none;
+        padding: 5px;
+        padding-right: 8px;
+        font-size: large; 
+        .add-img {
+            height: 24px;    
+            width: 24px;
+            svg { 
+                width: 24px;
+                height: 24px;
+                display: inline-block;            
+                path {
+                    stroke: $main-font-color;
+                    stroke-width: 4px;            
+                }
+            }
+        }        
+    }
 }
+
 .right-align{
     text-align: right;
     right: 20;
@@ -92,4 +146,12 @@ body {
 #created-by {
     text-align: right;
     color: $tertiary-font-color;
+}
+
+.material-symbol-add {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 600,
+    'GRAD' 0,
+    'opsz' 48;
 }
