@@ -167,6 +167,27 @@ body {
 .markdown {
     color: $tertiary-font-color;
     font-weight: lighter;
+    position: relative;
+    box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
+    -webkit-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
+    -moz-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;    
+    &::before {
+        content: "";
+        background-color: $hr-gradient-inner;
+        opacity: 0.6;
+        top: 0;
+        position: absolute;
+        display: block;
+        width: 10px;
+        height: 100%;
+        border-radius: 4px 0px 0px 4px;
+    }
+    & > :nth-child(1) {
+        padding-top: 15px;
+    }
+    & > * {
+        margin-left: 20px;
+    }
     & h1,& h2,& h3,& h4 {
         color: $main-font-color;
     }
@@ -186,13 +207,14 @@ body {
         background: rgb(172 229 255 / 44%);
         font-family: monospace;
         color: black;
+        border-radius: .2rem;
+        margin-right: 3px;
     }
     pre > code {
         padding: 4px;
         word-wrap: break-word;
         box-decoration-break: clone;
         padding: .1rem .3rem .2rem;
-        border-radius: .2rem;
     }
     p > code {
         padding-left: 4px;
