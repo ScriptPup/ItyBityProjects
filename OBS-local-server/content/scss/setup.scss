@@ -25,6 +25,23 @@ body {
     }
 }
 
+*::-webkit-scrollbar {
+    width: 12px;               /* width of the entire scrollbar */
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: $background-accent;        /* color of the tracking area */
+    border-radius: 0px 8px 8px 0px;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background-color: $accent-font-color;    /* color of the scroll thumb */
+    border-radius: 20px;       /* roundness of the scroll thumb */
+    border: 3px solid $background-accent;  /* creates padding around scroll thumb */
+  }
+
+
+
 .main{
     background-color: $background-accent;
     width: 95%;
@@ -231,3 +248,8 @@ body {
         padding-right: 4px;
     }
 }
+
+.command-container {
+
+}
+
