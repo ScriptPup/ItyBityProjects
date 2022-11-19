@@ -30,6 +30,23 @@
           </span>
         </header>
         <hr />
+
+        <!-- TODO: add sorting, filtering, and make the table pretty 
+        https://www.w3.org/WAI/ARIA/apg/example-index/table/sortable-table -->
+        <table class="command-container">
+          <thead>
+            <th>Command</th>
+            <th>Action</th>
+            <th>Allowed</th>
+            <th></th>
+          </thead>
+          <tbody id="command-list">
+            <td class="command-name">Cmd Name</td>
+            <td class="command-body">Hello world from planet {planet++}</td>
+            <td class="command-users">Everyone</td>
+            <td class="command-actions"></td>
+          </tbody>
+        </table>
       </div>
       <div id="information" class="panel-right">
         <h2>Information</h2>
