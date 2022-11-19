@@ -1,5 +1,7 @@
 # Command Components
 
+<hr />
+
 ## Name
 
 The name of the command is what the server will "listen" for, thios
