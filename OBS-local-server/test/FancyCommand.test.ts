@@ -4,7 +4,7 @@ import {
   FancyCommandExecutor,
   FancyCommand,
   UserTypes,
-} from "../server/FancyCommandExecutor";
+} from "../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 
 import { expect } from "chai";
 import "mocha";
