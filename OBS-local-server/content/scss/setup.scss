@@ -171,6 +171,7 @@ body {
 #page-title {
     color: $main-font-color;
     margin-left: 20px;
+    line-height: 0.76;
 }
 #created-by {
     text-align: right;
@@ -254,9 +255,6 @@ body {
 }
 
 .command {
-    &-container {
-
-    }
     &-component {        
         position: relative;
         &::after {
@@ -275,6 +273,7 @@ body {
         }
         &.left-component, &.right-component {
             display: inline-block;
+            margin-top: 5px;
         }
         &.right-component > select {
             min-width: 135px;
@@ -306,6 +305,7 @@ body {
             font-size: large;
             list-style: none;
             padding-left: 10px;
+            padding-top: 5px;
             margin-bottom: 5px;
             
             &:hover {
