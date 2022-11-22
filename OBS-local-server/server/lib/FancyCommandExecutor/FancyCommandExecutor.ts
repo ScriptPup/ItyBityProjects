@@ -61,7 +61,7 @@ export class FancyCommandExecutor {
   }
 
   /**
-   * Save a new command to the local AceBase DB
+   * Save a new command to the local AceBase DB (or overwrite an existing one)
    *
    * @remarks
    * While saving the command to the database, also adds the command to the local execution memory
@@ -72,7 +72,7 @@ export class FancyCommandExecutor {
    */
   public addCommand(ncmd: FancyCommand): Promise<DataReference> {
     return this.Ready.then(() => {
-      return this.db.ref("commands").push(ncmd);
+      return this.db.ref(`commands/${ncmd.name}`).set(ncmd);
     });
   }
 
