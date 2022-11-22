@@ -6,6 +6,7 @@ $hr-gradient-outter: #576a75a6;
 $main-font-color: white;
 $accent-font-color: #b0cdef;
 $tertiary-font-color: rgb(235, 235, 235);
+$deemphasised-font-color: gray;
 
 $button-background: #583e98;
 
@@ -213,8 +214,7 @@ body {
     }
     & > :nth-child(1) {
         padding-top: 15px;
-        margin-bottom: 10px;
-        
+        margin-bottom: 10px;        
     }
     & > * {
         margin-left: 20px;
@@ -253,10 +253,104 @@ body {
     }
 }
 
-.command-container {
-    & .command- {
-        &name {
+.command {
+    &-container {
+
+    }
+    &-component {        
+        position: relative;
+        &::after {
+            content: attr(subtitle);
+            color: $deemphasised-font-color;
+            position: absolute;
+            font-size: x-small;
+            left: 14;
+            bottom: 5;
+        }
+        & > * {
+            margin-left: 10px;
+            padding-bottom: 12;
+            border-radius: 4px;
+            margin-bottom: 4px;        
+        }
+        &.left-component, &.right-component {
+            display: inline-block;
+        }
+        &.right-component > select {
+            min-width: 135px;
+        }
+        & > textarea {
+            min-width: 325px;
+        }
+    }
+    &-item {
+        &::before {
+            content: "";
+            background-color: $hr-gradient-inner;
+            opacity: 0.6;
+            top: 0;
+            left: -10px;
+            position: absolute;
+            display: block;
+            width: 10px;
+            height: 100%;
+            border-radius: 4px 0px 0px 4px;
+        }
+        position: relative;
+        box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
+        -webkit-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
+        -moz-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;    
+        background-color: $accent-font-color;
+        margin-left: 10px;
+        & > summary {
+            font-size: large;
+            list-style: none;
+            padding-left: 10px;
+            margin-bottom: 5px;
             
+            &:hover {
+                cursor: pointer;
+            }
+        }
+        
+        & .command {
+            &-execute {
+                width: 80%;                                           
+            }
+        }
+
+        footer {
+            text-align: right;
+            vertical-align: middle;
+            display: flex;
+            align-items: center;
+            justify-content: right;
+            column-gap: 2px;
+            & .remove-item { 
+                
+                svg {
+                    height: 32px;
+                    width: 32px;
+                    path {
+                        fill: red;
+                        stroke: red;
+                        stroke-width: 1.6px;            
+                    }
+                }
+                &:hover {
+                    cursor: pointer;
+                }
+            }
+            & > .save-item {
+                flex-direction: initial;
+                display: initial;
+                font-size: medium;
+                padding-top: 1px;
+                padding-bottom: 1px;
+                padding-right: 5px;
+                padding-left: 5px;
+                margin-top: 0px;
+            }
         }
     }
 }
