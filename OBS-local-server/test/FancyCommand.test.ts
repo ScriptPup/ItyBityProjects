@@ -21,7 +21,7 @@ describe("FancyCommandExector storage operations", () => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
       command: 'console.log("Test command run successfully!")',
-      allowed: UserTypes.VIEWER,
+      allowed: UserTypes.EVERYONE,
     };
     const nCmd = await FCE.addCommand(new_fancy_command);
     addedCMDKey = nCmd.key;
@@ -47,7 +47,7 @@ describe("FancyCommandExector storage operations", () => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
       command: 'console.log("Test command run successfully AGAIN!")',
-      allowed: UserTypes.VIEWER,
+      allowed: UserTypes.EVERYONE,
     };
     await FCE.updateCommand(addedCMDKey, new_fancy_command);
     const ncmd = await FCE.getCommand(addedCMDKey);
