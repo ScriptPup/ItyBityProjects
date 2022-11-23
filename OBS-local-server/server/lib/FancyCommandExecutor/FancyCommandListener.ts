@@ -17,11 +17,12 @@ export class FancyCommandListener {
    *
    *
    * @param IO - expects an IO server
-   * @returns IO -> Returns the IO server object after adding listeners
+   * @returns returns the FancyCommandListener class instance
    *
    */
   constructor(IO: Server) {
     this.IO = IO;
+    this.init();
   }
 
   /**
