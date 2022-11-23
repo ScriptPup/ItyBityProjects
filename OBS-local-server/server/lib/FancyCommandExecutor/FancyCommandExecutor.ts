@@ -15,11 +15,35 @@ import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
 import { type } from "os";
 
 export enum UserTypes {
-  STREAMER,
+  OWNER,
   MODERATOR,
-  VIEWER,
-  BOT,
+  VIP,
+  REGULAR,
+  SUBSCRIBER,
+  FOLLOWER,
+  EVERYONE,
 }
+
+export const getUserType = (userType: string) => {
+  switch (userType) {
+    case "owner":
+      return UserTypes.OWNER;
+    case "moderator":
+      return UserTypes.MODERATOR;
+    case "vip":
+      return UserTypes.VIP;
+    case "regular":
+      return UserTypes.REGULAR;
+    case "subscriber":
+      return UserTypes.SUBSCRIBER;
+    case "follower":
+      return UserTypes.FOLLOWER;
+    case "everyone":
+      return UserTypes.EVERYONE;
+    default:
+      return UserTypes.EVERYONE;
+  }
+};
 
 export type FancyCommand = {
   name: string;
