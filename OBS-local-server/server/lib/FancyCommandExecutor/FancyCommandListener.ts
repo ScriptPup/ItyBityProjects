@@ -9,7 +9,7 @@ import { Server, Socket } from "socket.io";
 
 export class FancyCommandListener {
   private IO: Server;
-  private FCE: FancyCommandExecutor = new FancyCommandExecutor();
+  private FCE: FancyCommandExecutor;
   /**
    * FancyCommandListener is a IO server middleware. It will return the IO server after attaching its listeners.
    *
@@ -20,8 +20,9 @@ export class FancyCommandListener {
    * @returns returns the FancyCommandListener class instance
    *
    */
-  constructor(IO: Server) {
+  constructor(IO: Server, testing: boolean = false) {
     this.IO = IO;
+    this.FCE = new FancyCommandExecutor(testing);
     this.init();
   }
 
