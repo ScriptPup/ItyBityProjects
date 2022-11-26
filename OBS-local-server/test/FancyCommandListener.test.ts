@@ -7,7 +7,6 @@ import { io, io as SocketClient, Socket } from "socket.io-client";
 import { Server as SocketServer } from "socket.io";
 import "mocha";
 import { pino } from "pino";
-import { client } from "tmi.js";
 const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/logs/FancyCommandParser.test.log`}));
 
 
@@ -51,35 +50,68 @@ describe("FancyCommandListener listener", () => {
     client_io.connect();
   });
 
-  it("Should be able to recieve and reply to add-command events", (done) => {
+  it("Should be able to recieve and reply to command-add events", (done) => {
     const add_command: object = {
       name: "!test",
       command: "Some command",
       usableBy: "everyone",
     };
-    logger.debug({"test": "Should be able to recieve and reply to add-command events"},"Start");
+    logger.debug({"test": "Should be able to recieve and reply to command-add events"},"Start");
     IO = new SocketServer();
     FCE = new FancyCommandListener(IO, true);
     IO.listen(8081);
     client_io = SocketClient(end_point, opts);    
     
     client_io.on("connect", () => {
-      logger.debug({"test": "Should be able to recieve and reply to add-command events"},"Connection recieved, emitting add-command");
-      client_io.emit("add-command", add_command);      
+      logger.debug({"test": "Should be able to recieve and reply to command-add events"},"Connection recieved, emitting add-command");
+      client_io.on("command-add", (res) => {
+        expect(res).to.eql(add_command);      
+        success(done, IO, client_io);
+        logger.debug({"test": "Should be able to recieve and reply to command-add events"},"Done");
+      });
+      client_io.emit("command-add", add_command);
     });
 
     IO.on("connection", (srv_socket) => {
-      logger.debug({"test": "Should be able to recieve and reply to add-command events"},"Server connection established");
-      srv_socket.on("add-command", (res) => {
-        logger.debug({"test": "Should be able to recieve and reply to add-command events"},"add-command recieved from client");
-        expect(res).to.eql(add_command);      
-        success(done, IO, client_io);
-        logger.debug({"test": "Should be able to recieve and reply to add-command events"},"Done");
+      logger.debug({"test": "Should be able to recieve and reply to command-add events"},"Server connection established");
+      srv_socket.on("command-add", (res) => {
+        logger.debug({"test": "Should be able to recieve and reply to command-add events"},"add-command recieved from client on server");
+        expect(res).to.eql(add_command);     
       });
     });
 
     client_io = client_io.connect();    
   });
+
+  it("Should be able to recieve and reply to command-remove events", (done) => {
+    const add_command: object = { name: "!test" };
+    logger.debug({"test": "Should be able to recieve and reply to command-remove events"},"Start");
+    IO = new SocketServer();
+    FCE = new FancyCommandListener(IO, true);
+    IO.listen(8081);
+    client_io = SocketClient(end_point, opts);    
+    
+    client_io.on("connect", () => {
+      logger.debug({"test": "Should be able to recieve and reply to command-remove events"},"Connection recieved, emitting add-command");
+      client_io.on("command-remove", (res) => {
+        expect(res).to.eql(add_command);      
+        success(done, IO, client_io);
+        logger.debug({"test": "Should be able to recieve and reply to command-remove events"},"Done");
+      });
+      client_io.emit("command-remove", add_command);      
+    });
+
+    IO.on("connection", (srv_socket) => {
+      logger.debug({"test": "Should be able to recieve and reply to command-remove events"},"Server connection established");
+      srv_socket.on("command-remove", (res) => {
+        logger.debug({"test": "Should be able to recieve and reply to command-remove events"},"add-command recieved from client on server");
+        expect(res).to.eql(add_command);
+      });
+    });
+
+    client_io = client_io.connect();    
+  });
+
   // it("Should be able respond to add-command events", () => {
   //   expect(add_command_responded).to.be.true;
   // });
