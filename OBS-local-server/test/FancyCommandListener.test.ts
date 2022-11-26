@@ -72,7 +72,7 @@ describe("FancyCommandListener listener", () => {
       logger.debug({"test": "Should be able to recieve and reply to add-command events"},"Server connection established");
       srv_socket.on("add-command", (res) => {
         logger.debug({"test": "Should be able to recieve and reply to add-command events"},"add-command recieved from client");
-        expect(res).to.eql(add_command);        
+        expect(res).to.eql(add_command);      
         success(done, IO, client_io);
         logger.debug({"test": "Should be able to recieve and reply to add-command events"},"Done");
       });
