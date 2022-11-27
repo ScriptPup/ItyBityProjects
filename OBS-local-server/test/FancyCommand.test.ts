@@ -9,7 +9,7 @@ import {
 import { expect } from "chai";
 import "mocha";
 
-describe("FancyCommandExector storage operations", () => {
+describe("FancyCommandExecutor storage operations", () => {
   let addedCMDKey: string;
   let keyCount: number;
   let FCE: FancyCommandExecutor;
@@ -17,6 +17,7 @@ describe("FancyCommandExector storage operations", () => {
     FCE = new FancyCommandExecutor(true);
     expect(await FCE.Ready).to.be.true;
   });
+  
   it('Should be able to add a "test" command', async () => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
