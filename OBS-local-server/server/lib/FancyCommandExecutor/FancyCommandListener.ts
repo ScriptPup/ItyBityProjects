@@ -82,8 +82,10 @@ export class FancyCommandListener {
   private async listenForAdd(socket: Socket): Promise<void> {
     logger.debug({function: `listenForAdd`}, "Start");
     socket.on("command-add", async ({ name, command, usableBy }) => {
+      logger.debug({function: `listenForAdd`}, "Add fired");
       const allowed: UserTypes = getUserType(usableBy);
       await this.FCE.addCommand({ name, command, allowed });
+      logger.debug({function: `listenForAdd`, command: { name, command, usableBy }}, "Command added");
       this.IO.to("setup-commands").emit("command-add", {
         name,
         command,
@@ -104,7 +106,9 @@ export class FancyCommandListener {
   private async listenForRemove(socket: Socket): Promise<void> {
     logger.debug({function: `listenForRemove`}, "Start");
     socket.on("command-remove", async ({ name }) => {
+      logger.debug({function: `listenForRemove`}, "Remove fired");
       await this.FCE.removeCommand(name);
+      logger.debug({function: `listenForRemove`, command: {name}}, "Command removed");
       this.IO.to("setup-commands").emit("command-remove", { name });
     });
     logger.debug({function: `listenForRemove`}, "Listening");
