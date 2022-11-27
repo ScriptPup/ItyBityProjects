@@ -38,7 +38,8 @@ export class FancyCommandListener {
    */
   public init() {
     logger.debug(`Fancy Command Listener initializing`);
-    this.IO.on("Connection", (socket: Socket): void => {
+    this.IO.on("connection", (socket: Socket): void => {
+      logger.debug(`New socket connection started, listening for socket messages`);
       this.listenToJoin(socket);
       this.listenForAdd(socket);
       this.listenForRemove(socket);
