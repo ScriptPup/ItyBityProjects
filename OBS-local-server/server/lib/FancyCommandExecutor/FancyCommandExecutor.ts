@@ -6,13 +6,10 @@
 import {
   AceBase,
   DataReference,
-  DataReferencesArray,
-  DataSnapshot,
   DataSnapshotsArray,
 } from "acebase";
 
 import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
-import { type } from "os";
 
 export enum UserTypes {
   OWNER,
