@@ -173,9 +173,11 @@ describe("FancyCommandListener listener", () => {
       const expected_return_command: {[key: string]: string|number}  = { name: '!test1', command: 'Some command', allowed: 6 };
       client_io.once("command-add", (res) => {  
         db.ref(`commands/${add_command.name}`).get((ss)=>{
+          let err;
           try{ 
             expect(ss.val()).to.eql(expected_return_command);
-          } finally { done(); }          
+          } catch { err=false; }
+          done(err);
         });
       });
       client_io.emit("command-add", add_command);
@@ -190,8 +192,10 @@ describe("FancyCommandListener listener", () => {
       const expected_return_command: {[key: string]: string|number}  = { name: '!test2', command: 'Some new command', allowed: 6 };
       client_io.once("command-add", (res)=>{
         db.ref(`commands/${add_command.name}`).get((ss)=>{
+          let err;
           try { expect(ss.val()).to.eql(expected_return_command);}
-          finally { done(); }
+          catch { err=false; }
+          done(err);
         });   
       });          
       client_io.emit("command-add", add_command);    
@@ -199,11 +203,13 @@ describe("FancyCommandListener listener", () => {
 
     it("Should remove the command from the DB", (done) => {
       const remove_command: {[key: string]: string} = {name: "!test3" };
-      client_io.on("command-remove", (res) => {  
+      client_io.on("command-remove", (res) => {          
         db.ref(`commands/${remove_command.name}`).get((ss)=>{
+          let err;
           try {
           expect(ss.val()).to.be.null;
-          } finally { done(); }
+          } catch { err = false; }
+          done(err);
         });
       });
       client_io.emit("command-remove",remove_command);
