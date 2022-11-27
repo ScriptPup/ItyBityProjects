@@ -6,6 +6,9 @@ import {
   getUserType,
 } from "./FancyCommandExecutor";
 import { Server, Socket } from "socket.io";
+import { pino } from "pino";
+const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/../logs/FancyCommandListener.log`}));
+
 
 export class FancyCommandListener {
   private IO: Server;
@@ -34,8 +37,9 @@ export class FancyCommandListener {
    *
    */
   public init() {
+    logger.debug(`Fancy Command Listener initializing`);
     this.IO.on("Connection", (socket: Socket): void => {
-      this.listToJoin(socket);
+      this.listenToJoin(socket);
       this.listenForAdd(socket);
       this.listenForRemove(socket);
     });
@@ -51,7 +55,8 @@ export class FancyCommandListener {
    * @returns void
    *
    */
-  private listToJoin(socket: Socket): void {
+  private listenToJoin(socket: Socket): void {
+    logger.debug({function: `listenToJoin`}, "Start");
     // TODO: Add some conditional logic to ONLY join the room if the client is on a page where it actually matters
 
     // Join setup-commands when on the /setup page
@@ -59,6 +64,7 @@ export class FancyCommandListener {
 
     // Join the fire-commands when on the / page
     socket.join("fire-commands");
+    logger.debug({function: `listenToJoin`}, "Listening");
   }
 
   /**
@@ -73,6 +79,7 @@ export class FancyCommandListener {
    * @alpha
    */
   private async listenForAdd(socket: Socket): Promise<void> {
+    logger.debug({function: `listenForAdd`}, "Start");
     socket.on("command-add", async ({ name, command, usableBy }) => {
       const allowed: UserTypes = getUserType(usableBy);
       await this.FCE.addCommand({ name, command, allowed });
@@ -82,6 +89,7 @@ export class FancyCommandListener {
         usableBy,
       });
     });
+    logger.debug({function: `listenForAdd`}, "Listening");
   }
 
   /**
@@ -93,9 +101,11 @@ export class FancyCommandListener {
    *
    */
   private async listenForRemove(socket: Socket): Promise<void> {
+    logger.debug({function: `listenForRemove`}, "Start");
     socket.on("command-remove", async ({ name }) => {
       await this.FCE.removeCommand(name);
       this.IO.to("setup-commands").emit("command-remove", { name });
     });
+    logger.debug({function: `listenForRemove`}, "Listening");
   }
 }
