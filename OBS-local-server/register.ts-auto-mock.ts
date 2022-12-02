@@ -1,8 +1,9 @@
-const tsAutoMockTransformer = require('ts-auto-mock/transformer').default;
-require('ts-node').register({
+/** @format */
+
+import * as tsAutoMockTransformer from "ts-auto-mock/transformer";
+
+require("ts-node").register({
   transformers: (program: any) => ({
-    before: [
-      tsAutoMockTransformer(program)
-    ]
-  })
+    before: [tsAutoMockTransformer.default(program)],
+  }),
 });
