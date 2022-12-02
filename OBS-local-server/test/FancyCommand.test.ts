@@ -13,53 +13,80 @@ describe("FancyCommandExecutor storage operations", () => {
   let addedCMDKey: string;
   let keyCount: number;
   let FCE: FancyCommandExecutor;
-  it("Should be able to instantiate and wait until ready", async () => {
+  it("Should be able to instantiate and wait until ready", (done) => {
+    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
     FCE = new FancyCommandExecutor(true);
-    expect(await FCE.Ready).to.be.true;
+    FCE.Ready.then((res) => {
+      expect(res).to.be.true;
+      clearTimeout(cmdTmt);
+      done();
+    });
   });
-  
-  it('Should be able to add a "test" command', async () => {
+
+  it('Should be able to add a "test" command', (done) => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
       command: 'console.log("Test command run successfully!")',
       allowed: UserTypes.EVERYONE,
     };
-    const nCmd = await FCE.addCommand(new_fancy_command);
-    addedCMDKey = nCmd.key;
-    expect(nCmd).to.not.be.null;
-    expect(nCmd).to.not.be.undefined;
+    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    FCE.addCommand(new_fancy_command).then((nCmd) => {
+      addedCMDKey = nCmd.key;
+      expect(nCmd).to.not.be.null;
+      expect(nCmd).to.not.be.undefined;
+      clearTimeout(cmdTmt);
+      done();
+    });
   });
 
-  it("Should be able to list all contents", async () => {
-    const contents = await FCE.getAllCommands();
-    keyCount = contents.length;
-    expect(contents.length).to.greaterThan(0);
+  it("Should be able to list all contents", (done) => {
+    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    FCE.getAllCommands().then((contents) => {
+      keyCount = contents.length;
+      expect(contents.length).to.greaterThan(0);
+      clearTimeout(cmdTmt);
+      done();
+    });
   });
 
-  it("Should be able to lookup added key", async () => {
-    const cmd: FancyCommand = await FCE.getCommand(addedCMDKey);
-    expect(cmd.name).to.equal("!test");
-    expect(cmd.command).to.equal(
-      'console.log("Test command run successfully!")'
-    );
+  it("Should be able to lookup added key", (done) => {
+    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    FCE.getCommand(addedCMDKey).then((cmd) => {
+      expect(cmd.name).to.equal("!test");
+      expect(cmd.command).to.equal(
+        'console.log("Test command run successfully!")'
+      );
+      clearTimeout(cmdTmt);
+      done();
+    });
   });
 
-  it("Should be able to update item by ID", async () => {
+  it("Should be able to update item by ID", (done) => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
       command: 'console.log("Test command run successfully AGAIN!")',
       allowed: UserTypes.EVERYONE,
     };
-    await FCE.updateCommand(addedCMDKey, new_fancy_command);
-    const ncmd = await FCE.getCommand(addedCMDKey);
-    expect(ncmd.command).to.equal(
-      'console.log("Test command run successfully AGAIN!")'
-    );
+    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    FCE.updateCommand(addedCMDKey, new_fancy_command).then((res) => {
+      FCE.getCommand(addedCMDKey).then((ncmd) => {
+        expect(ncmd.command).to.equal(
+          'console.log("Test command run successfully AGAIN!")'
+        );
+        clearTimeout(cmdTmt);
+        done();
+      });
+    });
   });
 
-  it("Should be able to remove key by ID", async () => {
-    FCE.removeCommand(addedCMDKey);
-    const contents = await FCE.getAllCommands();
-    expect(contents.length).to.equal(keyCount - 1);
+  it("Should be able to remove key by ID", (done) => {
+    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    FCE.removeCommand(addedCMDKey).then(() => {
+      FCE.getAllCommands().then((contents) => {
+        expect(contents.length).to.equal(keyCount - 1);
+        clearTimeout(cmdTmt);
+        done();
+      });
+    });
   });
 });
