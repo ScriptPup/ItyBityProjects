@@ -25,8 +25,8 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - run: echo ${cwd}
       - uses: actions/checkout@v3
+      - run: echo ${cwd}
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
