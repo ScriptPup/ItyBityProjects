@@ -19,7 +19,12 @@ const logger = pino(
 
 export class FancyCommandListener {
   private IO: Server;
-  private FCE: FancyCommandExecutor;
+  /**
+   * FCE is the FancyCommandExecutor used internally by the event server
+   * This property is exposed for testing purposes since AceBase doesn't have thread saftey
+   * It should NOT be used outsie of testing
+   */
+  public FCE: FancyCommandExecutor;
   /**
    * FancyCommandListener is a IO server middleware. It will return the IO server after attaching its listeners.
    *

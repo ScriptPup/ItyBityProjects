@@ -3,11 +3,7 @@
 @username has been bonked {@username/bonk} times
 
 */
-import {
-  AceBase,
-  DataReference,
-  DataSnapshotsArray,
-} from "acebase";
+import { AceBase, DataReference, DataSnapshotsArray } from "acebase";
 
 import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
 
@@ -55,8 +51,10 @@ export class FancyCommandExecutor {
   public Ready: Promise<boolean>;
   /**
    * db is the internal AceBase database which we'll be using for everything
+   * This property is exposed for testing purposes since AceBase doesn't have thread saftey
+   * It should NOT be used outsie of testing
    */
-  private db: AceBase;
+  public db: AceBase;
 
   /**
    * Construct the FancyCommandExecutor
