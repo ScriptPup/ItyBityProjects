@@ -7,8 +7,15 @@ import {
 } from "./FancyCommandExecutor";
 import { Server, Socket } from "socket.io";
 import { pino } from "pino";
-const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/../logs/FancyCommandListener.log`}));
-
+const logger = pino(
+  { level: "debug" },
+  pino.destination({
+    mkdir: true,
+    writable: true,
+    dest: `${__dirname}/../logs/FancyCommandListener.log`,
+    append: false,
+  })
+);
 
 export class FancyCommandListener {
   private IO: Server;
@@ -39,7 +46,9 @@ export class FancyCommandListener {
   public init() {
     logger.debug(`Fancy Command Listener initializing`);
     this.IO.on("connection", (socket: Socket): void => {
-      logger.debug(`New socket connection started, listening for socket messages`);
+      logger.debug(
+        `New socket connection started, listening for socket messages`
+      );
       this.listenToJoin(socket);
       this.listenForAdd(socket);
       this.listenForRemove(socket);
@@ -57,7 +66,7 @@ export class FancyCommandListener {
    *
    */
   private listenToJoin(socket: Socket): void {
-    logger.debug({function: `listenToJoin`}, "Start");
+    logger.debug({ function: `listenToJoin` }, "Start");
     // TODO: Add some conditional logic to ONLY join the room if the client is on a page where it actually matters
 
     // Join setup-commands when on the /setup page
@@ -65,7 +74,7 @@ export class FancyCommandListener {
 
     // Join the fire-commands when on the / page
     socket.join("fire-commands");
-    logger.debug({function: `listenToJoin`}, "Listening");
+    logger.debug({ function: `listenToJoin` }, "Listening");
   }
 
   /**
@@ -80,19 +89,22 @@ export class FancyCommandListener {
    * @alpha
    */
   private async listenForAdd(socket: Socket): Promise<void> {
-    logger.debug({function: `listenForAdd`}, "Start");
+    logger.debug({ function: `listenForAdd` }, "Start");
     socket.on("command-add", async ({ name, command, usableBy }) => {
-      logger.debug({function: `listenForAdd`}, "Add fired");
+      logger.debug({ function: `listenForAdd` }, "Add fired");
       const allowed: UserTypes = getUserType(usableBy);
       await this.FCE.addCommand({ name, command, allowed });
-      logger.debug({function: `listenForAdd`, command: { name, command, usableBy }}, "Command added");
+      logger.debug(
+        { function: `listenForAdd`, command: { name, command, usableBy } },
+        "Command added"
+      );
       this.IO.to("setup-commands").emit("command-add", {
         name,
         command,
         usableBy,
       });
     });
-    logger.debug({function: `listenForAdd`}, "Listening");
+    logger.debug({ function: `listenForAdd` }, "Listening");
   }
 
   /**
@@ -104,13 +116,16 @@ export class FancyCommandListener {
    *
    */
   private async listenForRemove(socket: Socket): Promise<void> {
-    logger.debug({function: `listenForRemove`}, "Start");
+    logger.debug({ function: `listenForRemove` }, "Start");
     socket.on("command-remove", async ({ name }) => {
-      logger.debug({function: `listenForRemove`}, "Remove fired");
+      logger.debug({ function: `listenForRemove` }, "Remove fired");
       await this.FCE.removeCommand(name);
-      logger.debug({function: `listenForRemove`, command: {name}}, "Command removed");
+      logger.debug(
+        { function: `listenForRemove`, command: { name } },
+        "Command removed"
+      );
       this.IO.to("setup-commands").emit("command-remove", { name });
     });
-    logger.debug({function: `listenForRemove`}, "Listening");
+    logger.debug({ function: `listenForRemove` }, "Listening");
   }
 }
