@@ -1,21 +1,19 @@
 /** @format */
 
 import { FancyCommandListener } from "../server/lib/FancyCommandExecutor/FancyCommandListener";
-import { FancyCommand } from "../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 import { expect } from "chai";
-import { io, io as SocketClient, Socket } from "socket.io-client";
+import { io as SocketClient, Socket } from "socket.io-client";
 import { Server as SocketServer } from "socket.io";
 import "mocha";
 import { pino } from "pino";
 import { AceBase } from "acebase";
-import exp from "constants";
-import { client } from "tmi.js";
 const logger = pino(
   { level: "debug" },
   pino.destination({
     mkdir: true,
     writable: true,
     dest: `${__dirname}/logs/FancyCommandParser.test.log`,
+    append: false,
   })
 );
 
@@ -31,21 +29,23 @@ function success(done: Function, io: SocketServer, ...clients: Socket[]) {
 describe("FancyCommandListener listener", () => {
   describe("Events Fire", () => {
     let IO: SocketServer;
-    let FCE: FancyCommandListener;
+    let FCL: FancyCommandListener;
     let client_io: Socket;
-    after(() => {
+    afterEach(() => {
       try {
         client_io.close();
         IO.close();
       } catch {}
     });
+    beforeEach(() => {
+      IO = new SocketServer();
+      FCL = new FancyCommandListener(IO, true);
+      IO.listen(8081);
+      client_io = SocketClient(end_point, opts);
+    });
     // Generally can be ready
     it("Should be able to connect", (done) => {
       logger.debug({ test: "Should be able to connect" }, "Start");
-      IO = new SocketServer();
-      FCE = new FancyCommandListener(IO, true);
-      IO.listen(8081);
-      client_io = SocketClient(end_point, opts);
       client_io.on("connect", () => {
         logger.debug(
           { test: "Should be able to connect" },
@@ -72,11 +72,6 @@ describe("FancyCommandListener listener", () => {
         { test: "Should be able to recieve and reply to command-add events" },
         "Start"
       );
-      IO = new SocketServer();
-      FCE = new FancyCommandListener(IO, true);
-      IO.listen(8081);
-      client_io = SocketClient(end_point, opts);
-
       client_io.on("connect", () => {
         logger.debug(
           { test: "Should be able to recieve and reply to command-add events" },
@@ -122,11 +117,6 @@ describe("FancyCommandListener listener", () => {
         },
         "Start"
       );
-      IO = new SocketServer();
-      FCE = new FancyCommandListener(IO, true);
-      IO.listen(8081);
-      client_io = SocketClient(end_point, opts);
-
       client_io.on("connect", () => {
         logger.debug(
           {
@@ -170,16 +160,25 @@ describe("FancyCommandListener listener", () => {
 
   describe("Database changes", () => {
     let IO: SocketServer;
-    let FCE: FancyCommandListener;
+    let FCL: FancyCommandListener;
     let client_io: Socket;
-    let db: AceBase = new AceBase("commandDB", {
-      sponsor: true,
-      logLevel: "error",
-      info: "",
-    });
-    before(async () => {
-      return new Promise<boolean>(async (resolve) => {
-        await db.ready();
+    let db: AceBase;
+    before((done) => {
+      (async () => {
+        logger.debug(
+          { test: "Database changes setup (before)" },
+          "Starting setup"
+        );
+        // Setup socket server
+        IO = new SocketServer();
+        FCL = new FancyCommandListener(IO, true);
+        await FCL.FCE.Ready;
+        logger.debug(
+          { test: "Database changes setup (before)" },
+          "FCE database ready"
+        );
+        db = FCL.FCE.db;
+
         // Prep database entries to change
         const add_command2: { [key: string]: string | number } = {
           name: "!test2",
@@ -187,23 +186,32 @@ describe("FancyCommandListener listener", () => {
           allowed: 6,
         };
         await db.ref(`commands/${add_command2.name}`).set(add_command2);
+        logger.debug(
+          { test: "Database changes setup (before)" },
+          "Added command2"
+        );
         const add_command3: { [key: string]: string | number } = {
           name: "!test3",
           command: "Some command",
           allowed: 6,
         };
         await db.ref(`commands/${add_command3.name}`).set(add_command3);
-
-        // Setup socket server
-        IO = new SocketServer();
-        FCE = new FancyCommandListener(IO, true);
+        logger.debug(
+          { test: "Database changes setup (before)" },
+          "Added command 3"
+        );
+        // Connect client and server
         IO.listen(8081);
         client_io = SocketClient(end_point, opts);
         client_io.on("connect", () => {
-          resolve(true);
+          logger.debug(
+            { test: "Database changes setup (before)" },
+            "Setup complete"
+          );
+          done();
         });
         client_io.connect();
-      });
+      })();
     });
     after(async () => {
       try {
@@ -227,22 +235,31 @@ describe("FancyCommandListener listener", () => {
         allowed: 6,
       };
       client_io.once("command-add", (res) => {
+        logger.debug(
+          { test: "Should add the command to the DB" },
+          "Recieved reply from server regarding add"
+        );
         db.ref(`commands/${add_command.name}`).get((ss) => {
+          logger.debug(
+            { test: "Should add the command to the DB" },
+            "DB lookup complete"
+          );
           try {
             expect(ss.val()).to.eql(expected_return_command);
+            done();
           } catch (e) {
             done(e);
           }
         });
       });
       client_io.emit("command-add", add_command);
-    });
+    }).timeout(3000);
 
     it("Should update the command in the DB", (done) => {
       const add_command: { [key: string]: string | number } = {
         name: "!test2",
         command: "Some new command",
-        allowed: 6,
+        allowed: "everyone",
       };
       const expected_return_command: { [key: string]: string | number } = {
         name: "!test2",
@@ -253,6 +270,7 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${add_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.eql(expected_return_command);
+            done();
           } catch (e) {
             done(e);
           }
@@ -267,6 +285,7 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${remove_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.be.null;
+            done();
           } catch (e) {
             done(e);
           }
@@ -274,5 +293,5 @@ describe("FancyCommandListener listener", () => {
       });
       client_io.emit("command-remove", remove_command);
     });
-  });
+  }).timeout(4000);
 });
