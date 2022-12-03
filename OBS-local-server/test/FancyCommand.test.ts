@@ -14,7 +14,7 @@ describe("FancyCommandExecutor storage operations", () => {
   let keyCount: number;
   let FCE: FancyCommandExecutor;
   it("Should be able to instantiate and wait until ready", (done) => {
-    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE = new FancyCommandExecutor(true);
     FCE.Ready.then((res) => {
       expect(res).to.be.true;
@@ -29,7 +29,7 @@ describe("FancyCommandExecutor storage operations", () => {
       command: 'console.log("Test command run successfully!")',
       allowed: UserTypes.EVERYONE,
     };
-    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.addCommand(new_fancy_command).then((nCmd) => {
       addedCMDKey = nCmd.key;
       expect(nCmd).to.not.be.null;
@@ -40,7 +40,7 @@ describe("FancyCommandExecutor storage operations", () => {
   });
 
   it("Should be able to list all contents", (done) => {
-    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.getAllCommands().then((contents) => {
       keyCount = contents.length;
       expect(contents.length).to.greaterThan(0);
@@ -50,7 +50,7 @@ describe("FancyCommandExecutor storage operations", () => {
   });
 
   it("Should be able to lookup added key", (done) => {
-    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.getCommand(addedCMDKey).then((cmd) => {
       expect(cmd.name).to.equal("!test");
       expect(cmd.command).to.equal(
@@ -67,7 +67,7 @@ describe("FancyCommandExecutor storage operations", () => {
       command: 'console.log("Test command run successfully AGAIN!")',
       allowed: UserTypes.EVERYONE,
     };
-    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.updateCommand(addedCMDKey, new_fancy_command).then((res) => {
       FCE.getCommand(addedCMDKey).then((ncmd) => {
         expect(ncmd.command).to.equal(
@@ -80,7 +80,7 @@ describe("FancyCommandExecutor storage operations", () => {
   });
 
   it("Should be able to remove key by ID", (done) => {
-    const cmdTmt = setTimeout(() => done("Command timed out"), 1500);
+    const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.removeCommand(addedCMDKey).then(() => {
       FCE.getAllCommands().then((contents) => {
         expect(contents.length).to.equal(keyCount - 1);
