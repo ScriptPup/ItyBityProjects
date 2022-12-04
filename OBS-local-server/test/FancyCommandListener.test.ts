@@ -7,12 +7,13 @@ import { Server as SocketServer } from "socket.io";
 import "mocha";
 import { pino } from "pino";
 import { AceBase } from "acebase";
+import { FancyCommand } from "../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 const logger = pino(
   { level: "debug" },
   pino.destination({
     mkdir: true,
     writable: true,
-    dest: `${__dirname}/logs/FancyCommandParser.test.log`,
+    dest: `${__dirname}/logs/FancyCommandListener.test.log`,
     append: false,
   })
 );
@@ -28,6 +29,26 @@ function success(done: Function, io: SocketServer, ...clients: Socket[]) {
 
 describe("FancyCommandListener listener", () => {
   describe("Events Fire", () => {
+    const setupCon = (): Promise<boolean> => {
+      return new Promise<boolean>((resolve) => {
+        client_io.on("connect", () => {
+          joinSetupComdRoom().then(() => {
+            resolve(true);
+          });
+        });
+        client_io.connect();
+      });
+    };
+
+    const joinSetupComdRoom = (): Promise<boolean> => {
+      return new Promise<boolean>((resolve) => {
+        client_io.on("joined-setup-commands", () => {
+          resolve(true);
+        });
+        client_io.emit("join-setup-commands");
+      });
+    };
+
     let IO: SocketServer;
     let FCL: FancyCommandListener;
     let client_io: Socket;
@@ -37,29 +58,18 @@ describe("FancyCommandListener listener", () => {
         IO.close();
       } catch {}
     });
-    beforeEach(() => {
+    beforeEach((done) => {
       IO = new SocketServer();
       FCL = new FancyCommandListener(IO, true);
       IO.listen(8081);
       client_io = SocketClient(end_point, opts);
+      done();
     });
     // Generally can be ready
-    it("Should be able to connect", (done) => {
-      logger.debug({ test: "Should be able to connect" }, "Start");
-      client_io.on("connect", () => {
-        logger.debug(
-          { test: "Should be able to connect" },
-          "Client connection detected"
-        );
+    it("Should be able to connect", () => {
+      setupCon().then(() => {
         expect(client_io.connected).to.be.true;
-        logger.debug(
-          { test: "Should be able to connect" },
-          `IO connected status ${client_io.connected}`
-        );
-        success(done, IO, client_io);
-        logger.debug({ test: "Should be able to connect" }, "Done");
       });
-      client_io.connect();
     });
 
     it("Should be able to recieve and reply to command-add events", (done) => {
@@ -73,40 +83,45 @@ describe("FancyCommandListener listener", () => {
         "Start"
       );
       client_io.on("connect", () => {
-        logger.debug(
-          { test: "Should be able to recieve and reply to command-add events" },
-          "Connection recieved, emitting add-command"
-        );
-        client_io.on("command-add", (res) => {
-          expect(res).to.eql(add_command);
-          success(done, IO, client_io);
+        joinSetupComdRoom().then(() => {
           logger.debug(
             {
               test: "Should be able to recieve and reply to command-add events",
             },
-            "Done"
+            "Connection recieved, emitting add-command"
           );
+          client_io.on("command-add", (res) => {
+            expect(res).to.eql(add_command);
+            success(done, IO, client_io);
+            logger.debug(
+              {
+                test: "Should be able to recieve and reply to command-add events",
+              },
+              "Done"
+            );
+          });
+          client_io.emit("command-add", add_command);
         });
-        client_io.emit("command-add", add_command);
-      });
 
-      IO.on("connection", (srv_socket) => {
-        logger.debug(
-          { test: "Should be able to recieve and reply to command-add events" },
-          "Server connection established"
-        );
-        srv_socket.on("command-add", (res) => {
+        IO.on("connection", (srv_socket) => {
           logger.debug(
             {
               test: "Should be able to recieve and reply to command-add events",
             },
-            "add-command recieved from client on server"
+            "Server connection established"
           );
-          expect(res).to.eql(add_command);
+          srv_socket.on("command-add", (res) => {
+            logger.debug(
+              {
+                test: "Should be able to recieve and reply to command-add events",
+              },
+              "add-command recieved from client on server"
+            );
+            expect(res).to.eql(add_command);
+          });
         });
+        client_io.connect();
       });
-
-      client_io = client_io.connect();
     });
 
     it("Should be able to recieve and reply to command-remove events", (done) => {
@@ -118,43 +133,45 @@ describe("FancyCommandListener listener", () => {
         "Start"
       );
       client_io.on("connect", () => {
-        logger.debug(
-          {
-            test: "Should be able to recieve and reply to command-remove events",
-          },
-          "Connection recieved, emitting add-command"
-        );
-        client_io.on("command-remove", (res) => {
-          expect(res).to.eql(add_command);
-          success(done, IO, client_io);
+        joinSetupComdRoom().then(() => {
           logger.debug(
             {
               test: "Should be able to recieve and reply to command-remove events",
             },
-            "Done"
+            "Connection recieved, emitting add-command"
           );
+          client_io.on("command-remove", (res) => {
+            expect(res).to.eql(add_command);
+            success(done, IO, client_io);
+            logger.debug(
+              {
+                test: "Should be able to recieve and reply to command-remove events",
+              },
+              "Done"
+            );
+          });
+          client_io.emit("command-remove", add_command);
         });
-        client_io.emit("command-remove", add_command);
-      });
 
-      IO.on("connection", (srv_socket) => {
-        logger.debug(
-          {
-            test: "Should be able to recieve and reply to command-remove events",
-          },
-          "Server connection established"
-        );
-        srv_socket.on("command-remove", (res) => {
+        IO.on("connection", (srv_socket) => {
           logger.debug(
             {
               test: "Should be able to recieve and reply to command-remove events",
             },
-            "add-command recieved from client on server"
+            "Server connection established"
           );
-          expect(res).to.eql(add_command);
+          srv_socket.on("command-remove", (res) => {
+            logger.debug(
+              {
+                test: "Should be able to recieve and reply to command-remove events",
+              },
+              "add-command recieved from client on server"
+            );
+            expect(res).to.eql(add_command);
+          });
         });
       });
-      client_io = client_io.connect();
+      client_io.connect();
     });
   });
 
@@ -206,7 +223,14 @@ describe("FancyCommandListener listener", () => {
         client_io.on("connect", () => {
           logger.debug(
             { test: "Database changes setup (before)" },
-            "Setup complete"
+            "Connected"
+          );
+          client_io.emit("join-setup-commands");
+        });
+        client_io.on("joined-setup-commands", () => {
+          logger.debug(
+            { test: "Database changes setup (before)" },
+            "Joined room. Setup complete"
           );
           done();
         });
@@ -234,6 +258,10 @@ describe("FancyCommandListener listener", () => {
         command: "Some command",
         allowed: 6,
       };
+      logger.debug(
+        { test: "Should add the command to the DB" },
+        "Setting up listener"
+      );
       client_io.once("command-add", (res) => {
         logger.debug(
           { test: "Should add the command to the DB" },
@@ -242,7 +270,7 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${add_command.name}`).get((ss) => {
           logger.debug(
             { test: "Should add the command to the DB" },
-            "DB lookup complete"
+            "Recieved acknowledgement from server"
           );
           try {
             expect(ss.val()).to.eql(expected_return_command);
@@ -252,6 +280,10 @@ describe("FancyCommandListener listener", () => {
           }
         });
       });
+      logger.debug(
+        { test: "Should add the command to the DB" },
+        "Sending request to server"
+      );
       client_io.emit("command-add", add_command);
     }).timeout(3000);
 
@@ -266,7 +298,15 @@ describe("FancyCommandListener listener", () => {
         command: "Some new command",
         allowed: 6,
       };
+      logger.debug(
+        { test: "Should update the command in the DB" },
+        "Setting up listener"
+      );
       client_io.once("command-add", (res) => {
+        logger.debug(
+          { test: "Should update the command in the DB" },
+          "Recieved acknowledgement from server"
+        );
         db.ref(`commands/${add_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.eql(expected_return_command);
@@ -276,12 +316,24 @@ describe("FancyCommandListener listener", () => {
           }
         });
       });
+      logger.debug(
+        { test: "Should update the command in the DB" },
+        "Sending request to server"
+      );
       client_io.emit("command-add", add_command);
     });
 
     it("Should remove the command from the DB", (done) => {
       const remove_command: { [key: string]: string } = { name: "!test3" };
+      logger.debug(
+        { test: "Should remove the command from the DB" },
+        "Setting up listener"
+      );
       client_io.on("command-remove", (res) => {
+        logger.debug(
+          { test: "Should remove the command from the DB" },
+          "Recieved acknowledgement from server"
+        );
         db.ref(`commands/${remove_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.be.null;
@@ -291,7 +343,37 @@ describe("FancyCommandListener listener", () => {
           }
         });
       });
+      logger.debug(
+        { test: "Should remove the command from the DB" },
+        "Sending request to server"
+      );
       client_io.emit("command-remove", remove_command);
+    });
+
+    it("Should list all commands from the DB", (done) => {
+      logger.debug(
+        { test: "Should list all commands from the DB" },
+        "Setting up listener"
+      );
+      client_io.once("command-list", (cmdList: FancyCommand[]) => {
+        logger.debug(
+          { test: "Should list all commands from the DB" },
+          "Recieved acknowledgement from server"
+        );
+        try {
+          cmdList.forEach((cmd: FancyCommand) => {
+            expect(cmd).to.have.all.keys("name", "command", "allowed");
+          });
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+      logger.debug(
+        { test: "Should list all commands from the DB" },
+        "Sending request to server"
+      );
+      client_io.emit("command-list");
     });
   }).timeout(4000);
 });
