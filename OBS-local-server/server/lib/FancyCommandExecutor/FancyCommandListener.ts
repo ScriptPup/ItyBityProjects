@@ -4,9 +4,11 @@ import {
   FancyCommandExecutor,
   UserTypes,
   getUserType,
+  FancyCommand,
 } from "./FancyCommandExecutor";
 import { Server, Socket } from "socket.io";
 import { pino } from "pino";
+import { DataSnapshotsArray } from "acebase";
 const logger = pino(
   { level: "debug" },
   pino.destination({
@@ -57,6 +59,7 @@ export class FancyCommandListener {
       this.listenToJoin(socket);
       this.listenForAdd(socket);
       this.listenForRemove(socket);
+      this.listenForList(socket);
     });
   }
 
@@ -135,5 +138,21 @@ export class FancyCommandListener {
       this.IO.to("setup-commands").emit("command-remove", { name });
     });
     logger.debug({ function: `listenForRemove` }, "Listening");
+  }
+
+  /**
+   * Socket handler which will send an array of all currently available commands stored in the local DB
+   *
+   * @returns void
+   *
+   */
+  private async listenForList(socket: Socket): Promise<void> {
+    logger.debug({ function: `listenForList` }, "Start");
+    socket.on("command-list", async () => {
+      const cmdList: FancyCommand[] = await (
+        await this.FCE.getAllCommands()
+      ).getValues();
+      socket.emit("command-list", cmdList);
+    });
   }
 }
