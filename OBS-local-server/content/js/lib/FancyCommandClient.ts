@@ -4,6 +4,19 @@ import { io, Socket } from "socket.io-client";
 import { FancyCommand } from "../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 
 /**
+ * Type used when SENDING a new command to server
+ *
+ * @remarks
+ * It was easier to implement like this than to go refactor everything to expect the same structure on client and server side...
+ *
+ */
+type ClientFancyCommand = {
+  name: string;
+  cmd: string;
+  usableBy: string;
+};
+
+/**
  * Simple typing to explain the expected structure of a next() function
  *
  */
@@ -32,6 +45,8 @@ export class FancyCommandClient {
    * socket is the socket.io socket connection we'll use for command modification
    */
   private socket: Socket;
+
+  private commands: ClientFancyCommand[] = new Array<ClientFancyCommand>();
 
   /**
    * The FancyCommandClient class provides an easy way to reactively make changes based on adding/removing commands
@@ -85,6 +100,62 @@ export class FancyCommandClient {
     this._onRemove.push(...middleware);
   }
 
+  /**
+   * Provide simple interface for adding a command to the server
+   *
+   * @remarks
+   * additional details
+   *
+   * @param cmd - Expects ClientFancyCommand object {name: string, command: string, allowed: string}
+   * @returns void
+   *
+   */
+  public addCommand(cmd: ClientFancyCommand): void {
+    this.socket.emit("command-add", cmd);
+  }
+  /**
+   * Provide simple interface for removing a command from the server
+   *
+   * @remarks
+   * additional details
+   *
+   * @param name - The name of the command to remove
+   * @returns void
+   *
+   */
+  public removeCommand(name: string): void {
+    this.socket.emit("command-remove", { name });
+  }
+
+  /**
+   * Provide a simple interface for renaming a command on the server
+   *
+   * @remarks
+   * This is essentially a wrapper for removeCommand + addCommand
+   * Will fail with an error if the new name already exists
+   *
+   * @param origName - Original name of the command
+   * @param newCmd - New command object
+   * @returns void
+   *
+   */
+  public renameCommand(origName: string, newCmd: ClientFancyCommand): void {
+    if (this.commands.find((x) => x.name === newCmd.name)) {
+      throw new Error(
+        `Sorry, can't rename ${origName} as ${newCmd.name}, because ${newCmd.name} is already defined`
+      );
+    }
+    this.removeCommand(origName);
+    this.addCommand(newCmd);
+  }
+
+  /**
+   * Executes all the functions provided in onAdd when the server event is recieved
+   *
+   *
+   * @returns void
+   *
+   */
   private doAdd(
     context: FancyCommand,
     middlewares: FancyCommandClientMiddleware<FancyCommand>[]
@@ -99,7 +170,23 @@ export class FancyCommandClient {
   }
 
   /**
-   * Executes all the middlewares provided in onRemove when the server event is recieved
+   * Request all commands from the server in one list and then do something with the results
+   *
+   * @remarks
+   * If no callback is supplied, then doAdd() is called for each command, effectively acting like command-add has been fired once per command
+   *
+   * @param callback - Optional callback, provided to do something with resulting list
+   * @returns void
+   *
+   */
+  public cacheCommands(
+    callback?: FancyCommandClientMiddleware<FancyCommand>
+  ): void {
+    // this.socket.once("");
+  }
+
+  /**
+   * Executes all the functions provided in onRemove when the server event is recieved
    *
    *
    * @returns void
@@ -134,6 +221,6 @@ export class FancyCommandClient {
         this.doRemove(rmv, this._onRemove);
       });
     });
-    this.socket.emit("join-setup-commands");
+    this.socket.emit("join-setup-commands", true);
   }
 }
