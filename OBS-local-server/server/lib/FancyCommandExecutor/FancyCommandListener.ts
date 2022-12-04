@@ -79,6 +79,10 @@ export class FancyCommandListener {
 
     // Join setup-commands when on the /setup page
     socket.on("join-setup-commands", () => {
+      logger.debug(
+        { function: `listenToJoin`, firedEvent: "join-setup-commands" },
+        `Joined socket ${socket.id} to setup-commands`
+      );
       socket.join("setup-commands");
       socket.emit("joined-setup-commands");
     });
@@ -149,6 +153,7 @@ export class FancyCommandListener {
   private async listenForList(socket: Socket): Promise<void> {
     logger.debug({ function: `listenForList` }, "Start");
     socket.on("command-list", async () => {
+      logger.debug({ function: `listenForList` }, "Command list requested");
       const cmdList: FancyCommand[] = await (
         await this.FCE.getAllCommands()
       ).getValues();
