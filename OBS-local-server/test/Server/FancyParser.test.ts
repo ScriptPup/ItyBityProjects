@@ -7,7 +7,7 @@ import {
   VarBlockType,
   VarBlock,
   Next,
-} from "../server/lib/FancyCommandParser/FancyCommandParser";
+} from "../../server/lib/FancyCommandParser/FancyCommandParser";
 import { DataReference } from "acebase";
 import { expect } from "chai";
 import "mocha";

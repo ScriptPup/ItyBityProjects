@@ -1,13 +1,13 @@
 /** @format */
 
-import { FancyCommandListener } from "../server/lib/FancyCommandExecutor/FancyCommandListener";
+import { FancyCommandListener } from "../../server/lib/FancyCommandExecutor/FancyCommandListener";
 import { expect } from "chai";
 import { io as SocketClient, Socket } from "socket.io-client";
 import { Server as SocketServer } from "socket.io";
 import "mocha";
 import { pino } from "pino";
 import { AceBase } from "acebase";
-import { FancyCommand } from "../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import { FancyCommand } from "../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 const logger = pino(
   { level: "debug" },
   pino.destination({

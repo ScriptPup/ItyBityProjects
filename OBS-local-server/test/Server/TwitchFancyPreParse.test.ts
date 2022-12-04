@@ -1,8 +1,8 @@
 /** @format */
 
-import { FancyCommandParser } from "../server/lib/FancyCommandParser/FancyCommandParser";
-import { TwitchMessage } from "../server/obj/TwitchObjects";
-import { TwitchFancyPreParser } from "../server/lib/FancyCommandParser/middlewares/TwitchFancyPreParse";
+import { FancyCommandParser } from "../../server/lib/FancyCommandParser/FancyCommandParser";
+import { TwitchMessage } from "../../server/obj/TwitchObjects";
+import { TwitchFancyPreParser } from "../../server/lib/FancyCommandParser/middlewares/TwitchFancyPreParse";
 import { expect } from "chai";
 import "mocha";
 import { AceBase } from "acebase";
