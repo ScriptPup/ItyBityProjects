@@ -1,7 +1,7 @@
 /** @format */
 
 import { Next, FancyCommandParser } from "../FancyCommandParser";
-import { TwitchMessage } from "../../../obj/TwitchObjects";
+import { TwitchMessage } from "../../../../shared/obj/TwitchObjects";
 
 /**
  * FancyCommandParser middleware which will replace some variables with data from a twitch message
