@@ -75,7 +75,10 @@ export class FancyCommandListener {
     // TODO: Add some conditional logic to ONLY join the room if the client is on a page where it actually matters
 
     // Join setup-commands when on the /setup page
-    socket.join("setup-commands");
+    socket.on("join-setup-commands", () => {
+      socket.join("setup-commands");
+      socket.emit("joined-setup-commands");
+    });
 
     // Join the fire-commands when on the / page
     socket.join("fire-commands");
