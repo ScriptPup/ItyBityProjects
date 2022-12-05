@@ -1,6 +1,6 @@
 /** @format */
 
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import {
   FancyCommand,
   UserTypes,
@@ -47,7 +47,7 @@ export class FancyCommandClient {
   /**
    * socket is the socket.io socket connection we'll use for command modification
    */
-  private socket: Socket;
+  private socket: Socket | undefined;
 
   private commands: ClientFancyCommand[] = new Array<ClientFancyCommand>();
 
@@ -61,6 +61,11 @@ export class FancyCommandClient {
    *
    */
   constructor(socket?: Socket) {
+    this.init(socket);
+  }
+
+  private async init(socket?: Socket) {
+    const io = (await import("socket.io-client")).default;
     const opts = { forceNew: false, reconnect: true };
     if (socket) {
       this.socket = socket;
@@ -115,6 +120,11 @@ export class FancyCommandClient {
    *
    */
   public addCommand(cmd: ClientFancyCommand): void {
+    if (!this.socket) {
+      throw new Error(
+        "FrancyCommandClient.socket is not defined, cannot add command"
+      );
+    }
     this.socket.emit("command-add", cmd);
   }
   /**
@@ -128,6 +138,11 @@ export class FancyCommandClient {
    *
    */
   public removeCommand(name: string): void {
+    if (!this.socket) {
+      throw new Error(
+        "FrancyCommandClient.socket is not defined, cannot remove command"
+      );
+    }
     this.socket.emit("command-remove", { name });
   }
 
@@ -230,6 +245,11 @@ export class FancyCommandClient {
    *
    */
   public cacheCommands(callback?: (cmdList: FancyCommand[]) => {}): void {
+    if (!this.socket) {
+      throw new Error(
+        "FrancyCommandClient.socket is not defined, cannot cache commands"
+      );
+    }
     this.socket.once("command-list", (cmdList: FancyCommand[]) => {
       if (callback) {
         callback(cmdList);
@@ -269,15 +289,21 @@ export class FancyCommandClient {
    *
    */
   private setupServerListeners(): void {
-    this.socket.once("joined-setup-commands", () => {
-      this.socket.on("command-add", (cmd: FancyCommand) => {
+    if (!this.socket) {
+      throw new Error(
+        "FrancyCommandClient.socket is not defined, cannot setup listeners"
+      );
+    }
+    const socket = this.socket; // Had to do this because typescript can be incredibly stupid
+    socket.once("joined-setup-commands", () => {
+      socket.on("command-add", (cmd: FancyCommand) => {
         this.doAdd(cmd, this._onAdd);
       });
 
-      this.socket.on("command-remove", (rmv: { name: string }) => {
+      socket.on("command-remove", (rmv: { name: string }) => {
         this.doRemove(rmv, this._onRemove);
       });
     });
-    this.socket.emit("join-setup-commands", true);
+    socket.emit("join-setup-commands", true);
   }
 }
