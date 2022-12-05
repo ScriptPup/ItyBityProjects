@@ -1,7 +1,10 @@
 /** @format */
 
 import { io, Socket } from "socket.io-client";
-import { FancyCommand } from "../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import {
+  FancyCommand,
+  UserTypes,
+} from "../../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 
 /**
  * Type used when SENDING a new command to server
@@ -12,7 +15,7 @@ import { FancyCommand } from "../../../server/lib/FancyCommandExecutor/FancyComm
  */
 type ClientFancyCommand = {
   name: string;
-  cmd: string;
+  command: string;
   usableBy: string;
 };
 
@@ -64,7 +67,8 @@ export class FancyCommandClient {
     } else {
       this.socket = io(opts);
     }
-
+    this.addNewCommandsToLocalCache();
+    this.removeNewCommandsFromLocalCache();
     this.setupServerListeners();
   }
 
@@ -150,6 +154,52 @@ export class FancyCommandClient {
   }
 
   /**
+   * Default middleware which is run anytime the command-add event occurs
+   *
+   * @remarks
+   * Will add the new command to the this.commands internal cache
+   *
+   * @returns void
+   *
+   */
+  private addNewCommandsToLocalCache(): void {
+    this.onAdd((cmd: FancyCommand) => {
+      const existingCmd = this.commands.findIndex((x) => {
+        x.name === cmd.name;
+      });
+      const clientFC: ClientFancyCommand = {
+        name: cmd.name,
+        command: cmd.command,
+        usableBy: UserTypes[cmd.allowed],
+      };
+      if (existingCmd) {
+        this.commands[existingCmd] = clientFC;
+        return;
+      }
+      this.commands.push(clientFC);
+    });
+  }
+
+  /**
+   * Default middleware which is run anytime the command-remove event occurs
+   *
+   * @remarks
+   * Will remove the named command from the this.commands internal cache
+   *
+   * @returns void
+   *
+   */
+  private removeNewCommandsFromLocalCache(): void {
+    this.onRemove(({ name }) => {
+      this.commands.splice(
+        this.commands.findIndex((x) => {
+          x.name === name;
+        }),
+        1
+      );
+    });
+  }
+  /**
    * Executes all the functions provided in onAdd when the server event is recieved
    *
    *
@@ -179,10 +229,17 @@ export class FancyCommandClient {
    * @returns void
    *
    */
-  public cacheCommands(
-    callback?: FancyCommandClientMiddleware<FancyCommand>
-  ): void {
-    // this.socket.once("");
+  public cacheCommands(callback?: (cmdList: FancyCommand[]) => {}): void {
+    this.socket.once("command-list", (cmdList: FancyCommand[]) => {
+      if (callback) {
+        callback(cmdList);
+      } else {
+        cmdList.forEach((cmd) => {
+          this.doAdd(cmd, this._onAdd);
+        });
+      }
+    });
+    this.socket.emit("command-list");
   }
 
   /**
