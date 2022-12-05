@@ -6,6 +6,7 @@
 # Built server files
 *.js
 *.js.map
+!webpack.config.js
 # Logs
 logs
 *.log
