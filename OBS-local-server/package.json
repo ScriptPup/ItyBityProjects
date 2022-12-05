@@ -38,11 +38,13 @@
   "homepage": "https://github.com/ScriptPup/ItyBityProjects#readme",
   "devDependencies": {
     "@types/chai": "^4.3.3",
+    "@types/jquery": "^3.5.14",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.10",
     "@types/socket.io": "^3.0.2",
     "@types/tmi.js": "^1.8.1",
     "@types/webpack": "^5.28.0",
+    "@types/showdown": "^2.0.0",
     "chai": "^4.3.6",
     "mocha": "^10.1.0",
     "nodemon": "^2.0.20",
@@ -57,7 +59,9 @@
   },
   "dependencies": {
     "acebase": "^1.25.1",
+    "jquery": "^3.6.1",
     "pino": "^8.7.0",
+    "showdown": "^2.1.0",
     "socket.io": "^4.5.2",
     "tmi.js": "^1.8.5"
   }
