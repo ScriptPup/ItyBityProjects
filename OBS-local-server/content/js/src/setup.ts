@@ -4,6 +4,7 @@ import type { Converter } from "showdown";
 
 let converter: Converter;
 let command_template: string | null = null;
+let $: JQueryStatic;
 
 /**
  * Sets the information-contents panel to display the HTML provided
@@ -106,7 +107,7 @@ const getTemplateContents = async () => {
  *
  */
 const setupPage = async () => {
-  await import("jquery");
+  $ = (await import("jquery")).default;
 
   converter = new (await import("showdown")).Converter();
   let html = converter.makeHtml(await getInformationContents());
