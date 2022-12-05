@@ -15,7 +15,7 @@ export type TwitchMessageTags = {
   "client-nonce": string;
   color: string;
   "display-name": string;
-  emotes: object;
+  emotes: TwitchMessageTagEmotes;
   "first-msg": boolean;
   flags: object;
   id: string;
@@ -33,4 +33,14 @@ export type TwitchMessageTags = {
   username: string;
   "message-type": string;
   badgeURIs: [object];
+};
+
+export type TwitchMessageTagEmotes = {
+  [key: string]: [];
+};
+
+export type TwitchMessageTagParsedEmotes = {
+  name: string;
+  start: number;
+  end: number;
 };
