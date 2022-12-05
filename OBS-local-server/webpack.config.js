@@ -3,7 +3,10 @@
 path = require("path");
 
 module.exports = {
-  entry: { chat_relay: "./content/js/src/chat_relay.ts" },
+  entry: {
+    chat_relay: "./content/js/src/chat_relay.ts",
+    setup: "./content/js/src/setup.ts",
+  },
   devtool: "inline-source-map",
   module: {
     rules: [
