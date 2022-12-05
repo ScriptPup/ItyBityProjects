@@ -7,7 +7,7 @@ import {
   TwitchMessage,
 } from "../../../shared/obj/TwitchObjects";
 
-import { io, Socket } from "socket.io-client";
+import type { io, Socket } from "socket.io-client";
 
 const params = new URLSearchParams(window.location.search);
 const channel = params.get("channel"),
@@ -283,7 +283,8 @@ const createChatRecord = (tags: TwitchMessageTags, message: string) => {
  * @returns void
  *
  */
-const setupSockets = (): void => {
+const setupSockets = async (): Promise<void> => {
+  const { io } = await import("socket.io-client");
   const socket: Socket = io("http://localhost:9000");
   const client = socket.on("connect", () => {
     console.log("connected and listening for messages");
