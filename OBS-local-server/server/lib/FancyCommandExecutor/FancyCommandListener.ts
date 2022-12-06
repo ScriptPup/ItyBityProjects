@@ -9,7 +9,7 @@ const logger = pino(
   pino.destination({
     mkdir: true,
     writable: true,
-    dest: `${__dirname}/../logs/FancyCommandListener.log`,
+    dest: `${__dirname}/../../logs/FancyCommandListener.log`,
     append: false,
   })
 );
