@@ -3,7 +3,7 @@
 import { AceBase, DataSnapshot } from "acebase";
 import { pino } from "pino";
 
-const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/../logs/FancyCommandParser.log`}));
+const logger = pino({"level": "debug"},pino.destination({"mkdir": true, "writable": true, "dest": `${__dirname}/../../logs/FancyCommandParser.log`}));
 
 /**
 * Simple typing to explain the expected structure of a next() function
