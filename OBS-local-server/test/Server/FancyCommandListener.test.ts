@@ -7,7 +7,8 @@ import { Server as SocketServer } from "socket.io";
 import "mocha";
 import { pino } from "pino";
 import { AceBase } from "acebase";
-import { FancyCommand } from "../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import { FancyCommand } from "../../shared/obj/FancyCommandTypes";
+
 const logger = pino(
   { level: "debug" },
   pino.destination({

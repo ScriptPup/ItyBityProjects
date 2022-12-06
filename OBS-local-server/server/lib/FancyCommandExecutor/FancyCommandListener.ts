@@ -1,14 +1,9 @@
 /** @format */
 
-import {
-  FancyCommandExecutor,
-  UserTypes,
-  getUserType,
-  FancyCommand,
-} from "./FancyCommandExecutor";
+import { FancyCommandExecutor, getUserType } from "./FancyCommandExecutor";
+import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
 import { pino } from "pino";
-import { DataSnapshotsArray } from "acebase";
 const logger = pino(
   { level: "debug" },
   pino.destination({
