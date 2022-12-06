@@ -3,6 +3,7 @@
 path = require("path");
 
 module.exports = {
+  mode: "production",
   entry: {
     chat_relay: "./content/js/src/chat_relay.ts",
     setup: "./content/js/src/setup.ts",
