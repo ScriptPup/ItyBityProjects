@@ -8,6 +8,9 @@ module.exports = {
     chat_relay: "./content/js/src/chat_relay.ts",
     setup: "./content/js/src/setup.ts",
   },
+  performance: {
+    maxAssetSize: 1000000,
+  },
   devtool: "inline-source-map",
   module: {
     rules: [
