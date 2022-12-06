@@ -6,16 +6,7 @@
 import { AceBase, DataReference, DataSnapshotsArray } from "acebase";
 
 import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
-
-export enum UserTypes {
-  OWNER,
-  MODERATOR,
-  VIP,
-  REGULAR,
-  SUBSCRIBER,
-  FOLLOWER,
-  EVERYONE,
-}
+import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 
 export const getUserType = (userType: string) => {
   switch (userType) {
@@ -36,12 +27,6 @@ export const getUserType = (userType: string) => {
     default:
       return UserTypes.EVERYONE;
   }
-};
-
-export type FancyCommand = {
-  name: string;
-  command: string;
-  allowed: UserTypes;
 };
 
 export class FancyCommandExecutor {

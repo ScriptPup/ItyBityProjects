@@ -1,6 +1,9 @@
 /** @format */
 
 import type { Converter } from "showdown";
+import type { FancyCommand } from "../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import { UserTypes } from "../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import { FancyCommandClient } from "./lib/FancyCommandClient";
 
 let converter: Converter;
 let command_template: string | null = null;
@@ -54,7 +57,30 @@ const addCommand = async (name: string, command: string, usableBy: string) => {
   $(domContent)
     .find(`.select-usableby option[value="${usableBy}"]`)
     .prop("selected", true);
+  $(domContent).attr("id", name);
   $("#command-list").append(domContent);
+};
+
+/**
+ * Removes the command DOM element from the list
+ *
+ *
+ * @param name - name of the command to remove
+ * @returns void
+ *
+ */
+const removeCommand = (name: string): void => {
+  $(`#${name}`).remove();
+};
+
+const connectServer = (): void => {
+  const FCC: FancyCommandClient = new FancyCommandClient();
+  FCC.onAdd((cmd: FancyCommand) => {
+    addCommand(cmd.name, cmd.command, UserTypes[cmd.allowed]);
+  });
+  FCC.onRemove(({ name }) => {
+    removeCommand(name);
+  });
 };
 
 /**
@@ -112,6 +138,9 @@ const setupPage = async () => {
   converter = new (await import("showdown")).Converter();
   let html = converter.makeHtml(await getInformationContents());
   setInformationContents(html);
+
+  // Setup actions to do when the server says we got new commands, or existing ones have been removed.
+  connectServer();
 
   // For debugging/dev, intented to be removed shortly
   addCommand("!command", "Hello world from planet {planet++}", "everyone");
