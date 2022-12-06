@@ -114,7 +114,7 @@ export class FancyCommandListener {
       this.IO.to("setup-commands").emit("command-add", {
         name,
         command,
-        allowed,
+        usableBy: allowed,
       });
     });
     logger.debug({ function: `listenForAdd` }, "Listening");
