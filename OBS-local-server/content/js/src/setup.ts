@@ -1,8 +1,8 @@
 /** @format */
 
 import type { Converter } from "showdown";
-import type { FancyCommand } from "../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
-import { UserTypes } from "../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import type { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
+import { UserTypes } from "../../../shared/obj/FancyCommandTypes";
 import { FancyCommandClient } from "./lib/FancyCommandClient";
 
 let converter: Converter;
