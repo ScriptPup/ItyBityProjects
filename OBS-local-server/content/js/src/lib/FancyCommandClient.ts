@@ -1,10 +1,8 @@
 /** @format */
 
 import type { Socket } from "socket.io-client";
-import {
-  FancyCommand,
-  UserTypes,
-} from "../../../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import type { FancyCommand } from "../../../../shared/obj/FancyCommandTypes";
+import { UserTypes } from "../../../../shared/obj/FancyCommandTypes";
 
 /**
  * Type used when SENDING a new command to server
