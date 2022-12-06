@@ -105,13 +105,16 @@ export class FancyCommandListener {
       const allowed: UserTypes = getUserType(usableBy);
       await this.FCE.addCommand({ name, command, allowed });
       logger.debug(
-        { function: `listenForAdd`, command: { name, command, usableBy } },
+        {
+          function: `listenForAdd`,
+          command: { name, command, usableBy: allowed },
+        },
         "Command added"
       );
       this.IO.to("setup-commands").emit("command-add", {
         name,
         command,
-        usableBy,
+        allowed,
       });
     });
     logger.debug({ function: `listenForAdd` }, "Listening");
