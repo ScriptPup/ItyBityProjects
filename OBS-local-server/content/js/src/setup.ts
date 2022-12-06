@@ -9,6 +9,8 @@ let converter: Converter;
 let command_template: string | null = null;
 let $: JQueryStatic;
 
+let FCC: FancyCommandClient;
+
 /**
  * Sets the information-contents panel to display the HTML provided
  *
@@ -38,7 +40,12 @@ const setInformationContents = (html: string): void => {
  * @param usableBy - Who is able to call the command
  * @returns void
  */
-const addCommand = async (name: string, command: string, usableBy: string) => {
+const addCommand = async (
+  name: string,
+  command: string,
+  usableBy: string,
+  expand: boolean = false
+) => {
   if (null === command_template) {
     await getTemplateContents();
   }
@@ -58,7 +65,44 @@ const addCommand = async (name: string, command: string, usableBy: string) => {
     .find(`.select-usableby option[value="${usableBy}"]`)
     .prop("selected", true);
   $(domContent).attr("id", name);
+  setupButtons($(domContent), name, command, usableBy);
   $("#command-list").append(domContent);
+  if (expand) {
+    $(domContent).attr("open", "true");
+  }
+};
+
+/**
+ * Add listeners to the child buttons (save, delete)
+ *
+ *
+ * @param element - the parent command element which we want to subscribe actions to
+ * @returns void
+ *
+ */
+const setupButtons = (
+  element: JQuery<JQuery.Node[]>,
+  name: string,
+  command: string,
+  usableBy: string
+): void => {
+  $(element)
+    .find(".save-item")
+    .on("click", () => {
+      console.log(`Saving ${name}`);
+      if (!FCC) {
+        throw new Error(
+          "Fancy command client not initialized, unable to setup buttons!"
+        );
+      }
+      FCC.addCommand({ name, command, usableBy });
+    });
+  $(element)
+    .find(".remove-item")
+    .on("click", () => {
+      console.log(`Removing ${name}`);
+      FCC.removeCommand(name);
+    });
 };
 
 /**
@@ -73,8 +117,12 @@ const removeCommand = (name: string): void => {
   $(`#${name}`).remove();
 };
 
+/**
+ * Sets up the FancyCommandClient to listen for changes, and initialize the global object to allow interfacing with the server
+ *
+ */
 const connectServer = (): void => {
-  const FCC: FancyCommandClient = new FancyCommandClient();
+  FCC = new FancyCommandClient();
   FCC.onAdd((cmd: FancyCommand) => {
     addCommand(cmd.name, cmd.command, UserTypes[cmd.allowed]);
   });
@@ -142,8 +190,21 @@ const setupPage = async () => {
   // Setup actions to do when the server says we got new commands, or existing ones have been removed.
   connectServer();
 
+  // Setup button click actions
+  setupButtonListeners();
+
   // For debugging/dev, intented to be removed shortly
   addCommand("!command", "Hello world from planet {planet++}", "everyone");
+};
+
+/**
+ * Sets up the listeners for buttons
+ *
+ */
+const setupButtonListeners = async () => {
+  $("#btn-new-cmd").on("click", () => {
+    addCommand("!", "", "everyone", true);
+  });
 };
 
 /**
