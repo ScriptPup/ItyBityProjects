@@ -65,7 +65,7 @@ const addCommand = async (
     .find(`.select-usableby option[value="${usableBy}"]`)
     .prop("selected", true);
   $(domContent).attr("id", name);
-  setupButtons($(domContent), name, command, usableBy);
+  setupButtons($(domContent));
   $("#command-list").append(domContent);
   if (expand) {
     $(domContent).attr("open", "true");
@@ -80,29 +80,29 @@ const addCommand = async (
  * @returns void
  *
  */
-const setupButtons = (
-  element: JQuery<JQuery.Node[]>,
-  name: string,
-  command: string,
-  usableBy: string
-): void => {
-  $(element)
-    .find(".save-item")
-    .on("click", () => {
-      console.log(`Saving ${name}`);
-      if (!FCC) {
-        throw new Error(
-          "Fancy command client not initialized, unable to setup buttons!"
-        );
-      }
-      FCC.addCommand({ name, command, usableBy });
-    });
-  $(element)
-    .find(".remove-item")
-    .on("click", () => {
-      console.log(`Removing ${name}`);
-      FCC.removeCommand(name);
-    });
+const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
+  element.find(".save-item").on("click", () => {
+    const name: string =
+      element.find(".command-name").val()?.toString() || "!unknown";
+    const command: string =
+      element.find(".command-execute").val()?.toString() || "";
+    const usableBy: string =
+      element.find(".select-usableby option:selected").val()?.toString() ||
+      "everyone";
+    console.log(`Saving ${name}`);
+    if (!FCC) {
+      throw new Error(
+        "Fancy command client not initialized, unable to setup buttons!"
+      );
+    }
+    FCC.addCommand({ name, command, usableBy });
+  });
+  element.find(".remove-item").on("click", () => {
+    const name: string =
+      element.find(".command-name").val()?.toString() || "!unknown";
+    console.log(`Removing ${name}`);
+    FCC.removeCommand(name);
+  });
 };
 
 /**
