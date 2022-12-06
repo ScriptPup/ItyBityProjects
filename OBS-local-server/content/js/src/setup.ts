@@ -82,6 +82,7 @@ const addCommand = async (
  */
 const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
   element.find(".save-item").on("click", () => {
+    const id = element.attr("id");
     const name: string =
       element.find(".command-name").val()?.toString() || "!unknown";
     const command: string =
@@ -96,6 +97,9 @@ const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
       );
     }
     FCC.addCommand({ name, command, usableBy });
+    if (id === "!") {
+      element.remove();
+    }
   });
   element.find(".remove-item").on("click", () => {
     const name: string =
