@@ -82,7 +82,6 @@ const addCommand = async (
  */
 const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
   element.find(".save-item").on("click", () => {
-    const id = element.attr("id");
     const name: string =
       element.find(".command-name").val()?.toString() || "!unknown";
     const command: string =
@@ -96,10 +95,9 @@ const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
         "Fancy command client not initialized, unable to setup buttons!"
       );
     }
+    console.log(`Adding command`, { name, command, usableBy });
     FCC.addCommand({ name, command, usableBy });
-    if (id === "!") {
-      element.remove();
-    }
+    element.remove();
   });
   element.find(".remove-item").on("click", () => {
     const name: string =
