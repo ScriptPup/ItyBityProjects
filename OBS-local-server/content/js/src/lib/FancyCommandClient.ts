@@ -1,21 +1,11 @@
 /** @format */
 
 import type { Socket } from "socket.io-client";
-import type { FancyCommand } from "../../../../shared/obj/FancyCommandTypes";
+import type {
+  FancyCommand,
+  ClientFancyCommand,
+} from "../../../../shared/obj/FancyCommandTypes";
 import { UserTypes } from "../../../../shared/obj/FancyCommandTypes";
-
-/**
- * Type used when SENDING a new command to server
- *
- * @remarks
- * It was easier to implement like this than to go refactor everything to expect the same structure on client and server side...
- *
- */
-type ClientFancyCommand = {
-  name: string;
-  command: string;
-  usableBy: string;
-};
 
 /**
  * Simple typing to explain the expected structure of a next() function
@@ -113,7 +103,7 @@ export class FancyCommandClient {
    * @remarks
    * additional details
    *
-   * @param cmd - Expects ClientFancyCommand object {name: string, command: string, allowed: string}
+   * @param cmd - Expects ClientFancyCommand object {name: string, command: string, usableBy: string}
    * @returns void
    *
    */
@@ -183,7 +173,7 @@ export class FancyCommandClient {
       const clientFC: ClientFancyCommand = {
         name: cmd.name,
         command: cmd.command,
-        usableBy: UserTypes[cmd.allowed],
+        usableBy: UserTypes[cmd.usableBy],
       };
       if (existingCmd) {
         this.commands[existingCmd] = clientFC;
@@ -295,6 +285,7 @@ export class FancyCommandClient {
     const socket = this.socket; // Had to do this because typescript can be incredibly stupid
     socket.once("joined-setup-commands", () => {
       socket.on("command-add", (cmd: FancyCommand) => {
+        console.log("Firing onAdd with cmd", cmd);
         this.doAdd(cmd, this._onAdd);
       });
 

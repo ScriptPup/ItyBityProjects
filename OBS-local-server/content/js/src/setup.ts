@@ -126,7 +126,17 @@ const removeCommand = (name: string): void => {
 const connectServer = (): void => {
   FCC = new FancyCommandClient();
   FCC.onAdd((cmd: FancyCommand) => {
-    addCommand(cmd.name, cmd.command, UserTypes[cmd.allowed]);
+    const [name, command, usableBy] = [
+      cmd.name,
+      cmd.command,
+      UserTypes[cmd.usableBy],
+    ];
+    console.log("Running addCommand", {
+      name,
+      command,
+      usableBy,
+    });
+    addCommand(name, command, usableBy);
   });
   FCC.onRemove(({ name }) => {
     removeCommand(name);

@@ -7,7 +7,11 @@ import { Server as SocketServer } from "socket.io";
 import "mocha";
 import { pino } from "pino";
 import { AceBase } from "acebase";
-import { FancyCommand } from "../../shared/obj/FancyCommandTypes";
+import {
+  ClientFancyCommand,
+  FancyCommand,
+  UserTypes,
+} from "../../shared/obj/FancyCommandTypes";
 
 const logger = pino(
   { level: "debug" },
@@ -74,10 +78,14 @@ describe("FancyCommandListener listener", () => {
     });
 
     it("Should be able to recieve and reply to command-add events", (done) => {
-      const add_command: { [key: string]: string } = {
+      const add_command: ClientFancyCommand = {
         name: "!evt_test",
         command: "Some command",
         usableBy: "everyone",
+      };
+      const server_command: FancyCommand = {
+        ...add_command,
+        usableBy: UserTypes.EVERYONE,
       };
       logger.debug(
         { test: "Should be able to recieve and reply to command-add events" },
@@ -92,7 +100,7 @@ describe("FancyCommandListener listener", () => {
             "Connection recieved, emitting add-command"
           );
           client_io.on("command-add", (res) => {
-            expect(res).to.eql(add_command);
+            expect(res).to.eql(server_command);
             success(done, IO, client_io);
             logger.debug(
               {
@@ -201,7 +209,7 @@ describe("FancyCommandListener listener", () => {
         const add_command2: { [key: string]: string | number } = {
           name: "!test2",
           command: "Some command",
-          allowed: 6,
+          usableBy: 6,
         };
         await db.ref(`commands/${add_command2.name}`).set(add_command2);
         logger.debug(
@@ -211,7 +219,7 @@ describe("FancyCommandListener listener", () => {
         const add_command3: { [key: string]: string | number } = {
           name: "!test3",
           command: "Some command",
-          allowed: 6,
+          usableBy: 6,
         };
         await db.ref(`commands/${add_command3.name}`).set(add_command3);
         logger.debug(
@@ -257,7 +265,7 @@ describe("FancyCommandListener listener", () => {
       const expected_return_command: { [key: string]: string | number } = {
         name: "!test1",
         command: "Some command",
-        allowed: 6,
+        usableBy: 6,
       };
       logger.debug(
         { test: "Should add the command to the DB" },
@@ -292,12 +300,12 @@ describe("FancyCommandListener listener", () => {
       const add_command: { [key: string]: string | number } = {
         name: "!test2",
         command: "Some new command",
-        allowed: "everyone",
+        usableBy: "everyone",
       };
       const expected_return_command: { [key: string]: string | number } = {
         name: "!test2",
         command: "Some new command",
-        allowed: 6,
+        usableBy: 6,
       };
       logger.debug(
         { test: "Should update the command in the DB" },
@@ -363,7 +371,7 @@ describe("FancyCommandListener listener", () => {
         );
         try {
           cmdList.forEach((cmd: FancyCommand) => {
-            expect(cmd).to.have.all.keys("name", "command", "allowed");
+            expect(cmd).to.have.all.keys("name", "command", "usableBy");
           });
           done();
         } catch (e) {

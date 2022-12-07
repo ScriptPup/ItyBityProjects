@@ -27,7 +27,7 @@ describe("FancyCommandExecutor storage operations", () => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
       command: 'console.log("Test command run successfully!")',
-      allowed: UserTypes.EVERYONE,
+      usableBy: UserTypes.EVERYONE,
     };
     const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.addCommand(new_fancy_command)
@@ -80,7 +80,7 @@ describe("FancyCommandExecutor storage operations", () => {
     const new_fancy_command: FancyCommand = {
       name: "!test",
       command: 'console.log("Test command run successfully AGAIN!")',
-      allowed: UserTypes.EVERYONE,
+      usableBy: UserTypes.EVERYONE,
     };
     const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
     FCE.updateCommand(addedCMDKey, new_fancy_command).then((res) => {
