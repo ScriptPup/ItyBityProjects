@@ -292,6 +292,8 @@ export class FancyCommandClient {
       socket.on("command-remove", (rmv: { name: string }) => {
         this.doRemove(rmv, this._onRemove);
       });
+      // Get existing commands from server
+      this.cacheCommands();
     });
     socket.emit("join-setup-commands", true);
   }

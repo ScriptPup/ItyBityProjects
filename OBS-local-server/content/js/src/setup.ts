@@ -136,7 +136,7 @@ const connectServer = (): void => {
       command,
       usableBy,
     });
-    addCommand(name, command, usableBy);
+    addCommand(name, command, usableBy.toLowerCase());
   });
   FCC.onRemove(({ name }) => {
     removeCommand(name);
@@ -204,9 +204,6 @@ const setupPage = async () => {
 
   // Setup button click actions
   setupButtonListeners();
-
-  // For debugging/dev, intented to be removed shortly
-  addCommand("!command", "Hello world from planet {planet++}", "everyone");
 };
 
 /**
