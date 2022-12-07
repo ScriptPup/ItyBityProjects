@@ -12,5 +12,18 @@ export enum UserTypes {
 export type FancyCommand = {
   name: string;
   command: string;
-  allowed: UserTypes;
+  usableBy: UserTypes;
+};
+
+/**
+ * Type used when SENDING a new command to server
+ *
+ * @remarks
+ * It was easier to implement like this than to go refactor everything to expect the same structure on client and server side...
+ *
+ */
+export type ClientFancyCommand = {
+  name: string;
+  command: string;
+  usableBy: string;
 };

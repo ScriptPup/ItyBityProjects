@@ -103,7 +103,7 @@ export class FancyCommandListener {
     socket.on("command-add", async ({ name, command, usableBy }) => {
       logger.debug({ function: `listenForAdd` }, "Add fired");
       const allowed: UserTypes = getUserType(usableBy);
-      await this.FCE.addCommand({ name, command, allowed });
+      await this.FCE.addCommand({ name, command, usableBy: allowed });
       logger.debug(
         {
           function: `listenForAdd`,
