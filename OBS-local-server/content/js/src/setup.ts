@@ -116,7 +116,11 @@ const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
  *
  */
 const removeCommand = (name: string): void => {
-  $(`#${name}`).remove();
+  const cmdElem: HTMLElement | null = document.getElementById(name);
+  if (!cmdElem) {
+    throw new Error(`Cannot find #${name} to remove it from the DOM`);
+  }
+  $(cmdElem).remove();
 };
 
 /**
