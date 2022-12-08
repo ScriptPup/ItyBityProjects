@@ -14,7 +14,7 @@ export type Next = () => void;
 * Simple typing to explain the expected structure of a FancyMiddleware function or lambda
 *
 */
-export type FancyMiddleware = (context: VarBlock, next: Next) => void;
+export type FancyMiddleware = (context: VarBlock, next: Next, input: any) => void;
 export type FancyPreBlockMiddleware = (context: {val: string}, next: Next) => void;
 
 /**
@@ -26,7 +26,7 @@ export type FancyPreBlockMiddleware = (context: {val: string}, next: Next) => vo
 * @returns void
 *
 */
-function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[]): void {
+function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[], input?: any): void {
   logger.debug(`Middleware evoke started with ${middlewares.length} to evaluate`);
   if (!middlewares.length) {
     logger.debug(`No middlewares provides, skipping evaluations`);
@@ -37,7 +37,7 @@ function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[
   return mw(context, () => {
       logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
       invokeFancyMiddlewares(context, middlewares.slice(1));
-  });
+  }, input);
 }
 
 function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPreBlockMiddleware[]): void {
@@ -240,7 +240,7 @@ export class FancyCommandParser {
    * @returns returned value explanation
    *
    */
-  public async parse(cmd: string): Promise<string> {
+  public async parse(cmd: string, input?: string): Promise<string> {
     const ctxt = {val: cmd};
     this.preMiddlewares.dispatch(ctxt);
     cmd = ctxt.val;
