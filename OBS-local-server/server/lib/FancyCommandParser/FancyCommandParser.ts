@@ -14,8 +14,8 @@ export type Next = () => void;
 * Simple typing to explain the expected structure of a FancyMiddleware function or lambda
 *
 */
-export type FancyMiddleware = (context: VarBlock, next: Next, input: any) => void;
-export type FancyPreBlockMiddleware = (context: {val: string}, next: Next) => void;
+export type FancyMiddleware = (context: VarBlock, next: Next, input?: any) => void;
+export type FancyPreBlockMiddleware = (context: {val: string}, next: Next, input?: any) => void;
 
 /**
 * Invoker function for the VarBlockMiddleware which accepts any callable following the FancyMiddleware type
@@ -100,9 +100,9 @@ class VarBlockMiddleware {
   * @returns void
   *
   */
-  public dispatch(context: VarBlock): void {
+  public dispatch(context: VarBlock, input?: any): void {
     if(this.middlewares.length > 0)
-    return invokeFancyMiddlewares(context, this.middlewares);
+    return invokeFancyMiddlewares(context, this.middlewares, input);
   }
 }
 
@@ -152,9 +152,9 @@ class PreBlockMiddleware {
   * @returns void
   *
   */
-  public dispatch(context: {val: string}): void {
+  public dispatch(context: {val: string}, input?: any): void {
     if(this.middlewares.length > 0)
-    return invokeFancyPreMiddlewares(context, this.middlewares);
+    return invokeFancyPreMiddlewares(context, this.middlewares, input);
   }
 }
 
@@ -242,7 +242,7 @@ export class FancyCommandParser {
    */
   public async parse(cmd: string, input?: string): Promise<string> {
     const ctxt = {val: cmd};
-    this.preMiddlewares.dispatch(ctxt);
+    this.preMiddlewares.dispatch(ctxt, input);
     cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);
     const toParse: RegExp = new RegExp("({.+?})", "igm");
