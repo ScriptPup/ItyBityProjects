@@ -23,40 +23,37 @@ describe("TwitchFancyPreParse Middleware", () => {
   });
   describe("Replace variables in string with strich message values", () => {
     before(async () => {
-      FCP = TwitchFancyPreParser(
-        new FancyCommandParser(null, contextDB),
-        twitchMessage
-      );
+      FCP = TwitchFancyPreParser(new FancyCommandParser(null, contextDB));
     });
     it("Should replace @usernames", async () => {
       const command: string = "@user";
-      const res: string = await FCP.parse(command);
+      const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(twitchMessage.tags["display-name"]);
     });
     it("Should replace @channel", async () => {
       const command: string = "@channel";
-      const res: string = await FCP.parse(command);
+      const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(twitchMessage.channel);
     });
     it("Should replace @message", async () => {
       const command: string = "@message";
-      const res: string = await FCP.parse(command);
+      const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(twitchMessage.message);
     });
 
     it("Should replace @Usernames", async () => {
       const command: string = "@User";
-      const res: string = await FCP.parse(command);
+      const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(twitchMessage.tags["display-name"]);
     });
     it("Should replace @Channel", async () => {
       const command: string = "@Channel";
-      const res: string = await FCP.parse(command);
+      const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(twitchMessage.channel);
     });
     it("Should replace @Message", async () => {
       const command: string = "@Message";
-      const res: string = await FCP.parse(command);
+      const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(twitchMessage.message);
     });
   });

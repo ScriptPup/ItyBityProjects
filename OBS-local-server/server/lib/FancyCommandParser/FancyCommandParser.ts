@@ -40,7 +40,7 @@ function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[
   }, input);
 }
 
-function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPreBlockMiddleware[]): void {
+function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPreBlockMiddleware[], input?: any): void {
   logger.debug(`Middleware evoke started with ${middlewares.length} to evaluate`);
   if (!middlewares.length) {
     logger.debug(`No middlewares provides, skipping evaluations`);
@@ -50,8 +50,8 @@ function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPre
   logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion starting...`);
   return mw(context, () => {
       logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
-      invokeFancyPreMiddlewares(context, middlewares.slice(1));
-  });
+      invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
+  }, input);
 }
 
 /**
@@ -153,8 +153,10 @@ class PreBlockMiddleware {
   *
   */
   public dispatch(context: {val: string}, input?: any): void {
-    if(this.middlewares.length > 0)
-    return invokeFancyPreMiddlewares(context, this.middlewares, input);
+    if(this.middlewares.length > 0) { 
+      logger.debug({context, input},"Dispatching FancyPreMiddlewares");
+      return invokeFancyPreMiddlewares(context, this.middlewares, input);
+    }
   }
 }
 
@@ -240,8 +242,9 @@ export class FancyCommandParser {
    * @returns returned value explanation
    *
    */
-  public async parse(cmd: string, input?: string): Promise<string> {
+  public async parse(cmd: string, input?: any): Promise<string> {
     const ctxt = {val: cmd};
+    if(input) logger.debug({input},`Parsing ${cmd} with input`);
     this.preMiddlewares.dispatch(ctxt, input);
     cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);

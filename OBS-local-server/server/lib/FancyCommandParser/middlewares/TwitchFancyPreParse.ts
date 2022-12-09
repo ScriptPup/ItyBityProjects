@@ -15,13 +15,30 @@ import { TwitchMessage } from "../../../../shared/obj/TwitchObjects";
  *
  */
 export function TwitchFancyPreParser(
-  FCP: FancyCommandParser,
-  tmsg: TwitchMessage
+  FCP: FancyCommandParser
 ): FancyCommandParser {
-  const twitchFancyPreParse = (context: { val: string }, next: Next): void => {
+  const twitchFancyPreParse = (
+    context: { val: string },
+    next: Next,
+    tmsg: TwitchMessage
+  ): void => {
     context.val = context.val.replace(/\@channel/i, tmsg.channel);
     context.val = context.val.replace(/\@user/i, tmsg.tags["display-name"]);
     context.val = context.val.replace(/\@message/i, tmsg.message);
+
+    const paramPattern = /\@[0-9]+/gi;
+    const paramReplacements: IterableIterator<RegExpMatchArray> =
+      context.val.matchAll(paramPattern);
+    const msgWords = tmsg.message.split(" ");
+    let ix = 0;
+    for (const [param] of paramReplacements) {
+      ix++;
+      if (ix === 1) {
+        continue;
+      }
+      const paramIX = Number.parseInt(param.replace("@", ""));
+      context.val = context.val.replace(param, msgWords[paramIX]);
+    }
     next();
   };
   FCP.preParse(twitchFancyPreParse);
