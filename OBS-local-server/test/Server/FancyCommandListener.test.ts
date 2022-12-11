@@ -184,7 +184,7 @@ describe("FancyCommandListener listener", () => {
     });
   });
 
-  describe("Database changes", () => {
+  describe("Database & server cache changes", () => {
     let IO: SocketServer;
     let FCL: FancyCommandListener;
     let client_io: Socket;
@@ -256,7 +256,7 @@ describe("FancyCommandListener listener", () => {
       } catch {}
     });
 
-    it("Should add the command to the DB", (done) => {
+    it("Should add the command to the DB & server cache", (done) => {
       const add_command: { [key: string]: string } = {
         name: "!test1",
         command: "Some command",
@@ -283,6 +283,9 @@ describe("FancyCommandListener listener", () => {
           );
           try {
             expect(ss.val()).to.eql(expected_return_command);
+            expect(
+              FCL.commands.find((x) => x.name === add_command.name)
+            ).to.eql(expected_return_command);
             done();
           } catch (e) {
             done(e);
@@ -296,7 +299,7 @@ describe("FancyCommandListener listener", () => {
       client_io.emit("command-add", add_command);
     }).timeout(3000);
 
-    it("Should update the command in the DB", (done) => {
+    it("Should update the command in the DB & server cache", (done) => {
       const add_command: { [key: string]: string | number } = {
         name: "!test2",
         command: "Some new command",
@@ -319,6 +322,10 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${add_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.eql(expected_return_command);
+            const updatedCacheCmd = FCL.commands.find(
+              (x) => x.name === add_command.name
+            );
+            expect(updatedCacheCmd).to.eql(expected_return_command);
             done();
           } catch (e) {
             done(e);
@@ -332,7 +339,7 @@ describe("FancyCommandListener listener", () => {
       client_io.emit("command-add", add_command);
     });
 
-    it("Should remove the command from the DB", (done) => {
+    it("Should remove the command from the DB & local cache", (done) => {
       const remove_command: { [key: string]: string } = { name: "!test3" };
       logger.debug(
         { test: "Should remove the command from the DB" },
@@ -346,6 +353,8 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${remove_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.be.null;
+            expect(FCL.commands.find((x) => x.name === remove_command.name)).to
+              .be.undefined;
             done();
           } catch (e) {
             done(e);
