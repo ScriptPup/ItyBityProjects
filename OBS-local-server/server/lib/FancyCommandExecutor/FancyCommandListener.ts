@@ -4,6 +4,7 @@ import { FancyCommandExecutor, getUserType } from "./FancyCommandExecutor";
 import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
 import { pino } from "pino";
+import { DataSnapshot } from "acebase";
 const logger = pino(
   { level: "debug" },
   pino.destination({
@@ -32,6 +33,8 @@ export class FancyCommandListener {
    * @returns returns the FancyCommandListener class instance
    *
    */
+  public commands: FancyCommand[] = new Array<FancyCommand>();
+
   constructor(IO: Server, testing: boolean = false) {
     this.IO = IO;
     this.FCE = new FancyCommandExecutor(testing);
@@ -47,6 +50,45 @@ export class FancyCommandListener {
    */
   public init() {
     logger.debug(`Fancy Command Listener initializing`);
+    this.FCE.getAllCommands().then((cmdList) => {
+      cmdList.forEach((cmd) => {
+        this.commands.push(cmd.val());
+      });
+    });
+
+    logger.debug(`Setting up acebase DB child_added event listener`);
+    this.FCE.db.ref("commands").on("child_added", (cmdAdded: DataSnapshot) => {
+      const cmd = cmdAdded.val();
+      logger.debug(
+        { command: cmd },
+        "Added new child to database, adding to cache"
+      );
+      this.commands.push(cmd);
+    });
+
+    logger.debug(`Setting up acebase DB child_remove event listener`);
+    this.FCE.db.ref("commands").on("child_removed", (cmdRmvd: DataSnapshot) => {
+      const cmd: FancyCommand = cmdRmvd.val();
+      const rmvAt: number = this.commands.findIndex((x) => x.name === cmd.name);
+      logger.debug(
+        { command: cmd, rmvIX: rmvAt },
+        "Removed child from database, removing from cache"
+      );
+      this.commands.splice(rmvAt, 1);
+    });
+
+    logger.debug(`Setting up acebase DB child_changed event listener`);
+    this.FCE.db.ref("commands").on("child_changed", (cmdRmvd: DataSnapshot) => {
+      const cmd: FancyCommand = cmdRmvd.val();
+      const rmvAt: number = this.commands.findIndex((x) => x.name === cmd.name);
+      logger.debug(
+        { command: cmd, rmvIX: rmvAt },
+        "Updated child in database, removing previous version and adding new one"
+      );
+      this.commands.splice(rmvAt, 1);
+      this.commands.push(cmd);
+    });
+
     this.IO.on("connection", (socket: Socket): void => {
       logger.debug(
         `New socket connection started, listening for socket messages`
