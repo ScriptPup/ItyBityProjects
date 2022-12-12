@@ -47,16 +47,15 @@ export class FancyCommandExecutor {
    * @remarks
    * The constructor has a Ready property which is a boolean promise, feel free to use that to know whether the class is ready to be used
    *
-   * @param testing - The testing paramater should be set to True in a dev environment and False in a prod environment
    * @returns Itself, it's a constructor!
    *
    */
-  constructor(testing: boolean = false) {
+  constructor() {
     this.db = new AceBase("commandDB", {
-      sponsor: testing,
+      sponsor: process.env.NODE_ENV === "development",
       logLevel: "error",
       info: "",
-    }); // Sponsors can turn off the logo. I am not a sponsor and have no intention of using the software without it without the creator's consent; but when testing it's incredibly annoying and hides my test results... So this is a compromise :)
+    }); // Sponsors can turn off the logo. I did a one-time sponsor of the AceBase project because it's great! However I don't have the $$ to keep a monthly sponsorship going and don't feel good about entirely removing the "advert" for a measly few bucks based on how much work the author puts in. Instead, I'm just going to turn off the banner for development since the banner makes the console difficult to parse. Will have it on in production.
     this.Ready = new Promise((res, rej) => {
       this.db.ready(() => {
         res(true);
