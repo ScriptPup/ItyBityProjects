@@ -32,7 +32,7 @@ export type TwitchMessageTags = {
   "badges-raw": string;
   username: string;
   "message-type": string;
-  badgeURIs: [object];
+  badgeURIs: [string];
 };
 
 export type TwitchMessageTagEmotes = {
