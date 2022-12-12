@@ -6,7 +6,6 @@ import { Server } from "socket.io";
 import { Server as httpServer } from "http";
 import { get as httpsGet } from "https";
 import { EventEmitter } from "events";
-import { AceBase, DataSnapshot } from "acebase";
 
 const badgeDataReadyEvt: EventEmitter = new EventEmitter();
 const globalData: { [key: string]: {} | string } = {};
@@ -72,11 +71,6 @@ const transformTags = (
 export const ServeTwitchChat = (server: httpServer): Server => {
   const io = new Server(server);
   const badges = new TwitchBadges();
-  const acebase = new AceBase("config", {
-    sponsor: process.env.NODE_ENV === "development",
-    logLevel: "error",
-    info: "",
-  });
 
   io.on("connection", (socket) => {
     socket.on("join", ({ channel, fade, bot_activity }) => {
