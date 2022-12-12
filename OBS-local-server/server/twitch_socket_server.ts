@@ -78,34 +78,22 @@ export const ServeTwitchChat = (server: httpServer): Server => {
     info: "",
   });
 
-  acebase
-    .ref("twitch-bot-acct")
-    .get()
-    .then((ss: DataSnapshot) => {
-      const botAccount: { username: string; password: string } | null =
-        ss.val();
-      io.on("connection", (socket) => {
-        socket.on("join", ({ channel, fade, bot_activity }) => {
-          if (!channel) return;
-          const twitchClient = new tmi.Client({
-            channels: [channel],
-            options: { debug: true },
-          });
-          twitchClient.connect();
-          twitchClient.on(
-            "message",
-            (
-              channel: string,
-              tags: tmi.ChatUserstate,
-              message: string,
-              self
-            ) => {
-              tags = transformTags(badges, tags);
-              socket.emit("message", { channel, tags, message, self });
-            }
-          );
-        });
+  io.on("connection", (socket) => {
+    socket.on("join", ({ channel, fade, bot_activity }) => {
+      if (!channel) return;
+      const twitchClient = new tmi.Client({
+        channels: [channel],
+        options: { debug: true },
       });
+      twitchClient.connect();
+      twitchClient.on(
+        "message",
+        (channel: string, tags: tmi.ChatUserstate, message: string, self) => {
+          tags = transformTags(badges, tags);
+          socket.emit("message", { channel, tags, message, self });
+        }
+      );
     });
+  });
   return io;
 };
