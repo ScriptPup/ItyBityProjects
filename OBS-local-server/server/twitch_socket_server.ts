@@ -6,7 +6,7 @@ import { Server } from "socket.io";
 import { Server as httpServer } from "http";
 import { get as httpsGet } from "https";
 import { EventEmitter } from "events";
-import { AceBase } from "acebase";
+import { AceBase, DataSnapshot } from "acebase";
 
 const badgeDataReadyEvt: EventEmitter = new EventEmitter();
 const globalData: { [key: string]: {} | string } = {};
@@ -50,10 +50,16 @@ class TwitchBadges {
 }
 
 // Lookup the badge URIs so we can display the images nicely
-const transformTags = (badges: TwitchBadges, tags: { [key: string]: {} }) => {
+const transformTags = (
+  badges: TwitchBadges,
+  tags: tmi.ChatUserstate
+): tmi.ChatUserstate => {
   const badgeURIs: [string] = new Array() as [string];
   try {
     const badgeList = tags.badges;
+    if (!badgeList) {
+      return tags;
+    }
     for (let [key, version] of Object.entries(badgeList)) {
       const uri = badges.getBadgeURI(key, version as string);
       if (uri) badgeURIs.push(uri);
@@ -66,28 +72,40 @@ const transformTags = (badges: TwitchBadges, tags: { [key: string]: {} }) => {
 export const ServeTwitchChat = (server: httpServer): Server => {
   const io = new Server(server);
   const badges = new TwitchBadges();
-  const botAccount: {username: string, password: string}|undefined;
-  const acebase = new AceBase("config",{
-    sponsor: (process.env.NODE_ENV === 'development'),
+  const acebase = new AceBase("config", {
+    sponsor: process.env.NODE_ENV === "development",
     logLevel: "error",
     info: "",
   });
 
-  io.on("connection", (socket) => {
-    socket.on("join", ({ channel, fade, bot_activity }) => {
-      if (!channel) return;
-      const twitchClient = new tmi.Client({
-        channels: [channel],
-        options: { debug: true },
-      });
-      twitchClient.connect();
-      twitchClient.on("message", (channel, tags, message, self) => {
-        if(tags.username?.toLowerCase() !== )
-
-        tags = transformTags(badges, tags);
-        socket.emit("message", { channel, tags, message, self });
+  acebase
+    .ref("twitch-bot-acct")
+    .get()
+    .then((ss: DataSnapshot) => {
+      const botAccount: { username: string; password: string } | null =
+        ss.val();
+      io.on("connection", (socket) => {
+        socket.on("join", ({ channel, fade, bot_activity }) => {
+          if (!channel) return;
+          const twitchClient = new tmi.Client({
+            channels: [channel],
+            options: { debug: true },
+          });
+          twitchClient.connect();
+          twitchClient.on(
+            "message",
+            (
+              channel: string,
+              tags: tmi.ChatUserstate,
+              message: string,
+              self
+            ) => {
+              tags = transformTags(badges, tags);
+              socket.emit("message", { channel, tags, message, self });
+            }
+          );
+        });
       });
     });
-  });
   return io;
 };
