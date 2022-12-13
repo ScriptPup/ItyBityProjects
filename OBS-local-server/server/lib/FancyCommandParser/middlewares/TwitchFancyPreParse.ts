@@ -23,7 +23,10 @@ export function TwitchFancyPreParser(
     tmsg: TwitchMessage
   ): void => {
     context.val = context.val.replace(/\@channel/i, tmsg.channel);
-    context.val = context.val.replace(/\@user/i, tmsg.tags["display-name"]);
+    if ("display-name" in tmsg.tags) {
+      const username = tmsg.tags["display-name"] || "unknown";
+      context.val = context.val.replace(/\@user/i, username);
+    }
     context.val = context.val.replace(/\@message/i, tmsg.message);
 
     const paramPattern = /\@[0-9]+/gi;
