@@ -9,9 +9,7 @@ export type TwitchMessage = {
 
 export type TwitchMessageTags = ChatUserstate;
 
-export type TwitchMessageTagEmotes = {
-  [key: string]: [];
-};
+export type TwitchMessageTagEmotes = { [emoteid: string]: string[] };
 
 export type TwitchMessageTagParsedEmotes = {
   name: string;
