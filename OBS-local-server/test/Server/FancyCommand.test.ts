@@ -12,7 +12,7 @@ describe("FancyCommandExecutor storage operations", () => {
   let FCE: FancyCommandExecutor;
   it("Should be able to instantiate and wait until ready", (done) => {
     const cmdTmt = setTimeout(() => done(Error("Command timed out")), 1500);
-    FCE = new FancyCommandExecutor(true);
+    FCE = new FancyCommandExecutor();
     FCE.Ready.then((res) => {
       expect(res).to.be.true;
       clearTimeout(cmdTmt);
