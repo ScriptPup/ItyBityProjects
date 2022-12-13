@@ -37,7 +37,7 @@ export class FancyCommandListener {
 
   constructor(IO: Server, testing: boolean = false) {
     this.IO = IO;
-    this.FCE = new FancyCommandExecutor(testing);
+    this.FCE = new FancyCommandExecutor();
     this.init();
   }
 
