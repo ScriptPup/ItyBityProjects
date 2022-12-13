@@ -29,11 +29,11 @@ const createBadgeImages = (tags: TwitchMessageTags, parent: Element): void => {
   if (tags.hasOwnProperty("badgeURIs")) {
     for (let i = 0; i < tags.badgeURIs.length; i++) {
       const image_urls = new Array();
-      let image_url;
+      let image_url: string = "";
       let image_count = 1;
       for (let [key, uri] of Object.entries(tags.badgeURIs[i])) {
         if (key.startsWith("image_url")) {
-          if (!image_url) image_url = uri;
+          if (image_url === "") image_url = uri as string;
 
           image_urls.push(uri + ` x${image_count}`);
           image_count++;
@@ -248,8 +248,8 @@ const createChatRecord = (tags: TwitchMessageTags, message: string) => {
   chatRecord.classList.add("chat_line");
   const chatNick = document.createElement("span");
   chatNick.classList.add("nick");
-  chatNick.innerText = tags["display-name"];
-  chatNick.style.color = tags.color;
+  chatNick.innerText = tags["display-name"] || "unknown";
+  chatNick.style.color = tags.color || "";
   const chatBadges = document.createElement("span");
   chatBadges.classList.add("badges");
   const chatMessage = document.createElement("span");
