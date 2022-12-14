@@ -57,6 +57,56 @@ body {
     flex-direction: row;
     row-gap: 10px;    
 }
+
+.modal {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background-color: #{$background}99;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    &-contain {             
+        form {
+            display: flex;
+            flex-direction: column;
+            .modal-field {        
+                position: relative;
+                &::after {
+                    content: attr(subtitle);
+                    color: $deemphasised-font-color;
+                    position: absolute;
+                    font-size: x-small;
+                    left: 14;
+                    bottom: 5;
+                }
+                & > * {
+                    margin-left: 10px;
+                    padding-bottom: 12;
+                    border-radius: 4px;
+                    margin-bottom: 4px;        
+                }
+            }
+            footer {
+                display: flex;
+                flex-direction: row;
+                submit, button {
+                    margin-top: 0;
+                    margin-left: 10px;
+                    font-size: medium;
+                    padding-top: 2px;
+                    padding-bottom: 2px;
+                    font-weight: normal;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+            }
+        }  
+    }
+}
+
 #content { 
     &-main {
         border-radius: 8px;
