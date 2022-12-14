@@ -72,10 +72,16 @@ body {
     }
     &-head {
         min-height: 70px;
+        display: flex;
+        align-items: center;
+        align-content: space-between;
+        span:nth-child(1) {
+            flex: 0.9 0;
+        }
     }
     &-foot {
         min-height: 30px;
-    }
+    }     
 }
 .panel {
     &-left, &-right {
