@@ -7,6 +7,7 @@ import { FancyCommandClient } from "./lib/FancyCommandClient";
 
 let converter: Converter;
 let command_template: string | null = null;
+let bot_form_template: string | null = null;
 let $: JQueryStatic;
 
 let FCC: FancyCommandClient;
@@ -189,6 +190,63 @@ const getTemplateContents = async () => {
 };
 
 /**
+ * Retrieve the html template which will be used for bot settings
+ *
+ *
+ */
+const getBotTemplateContents = async () => {
+  return fetch("/html_templates/bot-settings-modal.html", {
+    headers: {
+      "Content-Type": "text/plain",
+    },
+  }).then((res) => {
+    return res.text().then((txt) => {
+      bot_form_template = txt;
+    });
+  });
+};
+
+/**
+ * Saves the data from the bot form to the server
+ *
+ *
+ */
+const saveBotData = async (data: { [key: string]: string }) => {
+  // TODO: THIS! Actually save the data to the server
+  // Probably need to setup a way for the server to actually serve data first though?
+  console.log(data);
+};
+
+/**
+ * Displays the bot template modal
+ *
+ */
+const showBotTemplate = async () => {
+  if (null === bot_form_template) {
+    await getBotTemplateContents();
+  }
+  // The if is unecissary because of the above, but typescript insists on wasting cycles
+  if (bot_form_template) {
+    const newModalHTML = $.parseHTML(bot_form_template);
+    const newModal = $(newModalHTML);
+    $("body").append(newModalHTML);
+    newModal.find("#modal-submit").on("click", (e: Event) => {
+      e.preventDefault();
+      const formserializeArray = newModal.find("form").serializeArray();
+      const jsonObj: { [key: string]: string } = {};
+      $.map(formserializeArray, function (n, i) {
+        jsonObj[n.name] = n.value;
+      });
+      saveBotData(jsonObj);
+      newModal.remove();
+    });
+    newModal.find("#modal-cancel").on("click", () => {
+      newModal.remove();
+    });
+  }
+};
+
+/**
  * Setup the page to work as designed! It's gonna do some things and some stuff, awesome!
  *   just, like, look at the other functions for more information... I can't be bothered to explain everything here
  *
@@ -217,6 +275,9 @@ const setupPage = async () => {
 const setupButtonListeners = async () => {
   $("#btn-new-cmd").on("click", () => {
     addCommand("!", "", "everyone", true);
+  });
+  $("#btn-bot-settings").on("click", () => {
+    showBotTemplate();
   });
 };
 
