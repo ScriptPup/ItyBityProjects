@@ -35,7 +35,7 @@ export class FancyCommandClient {
   /**
    * socket is the socket.io socket connection we'll use for command modification
    */
-  private socket: Socket | undefined;
+  public socket: Socket | undefined;
 
   private commands: ClientFancyCommand[] = new Array<ClientFancyCommand>();
 
