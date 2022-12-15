@@ -21,6 +21,17 @@ export type BotAccount = {
   channel: string;
 };
 
+/**
+ * Listener function which will listen for and provide interface with user configurations
+ *
+ * @remarks
+ * Current configurations available:
+ *      Twitch Bot Account (Used for chat command functions)
+ *
+ * @param socket - the websocket from which we should listen for configuration requests
+ * @returns the websocket
+ *
+ */
 export const FancyConfig = (socket: Socket): Socket => {
   // Listen for bot config requests
   socket.on("update-bot-acct", (acct: BotAccount | null) => {
