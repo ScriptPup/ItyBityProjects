@@ -2,6 +2,7 @@
 
 import { DataSnapshot } from "acebase";
 import { Client } from "tmi.js";
+import { BotAccount } from "../FancyConifg/FancyConfig";
 import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
@@ -20,11 +21,7 @@ export class TwitchListener {
   /**
    * botAccount is the object containing the bot information provided by the user, if one isn't provided then this listener doesn't really do anything
    */
-  private botAccount: {
-    username: string;
-    password: string;
-    channel: string;
-  } | null = null;
+  private botAccount: BotAccount | null = null;
   /**
    * FCL is the FancyCommandListener, which must be passed through upon creation
    */
