@@ -1,0 +1,23 @@
+@use "pallete";
+
+#bot-svg { 
+    g { 
+        path:nth-child(1) {
+            fill: pallete.$button-background;
+        }   
+        path:nth-child(2) {
+            fill: pallete.$tertiary-font-color;
+        }
+    }
+    &.button {
+        &:hover {
+            path:nth-child(1) {
+                fill: pallete.$tertiary-font-color;
+            }   
+            path:nth-child(2) {
+                fill: pallete.$button-background;
+            }
+        }
+        cursor: pointer;
+    }
+}
