@@ -18,6 +18,9 @@ export const FancyConfig = (socket: Socket): Socket => {
       return;
     }
     configDB.ref("twitch-bot-acct").set(acct);
+    configDB.ref("twitch-bot-acct").get((ss: DataSnapshot) => {
+      socket.emit("get-bot-acct", ss.val());
+    });
   });
 
   // Request the stored data about the bot account details

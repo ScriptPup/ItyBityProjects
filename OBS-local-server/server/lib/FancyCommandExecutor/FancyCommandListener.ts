@@ -3,6 +3,7 @@
 import { FancyCommandExecutor, getUserType } from "./FancyCommandExecutor";
 import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
+import { FancyConfig } from "../FancyConifg/FancyConfig";
 import { pino } from "pino";
 import { DataSnapshot } from "acebase";
 const logger = pino(
@@ -122,6 +123,8 @@ export class FancyCommandListener {
       );
       socket.join("setup-commands");
       socket.emit("joined-setup-commands");
+      // Setup socket to listen for bot account commands
+      FancyConfig(socket);
     });
 
     // Join the fire-commands when on the / page
