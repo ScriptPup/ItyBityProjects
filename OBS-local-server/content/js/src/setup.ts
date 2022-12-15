@@ -214,7 +214,22 @@ const getBotTemplateContents = async () => {
 const saveBotData = async (data: { [key: string]: string }) => {
   // TODO: THIS! Actually save the data to the server
   // Probably need to setup a way for the server to actually serve data first though?
-  console.log(data);
+  if (!FCC.socket) {
+    throw new Error("Socket not connected, cannot send data to server");
+  }
+  if (
+    data["bot-acct"] === "" &&
+    data["bot-pwd"] === "" &&
+    data["bot-channel"] === ""
+  ) {
+    FCC.socket.emit("update-bot-acct", null);
+    return;
+  }
+  FCC.socket.emit("update-bot-acct", {
+    username: data["bot-acct"],
+    password: data["bot-pwd"],
+    channel: data["bot-channel"],
+  });
 };
 
 /**
@@ -243,6 +258,25 @@ const showBotTemplate = async () => {
     newModal.find("#modal-cancel").on("click", () => {
       newModal.remove();
     });
+    if (!FCC.socket) {
+      throw new Error("Socket not connected, cannot send data to server");
+    }
+    FCC.socket.on("get-bot-acct", (res) => {
+      console.log("Recieved get-bot-acct", res);
+      if (null === res) {
+        newModal.find("input").val("");
+        return;
+      }
+      const {
+        username,
+        channel,
+        password,
+      }: { username: string; channel: string; password: string } = res;
+      newModal.find("input[name='bot-channel']").val(channel);
+      newModal.find("input[name='bot-acct']").val(username);
+      newModal.find("input[name='bot-pwd']").val(password);
+    });
+    FCC.socket.emit("get-bot-acct", true);
   }
 };
 
