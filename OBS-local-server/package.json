@@ -11,6 +11,7 @@
     "watch:build-server": "tsc -p tsconfig.json --watch",
     "watch:build-client": "npx webpack --watch --progress",
     "watch:build": "npm-run-all --parallel watch:build-server watch:build-client",
+    "server": "npm-run-all clean build nodemon",
     "watch:server": "nodemon --watch",
     "start": "npm-run-all clean build --parallel watch:build watch:server --print-label",
     "test": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
