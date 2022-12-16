@@ -8,6 +8,17 @@ import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
+import { pino } from "pino";
+
+const logger = pino(
+  { level: "debug" },
+  pino.destination({
+    mkdir: true,
+    writable: true,
+    dest: `${__dirname}/../../logs/TwitchHandling.log`,
+    append: false,
+  })
+);
 
 /**
  * Listener class for commands, then parse them via the FancyCommandParser (with plugins)
@@ -39,6 +50,7 @@ export class TwitchListener {
   private twitchClient: Client | null = null;
 
   constructor(FCL: FancyCommandListener) {
+    logger.debug("Creating TwitchListener class");
     this.FCL = FCL;
     this.getAndListenForAccounts();
   }
@@ -49,12 +61,40 @@ export class TwitchListener {
    *
    */
   private async init() {
+    logger.debug("Initializing TwitchListener");
     if (!this.botAccount) {
       return;
     }
     if (this.twitchClient) {
-      await this.twitchClient.disconnect();
+      if (this.twitchClient.readyState() === "OPEN") {
+        try {
+          await this.twitchClient.disconnect();
+        } catch (err) {
+          logger.error(
+            { err, twitchClient: this.twitchClient },
+            "Tried to disconnect twitch client, but failed"
+          );
+        }
+      }
     }
+    if (
+      null === this.botAccount.username ||
+      null === this.botAccount.password ||
+      null === this.botAccount.channel ||
+      typeof this.botAccount !== typeof {}
+    ) {
+      logger.error(
+        { acct: this.botAccount },
+        "Tried to connect to twitch client, but some account information is missing"
+      );
+      return;
+    }
+    logger.debug(
+      {
+        acct: this.botAccount,
+      },
+      "Creating new twitch client, logging in"
+    );
     this.twitchClient = new Client({
       channels: [this.botAccount.channel],
       options: { debug: process.env.NODE_ENV === "development" },
@@ -63,7 +103,14 @@ export class TwitchListener {
         password: this.botAccount.password,
       },
     });
-    this.twitchClient.connect();
+    this.twitchClient
+      .connect()
+      .catch((err) => {
+        logger.error({ err }, "Failed to connect twitch client");
+      })
+      .then(() => {
+        logger.debug("Created and connected new twitch client");
+      });
     this.handleTwitchMessages();
   }
 
@@ -81,58 +128,107 @@ export class TwitchListener {
       .ref("twitch-bot-acct")
       .get()
       .then((ss: DataSnapshot) => {
-        this.botAccount = ss.val();
-        configDB
-          .ref("twitch-bot-acct")
-          .on("child_added", (ss: DataSnapshot) => {
-            this.botAccount = ss.val();
-            this.init();
-          });
-        configDB
-          .ref("twitch-bot-acct")
-          .on("child_changed", (ss: DataSnapshot) => {
-            this.botAccount = ss.val();
-            this.init();
-          });
-        configDB
-          .ref("twitch-bot-acct")
-          .on("child_removed", (ss: DataSnapshot) => {
-            this.botAccount = null;
-            this.init();
-          });
+        const botAcct = ss.val();
+        this.botAccount = botAcct;
+        logger.debug(
+          { botAcct },
+          "Pulled bot account info from twitch-bot-acct"
+        );
+        this.init();
+      })
+      .catch((err) => {
+        logger.error(
+          { err },
+          "Failed to getAndListenForAccounts due to a database listener setup failure getting from twitch-bot-acct"
+        );
       });
-    this.init();
+    configDB.ref("twitch-bot-acct").on("child_changed", (ss: DataSnapshot) => {
+      const botAcct = ss.val();
+      if (botAcct === this.botAccount) {
+        logger.warn(
+          "Child supposedly changed for twitch-bot-acct, but the account is the same so not re-initializing"
+        );
+        return;
+      }
+      logger.debug(
+        { botAcct },
+        "Child changed for twitch-bot-acct, reset botAccount and reinitializing"
+      );
+      this.botAccount = botAcct;
+      this.init();
+    });
+    configDB.ref("twitch-bot-acct").on("child_removed", (ss: DataSnapshot) => {
+      const botAcct = ss.val();
+      if (botAcct === this.botAccount) {
+        logger.warn(
+          "Child supposedly removed for twitch-bot-acct, but the account is the same so not re-initializing"
+        );
+        return;
+      }
+      logger.debug(
+        { botAcct },
+        "Child removed for twitch-bot-acct, reset botAccount and reinitializing"
+      );
+      this.botAccount = null;
+      this.init();
+    });
   }
 
   private async handleTwitchMessages() {
     if (!this.twitchClient) {
+      logger.error("The twitch client is null, so we can't do anything, sorry");
       return;
     }
+    logger.info("Setting up listener for twitch messages");
     this.twitchClient.on("message", async (channel, tags, message, self) => {
+      const msgKey = `${tags["tmi-sent-ts"]?.toString()}:${message.substring(
+        0,
+        8
+      )}`;
+      logger.debug(
+        { channel, tags, message, msgKey },
+        "Twitch message recieved"
+      );
       // If a bot account isn't setup, then do nothing
       if (this.botAccount) {
         if (
           tags.username?.toLowerCase() !==
           this.botAccount.username.toLowerCase()
         ) {
+          logger.debug(
+            { msgKey },
+            "Twitch message discarded due to being from the bot"
+          );
           return;
         }
       }
       // If a bot account IS setup, then do stuff!
+      logger.debug({ msgKey }, "Twitch message being processed");
       const cmdsToProc = this.findMessageCommands(message);
+      logger.debug(
+        { cmdsToProc, msgKey },
+        "Commands matching the message found"
+      );
       // If the message doesn't match any of the commands defined, do nothing
-      if (cmdsToProc.length === 0) return;
+      if (cmdsToProc.length === 0) {
+        logger.debug({ msgKey }, "No matching commands found, stopping here");
+        return;
+      }
       // If the message DOES match any of the commands defined, then process them
+      logger.debug({ msgKey }, "Processing found commands");
       const finalMessages: string[] = await this.processMessageCommands(
         cmdsToProc,
         message
       );
+      logger.debug({ msgKey }, "Processed found commands");
       // Once the commands have been processed, send the response for each message in the stack back to twitch
       finalMessages.forEach((msg) => {
         if (!this.twitchClient) return; // Shouldn't need this, given the parent has it, but typescript is too stupid to figure that out
+        logger.debug({ msgKey, msg }, "Sending reply based on command parsing");
         this.twitchClient.say(channel, msg);
       });
     });
+    logger.info("Listening for twitch messages");
   }
 
   /**
@@ -152,10 +248,8 @@ export class TwitchListener {
     const msgRes: Promise<string>[] = [];
     cmds.forEach((cmd: FancyCommand) => {
       // If we already have the parser cached, use that
-      if (cmd.name in this.parseCommands) {
-      }
-      // If we don't have the parser cached, then create it and then use it
-      else {
+      if (!(cmd.name in this.parseCommands)) {
+        // If we don't have the parser cached, then create it and then use it
         const nCmdParser: FancyCommandParser = TwitchFancyPreParser(
           new FancyCommandParser(cmd.command, commandVarsDB)
         );
