@@ -19,6 +19,12 @@ export type BotAccount = {
   username: string;
   password: string;
   channel: string;
+  token?: {
+    access_token: string;
+    expires_in: number;
+    token_type: string;
+    access_timestamp: NodeJS.Timeout;
+  };
 };
 
 /**
