@@ -8,7 +8,9 @@ import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
+import { post } from "request";
 import { pino } from "pino";
+import { request } from "http";
 
 const logger = pino(
   { level: "debug" },
@@ -89,18 +91,31 @@ export class TwitchListener {
       );
       return;
     }
+
+    await this.getOAuthToken();
+
     logger.debug(
       {
         acct: this.botAccount,
       },
       "Creating new twitch client, logging in"
     );
+    if (!this.botAccount.token) {
+      logger.debug(
+        {
+          acct: this.botAccount,
+        },
+        "Bot token doesn't exist, so can't proceed!"
+      );
+      return;
+    }
+    const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
     this.twitchClient = new Client({
       channels: [this.botAccount.channel],
       options: { debug: process.env.NODE_ENV === "development" },
       identity: {
         username: this.botAccount.username,
-        password: this.botAccount.password,
+        password: tokenPass,
       },
     });
     this.twitchClient
@@ -229,6 +244,49 @@ export class TwitchListener {
       });
     });
     logger.info("Listening for twitch messages");
+  }
+
+  /**
+   * Queries twitch dev and gets a bearer token to use, automatically requests a new token a few seconds before expiration
+   * The resultant token is saved to the botAccount.token property
+   *
+   */
+  private async getOAuthToken(): Promise<void> {
+    if (!this.botAccount) {
+      logger.error(
+        { acct: this.botAccount },
+        "Could not request OAuthToken, due to this.botAccount not being set"
+      );
+      throw new Error(
+        "Could not request OAuthToken, due to this.botAccount not being set"
+      );
+    }
+    const options = {
+      url: "",
+      form: {
+        client_id: this.botAccount.username,
+        client_secret: this.botAccount.password,
+        grant_type: "client_credentials",
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      post(options, (err, res, body) => {
+        if (err) {
+          logger.error({ err, res, body }, "Failed to get an OAuthToken");
+          reject("Failed to get an OAuthToken");
+        }
+        if (!this.botAccount) {
+          logger.error(
+            "Bot account somehow isn't set after recieving OAuth response from server"
+          );
+          reject();
+          return;
+        }
+        this.botAccount.token = JSON.parse(body);
+        resolve();
+      });
+    });
   }
 
   /**

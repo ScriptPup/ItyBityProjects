@@ -2,3 +2,5 @@ Client
 - Use pop-up modal to setup bot configuration
 Server
 - Listen for setting changes for bot configuration
+
+FINISH IMPLEMENTING OAUTH AND TEST
