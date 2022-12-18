@@ -5,7 +5,7 @@ import { Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 
-const logger = MainLogger.child({ file: "TwitchSayHelper" });
+const logger = MainLogger.child({ file: "FancyConfig" });
 
 export type BotAccount = {
   username: string;
