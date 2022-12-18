@@ -2,7 +2,7 @@
 
 import { DataSnapshot } from "acebase";
 import { Client } from "tmi.js";
-import { BotAccount } from "../FancyConifg/FancyConfig";
+import { BotAccount } from "../../../shared/obj/TwitchObjects";
 import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";

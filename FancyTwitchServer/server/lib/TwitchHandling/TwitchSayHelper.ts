@@ -1,7 +1,7 @@
 /** @format */
 
 import { Client } from "tmi.js";
-import { BotAccount } from "../FancyConifg/FancyConfig";
+import { BotAccount } from "../../../shared/obj/TwitchObjects";
 import { got } from "got-cjs";
 import { MainLogger } from "../logging";
 const logger = MainLogger.child({ file: "TwitchSayHelper" });
@@ -25,7 +25,7 @@ export class TwitchSayHelper {
    */
   public isReady: Promise<void>;
 
-  public STATUS: "READY" | "PENDING" | "NOT STARTED" = "NOT STARTED";
+  public STATUS: "READY" | "PENDING" | "ERROR" | "NOT STARTED" = "NOT STARTED";
 
   constructor(botAccount: BotAccount) {
     // I know this is the same as setBotAccount()...
@@ -61,8 +61,9 @@ export class TwitchSayHelper {
         const { body } = await got.post("https://id.twitch.tv/oauth2/token", {
           form: {
             client_id: this.botAccount.username,
-            client_secret: this.botAccount.password,
-            grant_type: "client_credentials",
+            client_secret: this.botAccount.client_secret,
+            code: this.botAccount.auth_code,
+            grant_type: "authorization_code",
           },
         });
         const requestedDTM: Date = new Date();
@@ -78,18 +79,23 @@ export class TwitchSayHelper {
         const bodyJSON:
           | {
               access_token: string;
+              refresh_token: string;
               expires_in: number;
               token_type: string;
               access_timestamp?: Date;
             }
           | { status: string; message: string } = JSON.parse(body);
-        logger.debug({ body }, "Recieved token");
+        logger.debug({ bodyJSON, body }, "Recieved token");
         if ("status" in bodyJSON) {
+          logger.error(
+            { bodyJSON },
+            "Recieved unexpected status from twitch OAuth"
+          );
           return;
         }
+        this.botAccount.token = bodyJSON;
         if (this.botAccount.token) {
           this.botAccount.token.access_timestamp = requestedDTM;
-          this.botAccount.token = bodyJSON;
           resolve();
         }
       } catch (err: any) {
@@ -162,7 +168,8 @@ export class TwitchSayHelper {
       this.STATUS = "PENDING";
       if (
         null === this.botAccount.username ||
-        null === this.botAccount.password ||
+        null === this.botAccount.client_id ||
+        null === this.botAccount.client_secret ||
         null === this.botAccount.channel ||
         typeof this.botAccount !== typeof {}
       ) {
@@ -197,29 +204,43 @@ export class TwitchSayHelper {
         return;
       }
       // const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
-      const tokenPass = `oauth:${this.botAccount.token.access_token}`;
+      const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
       this.twitchClient = new Client({
+        connection: {
+          maxReconnectAttempts: 5,
+          timeout: 18000,
+        },
         channels: [this.botAccount.channel],
-        options: { debug: process.env.NODE_ENV === "development" },
+        options: {
+          debug: process.env.NODE_ENV === "development",
+          clientId: this.botAccount.client_id,
+        },
         identity: {
-          username: this.botAccount.username,
-          password: tokenPass,
+          username: this.botAccount.username, // this.botAccount.username,
+          password: tokenPass, //tokenPass,
         },
       });
-      this.twitchClient
-        .connect()
-        .catch((err) => {
-          reject(err);
-          logger.error(
-            { err },
-            "Failed to connect new twitch authenticated client"
-          );
-        })
-        .then(() => {
-          this.STATUS = "READY";
-          resolve();
-          logger.debug("Created and connected new authenticated twitch client");
-        });
+
+      this.twitchClient.on("disconnected", (reason) => {
+        logger.debug(
+          { reason, twitchClient: this.twitchClient },
+          "Twitch Client Disconnected"
+        );
+      });
+
+      try {
+        await this.twitchClient.connect();
+        this.STATUS = "READY";
+        resolve();
+        logger.debug("Created and connected new authenticated twitch client");
+      } catch (err) {
+        reject(err);
+        this.STATUS = "ERROR";
+        logger.error(
+          { err },
+          "Failed to connect new twitch authenticated client"
+        );
+      }
     });
   }
 
