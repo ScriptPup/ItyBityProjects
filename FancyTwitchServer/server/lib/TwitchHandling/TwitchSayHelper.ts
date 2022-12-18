@@ -26,7 +26,7 @@ export class TwitchSayHelper {
    */
   public isReady: Promise<void>;
 
-  public STATUS: "READY" | "PENDING" | "NOT STARTED" = "PENDING";
+  public STATUS: "READY" | "PENDING" | "NOT STARTED" = "NOT STARTED";
 
   constructor(botAccount: BotAccount) {
     // I know this is the same as setBotAccount()...
@@ -142,56 +142,82 @@ export class TwitchSayHelper {
   private async connectTwitchClient(
     skipAuthCheck: boolean = false
   ): Promise<void> {
-    // NEVER allow more than one event to try and create a twitchClient at the same time...
-    if (this.STATUS === "PENDING") {
-      return;
-    }
-    this.STATUS = "PENDING";
-    if (
-      null === this.botAccount.username ||
-      null === this.botAccount.password ||
-      null === this.botAccount.channel ||
-      typeof this.botAccount !== typeof {}
-    ) {
-      logger.error(
-        { acct: this.botAccount },
-        "Tried to connect to twitch client, but some account information is missing"
-      );
-      return;
-    }
+    logger.debug(
+      { skipAuthCheck },
+      "Setting up a new authenticated twitch client"
+    );
+    return new Promise<void>(async (resolve, reject) => {
+      // NEVER allow more than one event to try and create a twitchClient at the same time...
+      if (this.STATUS === "PENDING") {
+        logger.debug(
+          "Current SayHelper connection status is pending, canceling workflow"
+        );
+        return;
+      }
+      this.STATUS = "PENDING";
+      if (
+        null === this.botAccount.username ||
+        null === this.botAccount.password ||
+        null === this.botAccount.channel ||
+        typeof this.botAccount !== typeof {}
+      ) {
+        logger.error(
+          { acct: this.botAccount },
+          "Tried to connect to twitch client, but some account information is missing"
+        );
+        return;
+      }
 
-    if (!this.verifyAuth() || skipAuthCheck) {
-      await this.getOAuthToken();
-    }
+      if (!this.verifyAuth() || skipAuthCheck) {
+        logger.debug(
+          { skipAuthCheck },
+          "Twitch OAuth verification failed, or skipAuthCheck is true, requesting token"
+        );
+        const auth = this.getOAuthToken();
+        auth
+          .then(() => {
+            logger.debug("getOAuthToken request completed");
+          })
+          .catch((err) => {
+            logger.debug({ err }, "getOAuthToken request failed");
+          });
+        await auth;
+      }
 
-    if (!this.botAccount.token) {
-      logger.debug(
-        {
-          acct: this.botAccount,
+      if (!this.botAccount.token) {
+        logger.debug(
+          {
+            acct: this.botAccount,
+          },
+          "Bot token doesn't exist, so can't proceed!"
+        );
+        return;
+      }
+      // const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
+      const tokenPass = `oauth:${this.botAccount.token.access_token}`;
+      this.twitchClient = new Client({
+        channels: [this.botAccount.channel],
+        options: { debug: process.env.NODE_ENV === "development" },
+        identity: {
+          username: this.botAccount.username,
+          password: tokenPass,
         },
-        "Bot token doesn't exist, so can't proceed!"
-      );
-      return;
-    }
-    // const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
-    const tokenPass = `oauth:${this.botAccount.token.access_token}`;
-    this.twitchClient = new Client({
-      channels: [this.botAccount.channel],
-      options: { debug: process.env.NODE_ENV === "development" },
-      identity: {
-        username: this.botAccount.username,
-        password: tokenPass,
-      },
-    });
-    return this.twitchClient
-      .connect()
-      .catch((err) => {
-        logger.error({ err }, "Failed to connect twitch client");
-      })
-      .then(() => {
-        this.STATUS = "READY";
-        logger.debug("Created and connected new twitch client");
       });
+      this.twitchClient
+        .connect()
+        .catch((err) => {
+          reject(err);
+          logger.error(
+            { err },
+            "Failed to connect new twitch authenticated client"
+          );
+        })
+        .then(() => {
+          this.STATUS = "READY";
+          resolve();
+          logger.debug("Created and connected new authenticated twitch client");
+        });
+    });
   }
 
   /**
