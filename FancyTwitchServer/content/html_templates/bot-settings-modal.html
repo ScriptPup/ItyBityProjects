@@ -5,13 +5,16 @@
     <!-- TODO: Add some kind of information button that will send users to see how to setup a chat-bot login -->
     <form>
       <span class="modal-field" subtitle="Channel Name"
-        ><input name="bot-channel"
+        ><input name="channel"
       /></span>
       <span class="modal-field" subtitle="Bot Client ID"
-        ><input name="bot-acct" autocomplete="username"
+        ><input name="client_id" autocomplete="username-alt"
       /></span>
       <span class="modal-field" subtitle="Bot Client Secret"
-        ><input type="password" name="bot-pwd" autocomplete="current-password"
+        ><input name="client_secret" autocomplete="current-password" type="password"
+      /></span>
+      <span class="modal-field" subtitle="Bot Username"
+        ><input name="username" autocomplete="username"
       /></span>
       <footer>
         <button id="modal-cancel" type="button" class="panel-button">Nevermind</button>
