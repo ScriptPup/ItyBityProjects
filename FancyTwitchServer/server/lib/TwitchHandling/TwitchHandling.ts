@@ -48,7 +48,7 @@ export class TwitchListener {
   constructor(FCL: FancyCommandListener) {
     logger.debug("Creating TwitchListener class");
     this.FCL = FCL;
-    this.getAndListenForAccounts();
+    this.init();
   }
 
   /**
@@ -91,6 +91,7 @@ export class TwitchListener {
     this.twitchSayClient = new TwitchSayHelper(this.botAccount);
     await this.twitchSayClient.isReady;
     this.handleTwitchMessages();
+    this.getAndListenForAccounts();
   }
 
   /**
@@ -123,6 +124,7 @@ export class TwitchListener {
             {
               twitchSayClient: this.twitchListenClient,
               botAccount: this.botAccount,
+              event: "Initial",
             },
             "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
           );
@@ -153,6 +155,7 @@ export class TwitchListener {
           {
             twitchSayClient: this.twitchListenClient,
             botAccount: this.botAccount,
+            event: "child_changed",
           },
           "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
         );
@@ -177,6 +180,7 @@ export class TwitchListener {
           {
             twitchSayClient: this.twitchListenClient,
             botAccount: this.botAccount,
+            event: "child_removed",
           },
           "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
         );
