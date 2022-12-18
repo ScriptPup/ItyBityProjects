@@ -16,7 +16,7 @@
     "watch:server": "nodemon --watch",
     "start": "npm-run-all clean build --parallel watch:build watch:server --print-label",
     "test": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
-    "logs": "Type .\\server\\logs\\FancyCommandParser.log | pino-pretty",
+    "server-logs": "Type .\\logs\\Server.log | pino-pretty",
     "listener-logs": "Type .\\server\\logs\\FancyCommandListener.log | pino-pretty",
     "test-logs": "Type .\\test\\logs\\FancyCommandListener.test.log | pino-pretty",
     "clear-logs": "rimraf .\\server\\logs\\FancyCommandParser.log",
