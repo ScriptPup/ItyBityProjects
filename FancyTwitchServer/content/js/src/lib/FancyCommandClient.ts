@@ -37,6 +37,11 @@ export class FancyCommandClient {
    */
   public socket: Socket | undefined;
 
+  /**
+   * isReady is a promise which can be used to wait for the FCC sockets to be connected and ready for use when uncertain
+   */
+  public isReady?: Promise<void>;
+
   private commands: ClientFancyCommand[] = new Array<ClientFancyCommand>();
 
   /**
@@ -63,6 +68,21 @@ export class FancyCommandClient {
     this.addNewCommandsToLocalCache();
     this.removeNewCommandsFromLocalCache();
     this.setupServerListeners();
+    if (socket) {
+      this.isReady = new Promise((resolve) => resolve());
+      return;
+    }
+    this.isReady = this.whenSocketConnects();
+  }
+
+  private async whenSocketConnects(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      if (this.socket) {
+        this.socket.on("connect", () => {
+          resolve();
+        });
+      }
+    });
   }
 
   /**
