@@ -8,9 +8,8 @@ import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
-import { post } from "request";
+import { TwitchSayHelper } from "./TwitchSayHelper";
 import { pino } from "pino";
-import { request } from "http";
 
 const logger = pino(
   { level: "debug" },
@@ -26,7 +25,7 @@ const logger = pino(
  * Listener class for commands, then parse them via the FancyCommandParser (with plugins)
  *
  *
- * @param twitchClient - The tmi.js client which we're going to subscribe to events on
+ * @param twitchListenClient - The tmi.js client which we're going to subscribe to events on
  * @returns void
  *
  */
@@ -47,9 +46,12 @@ export class TwitchListener {
   private parseCommands: { [key: string]: FancyCommandParser } = {};
 
   /**
-   * twitchClient is the twitch client provided at initialization
+   * twitchListenClient is the twitch client provided at initialization which will LISTEN to commands, but will not SAY any commands
+   * the LISTEN and SAY roles are split up to avoid interuptions in the service due to bearer token timeouts (although that IS very unlikely anyway)
    */
-  private twitchClient: Client | null = null;
+  private twitchListenClient: Client | null = null;
+
+  private twitchSayClient?: TwitchSayHelper;
 
   constructor(FCL: FancyCommandListener) {
     logger.debug("Creating TwitchListener class");
@@ -67,65 +69,35 @@ export class TwitchListener {
     if (!this.botAccount) {
       return;
     }
-    if (this.twitchClient) {
-      if (this.twitchClient.readyState() === "OPEN") {
+    if (this.twitchListenClient) {
+      if (this.twitchListenClient.readyState() === "OPEN") {
         try {
-          await this.twitchClient.disconnect();
+          await this.twitchListenClient.disconnect();
         } catch (err) {
           logger.error(
-            { err, twitchClient: this.twitchClient },
+            { err, twitchListenClient: this.twitchListenClient },
             "Tried to disconnect twitch client, but failed"
           );
         }
       }
     }
-    if (
-      null === this.botAccount.username ||
-      null === this.botAccount.password ||
-      null === this.botAccount.channel ||
-      typeof this.botAccount !== typeof {}
-    ) {
-      logger.error(
-        { acct: this.botAccount },
-        "Tried to connect to twitch client, but some account information is missing"
-      );
-      return;
-    }
 
-    await this.getOAuthToken();
+    logger.debug("Creating new twitch client, connection anonymously");
 
-    logger.debug(
-      {
-        acct: this.botAccount,
-      },
-      "Creating new twitch client, logging in"
-    );
-    if (!this.botAccount.token) {
-      logger.debug(
-        {
-          acct: this.botAccount,
-        },
-        "Bot token doesn't exist, so can't proceed!"
-      );
-      return;
-    }
-    const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
-    this.twitchClient = new Client({
+    this.twitchListenClient = new Client({
       channels: [this.botAccount.channel],
       options: { debug: process.env.NODE_ENV === "development" },
-      identity: {
-        username: this.botAccount.username,
-        password: tokenPass,
-      },
     });
-    this.twitchClient
+    this.twitchListenClient
       .connect()
       .catch((err) => {
-        logger.error({ err }, "Failed to connect twitch client");
+        logger.error({ err }, "Failed to connect twitch client aononymously");
       })
       .then(() => {
-        logger.debug("Created and connected new twitch client");
+        logger.debug("Created and connected new twitch client anonymously");
       });
+    this.twitchSayClient = new TwitchSayHelper(this.botAccount);
+    await this.twitchSayClient.isReady;
     this.handleTwitchMessages();
   }
 
@@ -149,7 +121,17 @@ export class TwitchListener {
           { botAcct },
           "Pulled bot account info from twitch-bot-acct"
         );
-        this.init();
+        if (!this.twitchSayClient || !this.botAccount) {
+          logger.error(
+            {
+              twitchSayClient: this.twitchListenClient,
+              botAccount: this.botAccount,
+            },
+            "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
+          );
+          return;
+        }
+        this.twitchSayClient.setBotAccount(this.botAccount);
       })
       .catch((err) => {
         logger.error(
@@ -169,8 +151,17 @@ export class TwitchListener {
         { botAcct },
         "Child changed for twitch-bot-acct, reset botAccount and reinitializing"
       );
-      this.botAccount = botAcct;
-      this.init();
+      if (!this.twitchSayClient || !this.botAccount) {
+        logger.error(
+          {
+            twitchSayClient: this.twitchListenClient,
+            botAccount: this.botAccount,
+          },
+          "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
+        );
+        return;
+      }
+      this.twitchSayClient.setBotAccount(this.botAccount);
     });
     configDB.ref("twitch-bot-acct").on("child_removed", (ss: DataSnapshot) => {
       const botAcct = ss.val();
@@ -184,109 +175,96 @@ export class TwitchListener {
         { botAcct },
         "Child removed for twitch-bot-acct, reset botAccount and reinitializing"
       );
-      this.botAccount = null;
-      this.init();
-    });
-  }
-
-  private async handleTwitchMessages() {
-    if (!this.twitchClient) {
-      logger.error("The twitch client is null, so we can't do anything, sorry");
-      return;
-    }
-    logger.info("Setting up listener for twitch messages");
-    this.twitchClient.on("message", async (channel, tags, message, self) => {
-      const msgKey = `${tags["tmi-sent-ts"]?.toString()}:${message.substring(
-        0,
-        8
-      )}`;
-      logger.debug(
-        { channel, tags, message, msgKey },
-        "Twitch message recieved"
-      );
-      // If a bot account isn't setup, then do nothing
-      if (this.botAccount) {
-        if (
-          tags.username?.toLowerCase() !==
-          this.botAccount.username.toLowerCase()
-        ) {
-          logger.debug(
-            { msgKey },
-            "Twitch message discarded due to being from the bot"
-          );
-          return;
-        }
-      }
-      // If a bot account IS setup, then do stuff!
-      logger.debug({ msgKey }, "Twitch message being processed");
-      const cmdsToProc = this.findMessageCommands(message);
-      logger.debug(
-        { cmdsToProc, msgKey },
-        "Commands matching the message found"
-      );
-      // If the message doesn't match any of the commands defined, do nothing
-      if (cmdsToProc.length === 0) {
-        logger.debug({ msgKey }, "No matching commands found, stopping here");
+      if (!this.twitchSayClient || !this.botAccount) {
+        logger.error(
+          {
+            twitchSayClient: this.twitchListenClient,
+            botAccount: this.botAccount,
+          },
+          "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
+        );
         return;
       }
-      // If the message DOES match any of the commands defined, then process them
-      logger.debug({ msgKey }, "Processing found commands");
-      const finalMessages: string[] = await this.processMessageCommands(
-        cmdsToProc,
-        message
-      );
-      logger.debug({ msgKey }, "Processed found commands");
-      // Once the commands have been processed, send the response for each message in the stack back to twitch
-      finalMessages.forEach((msg) => {
-        if (!this.twitchClient) return; // Shouldn't need this, given the parent has it, but typescript is too stupid to figure that out
-        logger.debug({ msgKey, msg }, "Sending reply based on command parsing");
-        this.twitchClient.say(channel, msg);
-      });
+      this.twitchSayClient.setBotAccount(this.botAccount);
     });
-    logger.info("Listening for twitch messages");
   }
 
   /**
-   * Queries twitch dev and gets a bearer token to use, automatically requests a new token a few seconds before expiration
-   * The resultant token is saved to the botAccount.token property
+   * Function to handle twitch messages as they come in, applying command logic as needed and replying
+   *
+   *
    *
    */
-  private async getOAuthToken(): Promise<void> {
-    if (!this.botAccount) {
+  private async handleTwitchMessages() {
+    if (!this.twitchSayClient) {
       logger.error(
-        { acct: this.botAccount },
-        "Could not request OAuthToken, due to this.botAccount not being set"
+        "The twitchSayClient is null, so we can't do anything, sorry"
       );
-      throw new Error(
-        "Could not request OAuthToken, due to this.botAccount not being set"
-      );
+      return;
     }
-    const options = {
-      url: "",
-      form: {
-        client_id: this.botAccount.username,
-        client_secret: this.botAccount.password,
-        grant_type: "client_credentials",
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      post(options, (err, res, body) => {
-        if (err) {
-          logger.error({ err, res, body }, "Failed to get an OAuthToken");
-          reject("Failed to get an OAuthToken");
+    if (!this.twitchListenClient) {
+      logger.error(
+        "The twitchListenClient is null, so we can't do anything, sorry"
+      );
+      return;
+    }
+    logger.info("Setting up listener for twitch messages");
+    this.twitchListenClient.on(
+      "message",
+      async (channel, tags, message, self) => {
+        const msgKey = `${tags["tmi-sent-ts"]?.toString()}:${message.substring(
+          0,
+          8
+        )}`;
+        logger.debug(
+          { channel, tags, message, msgKey },
+          "Twitch message recieved"
+        );
+        // If a bot account isn't setup, then do nothing
+        if (this.botAccount) {
+          if (
+            tags.username?.toLowerCase() !==
+            this.botAccount.username.toLowerCase()
+          ) {
+            logger.debug(
+              { msgKey },
+              "Twitch message discarded due to being from the bot"
+            );
+            return;
+          }
         }
-        if (!this.botAccount) {
-          logger.error(
-            "Bot account somehow isn't set after recieving OAuth response from server"
-          );
-          reject();
+        // If a bot account IS setup, then do stuff!
+        logger.debug({ msgKey }, "Twitch message being processed");
+        const cmdsToProc = this.findMessageCommands(message);
+        logger.debug(
+          { cmdsToProc, msgKey },
+          "Commands matching the message found"
+        );
+        // If the message doesn't match any of the commands defined, do nothing
+        if (cmdsToProc.length === 0) {
+          logger.debug({ msgKey }, "No matching commands found, stopping here");
           return;
         }
-        this.botAccount.token = JSON.parse(body);
-        resolve();
-      });
-    });
+        // If the message DOES match any of the commands defined, then process them
+        logger.debug({ msgKey }, "Processing found commands");
+        const finalMessages: string[] = await this.processMessageCommands(
+          cmdsToProc,
+          message
+        );
+        logger.debug({ msgKey }, "Processed found commands");
+        // Before processing the commands, make sure the authentication token we're using is still valid, if not create a new client to use for writing
+        // Once the commands have been processed, send the response for each message in the stack back to twitch
+        finalMessages.forEach((msg) => {
+          if (!this.twitchSayClient) return; // Shouldn't need this, given the parent has it, but typescript is too stupid to figure that out
+          logger.debug(
+            { msgKey, msg },
+            "Sending reply based on command parsing"
+          );
+          this.twitchSayClient.say(channel, msg);
+        });
+      }
+    );
+    logger.info("Listening for twitch messages");
   }
 
   /**

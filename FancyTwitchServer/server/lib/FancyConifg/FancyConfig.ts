@@ -23,7 +23,7 @@ export type BotAccount = {
     access_token: string;
     expires_in: number;
     token_type: string;
-    access_timestamp: NodeJS.Timeout;
+    access_timestamp?: Date;
   };
 };
 
