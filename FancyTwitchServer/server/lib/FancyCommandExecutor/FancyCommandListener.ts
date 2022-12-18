@@ -7,7 +7,7 @@ import { FancyConfig } from "../FancyConifg/FancyConfig";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 
-const logger = MainLogger.child({ file: "TwitchSayHelper" });
+const logger = MainLogger.child({ file: "FancyCommandListener" });
 
 export class FancyCommandListener {
   private IO: Server;
