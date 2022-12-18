@@ -4,6 +4,7 @@ import { configDB } from "../DatabaseRef";
 import { Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
+import { TwitchListener } from "../TwitchHandling/TwitchHandling";
 
 const logger = MainLogger.child({ file: "FancyConfig" });
 
@@ -30,7 +31,7 @@ export type BotAccount = {
  * @returns the websocket
  *
  */
-export const FancyConfig = (socket: Socket): Socket => {
+export const FancyConfig = (socket: Socket, TL?: TwitchListener): Socket => {
   // Listen for bot config requests
   socket.on("update-bot-acct", (acct: BotAccount | null) => {
     logger.debug({ acct }, "Recieved bot account update request from client");
@@ -61,6 +62,10 @@ export const FancyConfig = (socket: Socket): Socket => {
     }
     configDB.ref("twitch-bot-acct").set([acct]);
     sendTwitchBotConfig(socket);
+    // Refresh the TwitchSayHelper when the account changes
+    if (TL) {
+      TL.getAndListenForAccounts();
+    }
   });
 
   // Request the stored data about the bot account details
