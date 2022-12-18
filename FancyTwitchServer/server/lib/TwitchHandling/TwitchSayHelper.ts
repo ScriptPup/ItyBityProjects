@@ -26,7 +26,7 @@ export class TwitchSayHelper {
    */
   public isReady: Promise<void>;
 
-  private STATUS: "READY" | "PENDING" = "PENDING";
+  private STATUS: "READY" | "PENDING" | "NOT STARTED" = "PENDING";
 
   constructor(botAccount: BotAccount) {
     // I know this is the same as setBotAccount()...
