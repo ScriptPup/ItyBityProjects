@@ -1,8 +1,8 @@
 /** @format */
-
 import type { Converter } from "showdown";
 import type { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { UserTypes } from "../../../shared/obj/FancyCommandTypes";
+import { BotAccount } from "../../../shared/obj/TwitchObjects";
 import { FancyCommandClient } from "./lib/FancyCommandClient";
 
 let converter: Converter;
@@ -211,25 +211,19 @@ const getBotTemplateContents = async () => {
  *
  *
  */
-const saveBotData = async (data: { [key: string]: string }) => {
-  // TODO: THIS! Actually save the data to the server
-  // Probably need to setup a way for the server to actually serve data first though?
+const saveBotData = async (data: BotAccount) => {
   if (!FCC.socket) {
     throw new Error("Socket not connected, cannot send data to server");
   }
   if (
-    data["bot-acct"] === "" &&
-    data["bot-pwd"] === "" &&
-    data["bot-channel"] === ""
+    data["username"] === "" &&
+    data["client_id"] === "" &&
+    data["client_secret"] === ""
   ) {
     FCC.socket.emit("update-bot-acct", null);
     return;
   }
-  FCC.socket.emit("update-bot-acct", {
-    username: data["bot-acct"],
-    password: data["bot-pwd"],
-    channel: data["bot-channel"],
-  });
+  FCC.socket.emit("update-bot-acct", data);
 };
 
 /**
@@ -247,16 +241,28 @@ const showBotTemplate = async () => {
     $("body").append(newModalHTML);
     newModal.find("#modal-submit").on("click", (e: Event) => {
       e.preventDefault();
+    });
+    newModal.find("#modal-cancel").on("click", () => {
+      const newModal = $("#modal-submit");
       const formserializeArray = newModal.find("form").serializeArray();
       const jsonObj: { [key: string]: string } = {};
       $.map(formserializeArray, function (n, i) {
         jsonObj[n.name] = n.value;
       });
-      saveBotData(jsonObj);
-      newModal.remove();
-    });
-    newModal.find("#modal-cancel").on("click", () => {
-      newModal.remove();
+      const botAccount: BotAccount = {
+        channel: jsonObj["channel"],
+        client_id: jsonObj["client_id"],
+        client_secret: jsonObj["client_secret"],
+        username: jsonObj["username"],
+        // auth_code?: string
+      };
+      const state = Math.random().toString(16).substr(2, 8);
+      localStorage.setItem("auth-verify-code", state);
+      localStorage.setItem("auth-verify-cache", JSON.stringify(botAccount));
+
+      // TODO: it would be wise to change this from a straight localhost redirect to get the information from the server somehow... But that sounds like a PITA RN
+      const twitchAuthURI = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${botAccount.client_id}&redirect_uri=http://localhost:900&scope=chat%3Aedit%20whispers%3Aedit&state=${state}`;
+      $(window).attr("location", twitchAuthURI);
     });
     if (!FCC.socket) {
       throw new Error("Socket not connected, cannot send data to server");
@@ -267,16 +273,51 @@ const showBotTemplate = async () => {
         newModal.find("input").val("");
         return;
       }
-      const {
-        username,
-        channel,
-        password,
-      }: { username: string; channel: string; password: string } = res;
-      newModal.find("input[name='bot-channel']").val(channel);
-      newModal.find("input[name='bot-acct']").val(username);
-      newModal.find("input[name='bot-pwd']").val(password);
+      const { channel, client_id, username }: BotAccount = res;
+      newModal.find("input[name='channel']").val(channel);
+      newModal.find("input[name='username']").val(username);
+      newModal.find("input[name='client_id']").val(client_id);
+      newModal.find("input[name='client_secret']").val("*****");
     });
     FCC.socket.emit("get-bot-acct", true);
+  }
+};
+
+const authorizedApplication = async () => {
+  if (!window.location.search) {
+    return;
+  }
+  const state = localStorage.getItem("auth-verify-code");
+  const rawBotData = localStorage.getItem("auth-verify-cache");
+  if (!rawBotData) {
+    console.error(
+      "Bot data not stored locally, cannot retrieve to send data to server."
+    );
+    return;
+  }
+  const botAccount = JSON.parse(rawBotData);
+
+  try {
+    const parsedURLParams = new URLSearchParams(window.location.search);
+    const stateVerify = parsedURLParams.get("state");
+    if (state !== stateVerify) {
+      throw new Error(
+        "State returned isn't the same as state sent, something malicious is likely going on. Verify your network connection is private and trusted!"
+      );
+    }
+
+    // If we've verified everything satisfactorially, then send the botAccount data to the server
+    botAccount["auth_code"] = parsedURLParams.get("code");
+    if (!botAccount.auth_code) {
+      throw new Error("Somehow the authorization code doesn't exist!");
+    }
+
+    console.log("Bot account authorized and linked!");
+    saveBotData(botAccount);
+  } finally {
+    // Clear the temporary data storage used
+    localStorage.removeItem("auth-verify-code");
+    localStorage.removeItem("auth-verify-cache");
   }
 };
 
@@ -322,4 +363,5 @@ const setupButtonListeners = async () => {
  */
 document.addEventListener("DOMContentLoaded", function () {
   setupPage();
+  authorizedApplication();
 });
