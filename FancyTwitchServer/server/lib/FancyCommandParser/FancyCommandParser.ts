@@ -3,7 +3,7 @@
 import { AceBase, DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 
-const logger = MainLogger.child({ file: "TwitchSayHelper" });
+const logger = MainLogger.child({ file: "FancyCommandParser" });
 /**
 * Simple typing to explain the expected structure of a next() function
 *
