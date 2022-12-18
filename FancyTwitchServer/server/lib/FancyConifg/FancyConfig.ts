@@ -41,7 +41,11 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
           if (typeof oldAcct === typeof []) {
             oldAcct = oldAcct[0];
           }
-          acct.client_secret = oldAcct.client_secret;
+          if (oldAcct) {
+            if ("client_secret" in oldAcct) {
+              acct.client_secret = oldAcct.client_secret;
+            }
+          }
         }
         configDB.ref("twitch-bot-acct").set([acct]);
         sendTwitchBotConfig(socket);
