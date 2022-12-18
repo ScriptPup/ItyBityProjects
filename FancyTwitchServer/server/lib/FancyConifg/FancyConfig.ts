@@ -5,20 +5,9 @@ import { Server, Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 import { TwitchListener } from "../TwitchHandling/TwitchHandling";
+import { BotAccount } from "../../../shared/obj/TwitchObjects";
 
 const logger = MainLogger.child({ file: "FancyConfig" });
-
-export type BotAccount = {
-  username: string;
-  password: string;
-  channel: string;
-  token?: {
-    access_token: string;
-    expires_in: number;
-    token_type: string;
-    access_timestamp?: Date;
-  };
-};
 
 /**
  * Listener function which will listen for and provide interface with user configurations
@@ -45,33 +34,19 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
           configDB.ref("twitch-bot-acct[0]").remove();
           return;
         }
-        // If a "ofuscated" password is provided, then don't overwrite the old password
-        if (acct["password"] === "*****") {
-          configDB.ref("twitch-bot-acct").get((ss: DataSnapshot) => {
-            let dbVal = ss.val();
-            if (dbVal) {
-              if (typeof dbVal === typeof [] && dbVal.length > 0) {
-                acct["password"] = dbVal[0]["password"];
-              }
-            }
-            configDB
-              .ref("twitch-bot-acct")
-              .set([acct])
-              .catch((err) => {
-                logger.error(
-                  { acct: [acct], err },
-                  "Failed to set account values"
-                );
-                // TODO: let the USER know the action failed...
-              });
-            acct["password"] = "*****";
-            socket.emit("get-bot-acct", acct);
-          });
-          return;
-        }
+
         configDB.ref("twitch-bot-acct").set([acct]);
         sendTwitchBotConfig(socket);
         // Refresh the TwitchSayHelper when the account changes
+        if (TL) {
+          TL.getAndListenForAccounts();
+        }
+      });
+
+      socket.on("unlink-bot-acct", () => {
+        logger.debug("Recieved bot account update request from client");
+        configDB.ref("twitch-bot-acct[0]").remove();
+        configDB.ref("twitch-bot-acct").set([]);
         if (TL) {
           TL.getAndListenForAccounts();
         }
