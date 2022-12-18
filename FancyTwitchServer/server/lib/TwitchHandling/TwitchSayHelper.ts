@@ -2,9 +2,8 @@
 
 import { Client } from "tmi.js";
 import { BotAccount } from "../FancyConifg/FancyConfig";
-import { post } from "request";
+import { got } from "got-cjs";
 import { MainLogger } from "../logging";
-
 const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
 export class TwitchSayHelper {
@@ -57,27 +56,23 @@ export class TwitchSayHelper {
       );
     }
 
-    const options = {
-      url: "https://id.twitch.tv/oauth2/token",
-      form: {
-        client_id: this.botAccount.username,
-        client_secret: this.botAccount.password,
-        grant_type: "client_credentials",
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      post(options, (err, res, body) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { body } = await got.post("https://id.twitch.tv/oauth2/token", {
+          form: {
+            client_id: this.botAccount.username,
+            client_secret: this.botAccount.password,
+            grant_type: "client_credentials",
+          },
+        });
         const requestedDTM: Date = new Date();
-        if (err) {
-          logger.error({ err, res, body }, "Failed to get an OAuthToken");
-          reject("Failed to get an OAuthToken");
-        }
         if (!this.botAccount) {
           logger.error(
             "Bot account somehow isn't set after recieving OAuth response from server"
           );
-          reject();
+          reject(
+            "Bot account somehow isn't set after recieving OAuth response from server"
+          );
           return;
         }
         const bodyJSON:
@@ -97,7 +92,17 @@ export class TwitchSayHelper {
           this.botAccount.token = bodyJSON;
           resolve();
         }
-      });
+      } catch (err: any) {
+        logger.error(
+          { responseBody: err.response.body, err },
+          "Failed to get an OAuthToken"
+        );
+        if (JSON.parse(err.response.body).message === "invalid client") {
+          reject("Failed to get an OAuthToken due to an invalid client ID");
+        } else {
+          reject("Failed to get an OAuthToken for an unknown reason");
+        }
+      }
     });
   }
 
@@ -173,15 +178,13 @@ export class TwitchSayHelper {
           { skipAuthCheck },
           "Twitch OAuth verification failed, or skipAuthCheck is true, requesting token"
         );
-        const auth = this.getOAuthToken();
-        auth
-          .then(() => {
-            logger.debug("getOAuthToken request completed");
-          })
-          .catch((err) => {
-            logger.debug({ err }, "getOAuthToken request failed");
-          });
-        await auth;
+        try {
+          await this.getOAuthToken();
+          logger.debug("getOAuthToken request completed");
+        } catch (err: any) {
+          logger.debug({ err }, "getOAuthToken request failed");
+          // TODO: Provide user feedback about the authentication failure!
+        }
       }
 
       if (!this.botAccount.token) {
