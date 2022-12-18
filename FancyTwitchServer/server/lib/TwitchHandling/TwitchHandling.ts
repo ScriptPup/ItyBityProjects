@@ -119,10 +119,7 @@ export class TwitchListener {
 
         this.twitchSayClient = new TwitchSayHelper(botAcct);
         await this.twitchSayClient.isReady;
-        logger.debug(
-          { twitchSayClient: this.twitchSayClient },
-          "twitchSayClient initialized"
-        );
+        logger.debug("twitchSayClient initialized");
       })
       .catch((err) => {
         logger.error({ err }, "Failed to getAndListenForAccounts");
