@@ -25,7 +25,7 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
     // Only bother subscribing to these events for clients which are in the setup-commands room, no other clients care
     socket.on("join-setup-commands", () => {
       // Listen for bot config requests
-      socket.on("update-bot-acct", (acct: BotAccount | null) => {
+      socket.on("update-bot-acct", async (acct: BotAccount | null) => {
         logger.debug(
           { acct },
           "Recieved bot account update request from client"
@@ -34,7 +34,15 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
           configDB.ref("twitch-bot-acct[0]").remove();
           return;
         }
-
+        if (acct.client_secret === "*****") {
+          let oldAcct: any = (
+            await configDB.ref("twitch-bot-acct").get()
+          ).val();
+          if (typeof oldAcct === typeof []) {
+            oldAcct = oldAcct[0];
+          }
+          acct.client_secret = oldAcct.client_secret;
+        }
         configDB.ref("twitch-bot-acct").set([acct]);
         sendTwitchBotConfig(socket);
         // Refresh the TwitchSayHelper when the account changes
@@ -69,9 +77,9 @@ const sendTwitchBotConfig = (socket: Socket) => {
       if (typeof f_acct === typeof [] && f_acct.length > 0) {
         f_acct = f_acct[0];
       }
-      if ("password" in f_acct) {
-        if (f_acct["password"].length > 0) {
-          f_acct["password"] = "*****";
+      if ("client_secret" in f_acct) {
+        if (f_acct["client_secret"].length > 0) {
+          f_acct["client_secret"] = "*****";
         }
       }
     }
