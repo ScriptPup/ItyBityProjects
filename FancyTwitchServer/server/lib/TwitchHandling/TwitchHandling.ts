@@ -58,6 +58,7 @@ export class TwitchListener {
    */
   private async init() {
     logger.debug("Initializing TwitchListener");
+    await this.getAndListenForAccounts();
     if (!this.botAccount) {
       return;
     }
@@ -73,7 +74,6 @@ export class TwitchListener {
         }
       }
     }
-
     logger.debug("Creating new twitch client, connection anonymously");
 
     this.twitchListenClient = new Client({
@@ -88,10 +88,7 @@ export class TwitchListener {
       .then(() => {
         logger.debug("Created and connected new twitch client anonymously");
       });
-    this.twitchSayClient = new TwitchSayHelper(this.botAccount);
-    await this.twitchSayClient.isReady;
     this.handleTwitchMessages();
-    this.getAndListenForAccounts();
   }
 
   /**
@@ -103,11 +100,11 @@ export class TwitchListener {
    * @returns void
    *
    */
-  private getAndListenForAccounts() {
+  public async getAndListenForAccounts() {
     configDB
       .ref("twitch-bot-acct")
       .get()
-      .then((ss: DataSnapshot) => {
+      .then(async (ss: DataSnapshot) => {
         let botAcct = ss.val();
         if (botAcct) {
           if (typeof botAcct === typeof [] && botAcct.length > 0) {
@@ -116,27 +113,19 @@ export class TwitchListener {
         }
         this.botAccount = botAcct;
         logger.debug(
-          { botAcct },
+          { botAcct: this.botAccount },
           "Pulled bot account info from twitch-bot-acct"
         );
-        if (!this.twitchSayClient || !this.botAccount) {
-          logger.error(
-            {
-              twitchSayClient: this.twitchListenClient,
-              botAccount: this.botAccount,
-              event: "Initial",
-            },
-            "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
-          );
-          return;
-        }
-        this.twitchSayClient.setBotAccount(this.botAccount);
+
+        this.twitchSayClient = new TwitchSayHelper(botAcct);
+        await this.twitchSayClient.isReady;
+        logger.debug(
+          { twitchSayClient: this.twitchSayClient },
+          "twitchSayClient initialized"
+        );
       })
       .catch((err) => {
-        logger.error(
-          { err },
-          "Failed to getAndListenForAccounts due to a database listener setup failure getting from twitch-bot-acct"
-        );
+        logger.error({ err }, "Failed to getAndListenForAccounts");
       });
   }
 

@@ -116,8 +116,6 @@ export class FancyCommandListener {
       );
       socket.join("setup-commands");
       socket.emit("joined-setup-commands");
-      // Setup socket to listen for bot account commands
-      FancyConfig(socket);
     });
 
     // Join the fire-commands when on the / page

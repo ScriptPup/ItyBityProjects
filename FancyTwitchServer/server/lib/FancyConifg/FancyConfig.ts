@@ -1,7 +1,7 @@
 /** @format */
 
 import { configDB } from "../DatabaseRef";
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 import { TwitchListener } from "../TwitchHandling/TwitchHandling";
@@ -31,49 +31,60 @@ export type BotAccount = {
  * @returns the websocket
  *
  */
-export const FancyConfig = (socket: Socket, TL?: TwitchListener): Socket => {
-  // Listen for bot config requests
-  socket.on("update-bot-acct", (acct: BotAccount | null) => {
-    logger.debug({ acct }, "Recieved bot account update request from client");
-    if (acct === null) {
-      configDB.ref("twitch-bot-acct[0]").remove();
-      return;
-    }
-    // If a "ofuscated" password is provided, then don't overwrite the old password
-    if (acct["password"] === "*****") {
-      configDB.ref("twitch-bot-acct").get((ss: DataSnapshot) => {
-        let dbVal = ss.val();
-        if (dbVal) {
-          if (typeof dbVal === typeof [] && dbVal.length > 0) {
-            acct["password"] = dbVal[0]["password"];
-          }
+export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
+  IO.on("connection", (socket: Socket): void => {
+    // Only bother subscribing to these events for clients which are in the setup-commands room, no other clients care
+    socket.on("join-setup-commands", () => {
+      // Listen for bot config requests
+      socket.on("update-bot-acct", (acct: BotAccount | null) => {
+        logger.debug(
+          { acct },
+          "Recieved bot account update request from client"
+        );
+        if (acct === null) {
+          configDB.ref("twitch-bot-acct[0]").remove();
+          return;
         }
-        configDB
-          .ref("twitch-bot-acct")
-          .set([acct])
-          .catch((err) => {
-            logger.error({ acct: [acct], err }, "Failed to set account values");
-            // TODO: let the USER know the action failed...
+        // If a "ofuscated" password is provided, then don't overwrite the old password
+        if (acct["password"] === "*****") {
+          configDB.ref("twitch-bot-acct").get((ss: DataSnapshot) => {
+            let dbVal = ss.val();
+            if (dbVal) {
+              if (typeof dbVal === typeof [] && dbVal.length > 0) {
+                acct["password"] = dbVal[0]["password"];
+              }
+            }
+            configDB
+              .ref("twitch-bot-acct")
+              .set([acct])
+              .catch((err) => {
+                logger.error(
+                  { acct: [acct], err },
+                  "Failed to set account values"
+                );
+                // TODO: let the USER know the action failed...
+              });
+            acct["password"] = "*****";
+            socket.emit("get-bot-acct", acct);
           });
-        acct["password"] = "*****";
-        socket.emit("get-bot-acct", acct);
+          return;
+        }
+        configDB.ref("twitch-bot-acct").set([acct]);
+        sendTwitchBotConfig(socket);
+        // Refresh the TwitchSayHelper when the account changes
+        if (TL) {
+          TL.getAndListenForAccounts();
+        }
       });
-      return;
-    }
-    configDB.ref("twitch-bot-acct").set([acct]);
-    sendTwitchBotConfig(socket);
-    // Refresh the TwitchSayHelper when the account changes
-    if (TL) {
-      TL.getAndListenForAccounts();
-    }
-  });
 
-  // Request the stored data about the bot account details
-  socket.on("get-bot-acct", () => {
-    logger.debug("Recieved bot account get request from client");
-    sendTwitchBotConfig(socket);
+      // Request the stored data about the bot account details
+      socket.on("get-bot-acct", () => {
+        logger.debug("Recieved bot account get request from client");
+        sendTwitchBotConfig(socket);
+      });
+    });
   });
-  return socket;
+  return IO;
 };
 
 const sendTwitchBotConfig = (socket: Socket) => {
