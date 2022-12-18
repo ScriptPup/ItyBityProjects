@@ -4,6 +4,7 @@ import { Client } from "tmi.js";
 import { BotAccount } from "../../../shared/obj/TwitchObjects";
 import { got } from "got-cjs";
 import { MainLogger } from "../logging";
+import { configDB } from "../DatabaseRef";
 const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
 export class TwitchSayHelper {
@@ -56,15 +57,50 @@ export class TwitchSayHelper {
       );
     }
 
+    if (!this.botAccount.token?.refresh_token) {
+      return this.OAuthTokenRequest("refresh_token");
+    } else {
+      return this.OAuthTokenRequest("authorization_code");
+    }
+  }
+
+  /**
+   * Uses the authorization code to request a bearer token. The authorization token can get revoked if the user re-submits/reconnects with the rediret URL still in the banner.
+   *
+   */
+  private async OAuthTokenRequest(
+    grant_type: "refresh_token" | "authorization_code"
+  ): Promise<void> {
     return new Promise(async (resolve, reject) => {
       try {
-        const { body } = await got.post("https://id.twitch.tv/oauth2/token", {
-          form: {
-            client_id: this.botAccount.username,
+        let form: Record<string, any> = {
+          client_id: this.botAccount.client_id,
+          client_secret: this.botAccount.client_secret,
+          code: this.botAccount.auth_code,
+          redirect_uri: "http://localhost:9000",
+          grant_type: "authorization_code",
+        };
+
+        if (
+          grant_type === "refresh_token" &&
+          this.botAccount.token?.refresh_token
+        ) {
+          form = {
+            client_id: this.botAccount.client_id,
             client_secret: this.botAccount.client_secret,
-            code: this.botAccount.auth_code,
-            grant_type: "authorization_code",
-          },
+            refresh_token: this.botAccount.token.refresh_token,
+            grant_type: "refresh_token",
+          };
+          logger.debug(
+            { refresh_token: this.botAccount.token.refresh_token },
+            "OAuth retrieving token using refresh_token"
+          );
+        } else {
+          logger.debug("OAuth retrieving token using authorization_code");
+        }
+
+        const { body } = await got.post("https://id.twitch.tv/oauth2/token", {
+          form,
         });
         const requestedDTM: Date = new Date();
         if (!this.botAccount) {
@@ -96,17 +132,26 @@ export class TwitchSayHelper {
         this.botAccount.token = bodyJSON;
         if (this.botAccount.token) {
           this.botAccount.token.access_timestamp = requestedDTM;
+          await configDB.ref("twitch-bot-acct").set(this.botAccount);
           resolve();
         }
       } catch (err: any) {
         logger.error(
-          { responseBody: err.response.body, err },
+          { responseBody: err.response.body },
           "Failed to get an OAuthToken"
         );
-        if (JSON.parse(err.response.body).message === "invalid client") {
-          reject("Failed to get an OAuthToken due to an invalid client ID");
-        } else {
-          reject("Failed to get an OAuthToken for an unknown reason");
+        switch (JSON.parse(err.response.body).message) {
+          case "invalid client":
+            reject("Failed to get an OAuthToken due to an invalid client ID");
+            break;
+          case "Invalid authorization code":
+            reject(
+              "Failed to get an OAuthToken due to an invalid authorization code. Re-authorize and try again."
+            );
+            break;
+          default:
+            reject("Failed to get an OAuthToken for an unknown reason");
+            return;
         }
       }
     });
@@ -158,6 +203,12 @@ export class TwitchSayHelper {
       "Setting up a new authenticated twitch client"
     );
     return new Promise<void>(async (resolve, reject) => {
+      if (this.botAccount == null) {
+        logger.info(
+          "No bot account information available, not attempting to connect with twitch"
+        );
+        return;
+      }
       // NEVER allow more than one event to try and create a twitchClient at the same time...
       if (this.STATUS === "PENDING") {
         logger.debug(
@@ -213,7 +264,6 @@ export class TwitchSayHelper {
         channels: [this.botAccount.channel],
         options: {
           debug: process.env.NODE_ENV === "development",
-          clientId: this.botAccount.client_id,
         },
         identity: {
           username: this.botAccount.username, // this.botAccount.username,
@@ -222,10 +272,10 @@ export class TwitchSayHelper {
       });
 
       this.twitchClient.on("disconnected", (reason) => {
-        logger.debug(
-          { reason, twitchClient: this.twitchClient },
-          "Twitch Client Disconnected"
-        );
+        logger.debug({ reason }, "Twitch Client Disconnected");
+      });
+      this.twitchClient.on("connected", (reason) => {
+        logger.debug("Twitch client connected");
       });
 
       try {
