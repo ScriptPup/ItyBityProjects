@@ -57,6 +57,10 @@ export class TwitchSayHelper {
       );
     }
 
+    const bodyToken = (await configDB.ref("twitch-bot-token").get()).val();
+    if (bodyToken) {
+      this.botAccount.token = bodyToken;
+    }
     if (!this.botAccount.token?.refresh_token) {
       return this.OAuthTokenRequest("refresh_token");
     } else {
@@ -132,7 +136,7 @@ export class TwitchSayHelper {
         this.botAccount.token = bodyJSON;
         if (this.botAccount.token) {
           this.botAccount.token.access_timestamp = requestedDTM;
-          await configDB.ref("twitch-bot-acct").set(this.botAccount);
+          await configDB.ref("twitch-bot-token").set(this.botAccount.token);
           resolve();
         }
       } catch (err: any) {
@@ -265,6 +269,7 @@ export class TwitchSayHelper {
         channels: [this.botAccount.channel],
         options: {
           debug: process.env.NODE_ENV === "development",
+          clientId: this.botAccount.client_id,
         },
         identity: {
           username: this.botAccount.username, // this.botAccount.username,
