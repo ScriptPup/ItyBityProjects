@@ -146,6 +146,7 @@ const connectServer = (): void => {
   FCC.onRemove(({ name }) => {
     removeCommand(name);
   });
+  authorizedApplication();
 };
 
 /**
@@ -241,9 +242,6 @@ const showBotTemplate = async () => {
     $("body").append(newModalHTML);
     newModal.find("#modal-submit").on("click", (e: Event) => {
       e.preventDefault();
-    });
-    newModal.find("#modal-cancel").on("click", () => {
-      const newModal = $("#modal-submit");
       const formserializeArray = newModal.find("form").serializeArray();
       const jsonObj: { [key: string]: string } = {};
       $.map(formserializeArray, function (n, i) {
@@ -261,13 +259,16 @@ const showBotTemplate = async () => {
       localStorage.setItem("auth-verify-cache", JSON.stringify(botAccount));
 
       // TODO: it would be wise to change this from a straight localhost redirect to get the information from the server somehow... But that sounds like a PITA RN
-      const twitchAuthURI = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${botAccount.client_id}&redirect_uri=http://localhost:900&scope=chat%3Aedit%20whispers%3Aedit&state=${state}`;
+      const twitchAuthURI = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${botAccount.client_id}&redirect_uri=http://localhost:9000%2Fsetup&scope=chat%3Aedit%20whispers%3Aedit&state=${state}`;
       $(window).attr("location", twitchAuthURI);
+    });
+    newModal.find("#modal-cancel").on("click", () => {
+      newModal.remove();
     });
     if (!FCC.socket) {
       throw new Error("Socket not connected, cannot send data to server");
     }
-    FCC.socket.on("get-bot-acct", (res) => {
+    FCC.socket.once("get-bot-acct", (res) => {
       console.log("Recieved get-bot-acct", res);
       if (null === res) {
         newModal.find("input").val("");
@@ -284,6 +285,12 @@ const showBotTemplate = async () => {
 };
 
 const authorizedApplication = async () => {
+  if (FCC.isReady) {
+    await FCC.isReady;
+  } else {
+    setTimeout(authorizedApplication, 200);
+    return;
+  }
   if (!window.location.search) {
     return;
   }
@@ -315,6 +322,13 @@ const authorizedApplication = async () => {
     console.log("Bot account authorized and linked!");
     saveBotData(botAccount);
   } finally {
+    // Remove query string from navigation, we don't want the user to refresh the page and end up invalidating their token
+    window.history.replaceState(
+      null,
+      document.title,
+      window.location.toString().split("?")[0]
+    );
+
     // Clear the temporary data storage used
     localStorage.removeItem("auth-verify-code");
     localStorage.removeItem("auth-verify-cache");
@@ -352,6 +366,7 @@ const setupButtonListeners = async () => {
     addCommand("!", "", "everyone", true);
   });
   $("#btn-bot-settings").on("click", () => {
+    console.log("Opening bot template modal");
     showBotTemplate();
   });
 };
@@ -363,5 +378,4 @@ const setupButtonListeners = async () => {
  */
 document.addEventListener("DOMContentLoaded", function () {
   setupPage();
-  authorizedApplication();
 });
