@@ -4,17 +4,10 @@ import { FancyCommandExecutor, getUserType } from "./FancyCommandExecutor";
 import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
 import { FancyConfig } from "../FancyConifg/FancyConfig";
-import { pino } from "pino";
 import { DataSnapshot } from "acebase";
-const logger = pino(
-  { level: "debug" },
-  pino.destination({
-    mkdir: true,
-    writable: true,
-    dest: `${__dirname}/../../logs/FancyCommandListener.log`,
-    append: false,
-  })
-);
+import { MainLogger } from "../logging";
+
+const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
 export class FancyCommandListener {
   private IO: Server;

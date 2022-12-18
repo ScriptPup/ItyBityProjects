@@ -3,17 +3,9 @@
 import { configDB } from "../DatabaseRef";
 import { Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
-import { pino } from "pino";
+import { MainLogger } from "../logging";
 
-const logger = pino(
-  { level: "debug" },
-  pino.destination({
-    mkdir: true,
-    writable: true,
-    dest: `${__dirname}/../../logs/FancyConfig.log`,
-    append: false,
-  })
-);
+const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
 export type BotAccount = {
   username: string;
@@ -43,20 +35,31 @@ export const FancyConfig = (socket: Socket): Socket => {
   socket.on("update-bot-acct", (acct: BotAccount | null) => {
     logger.debug({ acct }, "Recieved bot account update request from client");
     if (acct === null) {
-      configDB.ref("twitch-bot-acct").remove();
+      configDB.ref("twitch-bot-acct[0]").remove();
       return;
     }
     // If a "ofuscated" password is provided, then don't overwrite the old password
     if (acct["password"] === "*****") {
       configDB.ref("twitch-bot-acct").get((ss: DataSnapshot) => {
-        acct["password"] = ss.val()["password"];
-        configDB.ref("twitch-bot-acct").set(acct);
+        let dbVal = ss.val();
+        if (dbVal) {
+          if (typeof dbVal === typeof [] && dbVal.length > 0) {
+            acct["password"] = dbVal[0]["password"];
+          }
+        }
+        configDB
+          .ref("twitch-bot-acct")
+          .set([acct])
+          .catch((err) => {
+            logger.error({ acct: [acct], err }, "Failed to set account values");
+            // TODO: let the USER know the action failed...
+          });
         acct["password"] = "*****";
         socket.emit("get-bot-acct", acct);
       });
       return;
     }
-    configDB.ref("twitch-bot-acct").set(acct);
+    configDB.ref("twitch-bot-acct").set([acct]);
     sendTwitchBotConfig(socket);
   });
 
@@ -70,10 +73,15 @@ export const FancyConfig = (socket: Socket): Socket => {
 
 const sendTwitchBotConfig = (socket: Socket) => {
   configDB.ref("twitch-bot-acct").get((ss: DataSnapshot) => {
-    const f_acct = ss.val();
+    let f_acct = ss.val();
     if (f_acct) {
-      if (f_acct["password"].length > 0) {
-        f_acct["password"] = "*****";
+      if (typeof f_acct === typeof [] && f_acct.length > 0) {
+        f_acct = f_acct[0];
+      }
+      if ("password" in f_acct) {
+        if (f_acct["password"].length > 0) {
+          f_acct["password"] = "*****";
+        }
       }
     }
     logger.debug(

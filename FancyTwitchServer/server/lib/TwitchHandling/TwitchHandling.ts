@@ -9,17 +9,9 @@ import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListen
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
 import { TwitchSayHelper } from "./TwitchSayHelper";
-import { pino } from "pino";
+import { MainLogger } from "../logging";
 
-const logger = pino(
-  { level: "debug" },
-  pino.destination({
-    mkdir: true,
-    writable: true,
-    dest: `${__dirname}/../../logs/TwitchHandling.log`,
-    append: false,
-  })
-);
+const logger = MainLogger.child({ file: "TwitchHandling" });
 
 /**
  * Listener class for commands, then parse them via the FancyCommandParser (with plugins)
@@ -115,7 +107,12 @@ export class TwitchListener {
       .ref("twitch-bot-acct")
       .get()
       .then((ss: DataSnapshot) => {
-        const botAcct = ss.val();
+        let botAcct = ss.val();
+        if (botAcct) {
+          if (typeof botAcct === typeof [] && botAcct.length > 0) {
+            botAcct = botAcct[0];
+          }
+        }
         this.botAccount = botAcct;
         logger.debug(
           { botAcct },

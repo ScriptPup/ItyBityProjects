@@ -3,17 +3,9 @@
 import { Client } from "tmi.js";
 import { BotAccount } from "../FancyConifg/FancyConfig";
 import { post } from "request";
-import { pino } from "pino";
+import { MainLogger } from "../logging";
 
-const logger = pino(
-  { level: "debug" },
-  pino.destination({
-    mkdir: true,
-    writable: true,
-    dest: `${__dirname}/../../logs/TwitchSayHelper.log`,
-    append: false,
-  })
-);
+const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
 export class TwitchSayHelper {
   /**
