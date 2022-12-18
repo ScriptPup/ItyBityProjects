@@ -59,9 +59,10 @@ export class TwitchSayHelper {
 
     const bodyToken = (await configDB.ref("twitch-bot-token").get()).val();
     if (bodyToken) {
+      logger.debug(bodyToken, "Token retrieved from twitch-bot-token store");
       this.botAccount.token = bodyToken;
     }
-    if (!this.botAccount.token?.refresh_token) {
+    if (this.botAccount.token?.refresh_token) {
       return this.OAuthTokenRequest("refresh_token");
     } else {
       return this.OAuthTokenRequest("authorization_code");
@@ -76,33 +77,32 @@ export class TwitchSayHelper {
     grant_type: "refresh_token" | "authorization_code"
   ): Promise<void> {
     return new Promise(async (resolve, reject) => {
-      try {
-        let form: Record<string, any> = {
+      let form: Record<string, any> = {
+        client_id: this.botAccount.client_id,
+        client_secret: this.botAccount.client_secret,
+        code: this.botAccount.auth_code,
+        redirect_uri: "http://localhost:9000",
+        grant_type: "authorization_code",
+      };
+      if (
+        grant_type === "refresh_token" &&
+        this.botAccount.token?.refresh_token
+      ) {
+        form = {
           client_id: this.botAccount.client_id,
           client_secret: this.botAccount.client_secret,
-          code: this.botAccount.auth_code,
-          redirect_uri: "http://localhost:9000",
-          grant_type: "authorization_code",
+          refresh_token: this.botAccount.token.refresh_token,
+          grant_type: "refresh_token",
         };
+        logger.debug(
+          { refresh_token: this.botAccount.token.refresh_token },
+          "OAuth retrieving token using refresh_token"
+        );
+      } else {
+        logger.debug("OAuth retrieving token using authorization_code");
+      }
 
-        if (
-          grant_type === "refresh_token" &&
-          this.botAccount.token?.refresh_token
-        ) {
-          form = {
-            client_id: this.botAccount.client_id,
-            client_secret: this.botAccount.client_secret,
-            refresh_token: this.botAccount.token.refresh_token,
-            grant_type: "refresh_token",
-          };
-          logger.debug(
-            { refresh_token: this.botAccount.token.refresh_token },
-            "OAuth retrieving token using refresh_token"
-          );
-        } else {
-          logger.debug("OAuth retrieving token using authorization_code");
-        }
-
+      try {
         const { body } = await got.post("https://id.twitch.tv/oauth2/token", {
           form,
         });
@@ -137,12 +137,16 @@ export class TwitchSayHelper {
         if (this.botAccount.token) {
           this.botAccount.token.access_timestamp = requestedDTM;
           await configDB.ref("twitch-bot-token").set(this.botAccount.token);
+          logger.debug(
+            { token: this.botAccount.token },
+            "Added token to twitch-bot-token"
+          );
           resolve();
         }
       } catch (err: any) {
         delete this.botAccount["token"];
         logger.error(
-          { responseBody: err.response.body },
+          { responseBody: err.response.body, form },
           "Failed to get an OAuthToken"
         );
         switch (JSON.parse(err.response.body).message) {
@@ -260,20 +264,20 @@ export class TwitchSayHelper {
         return;
       }
       // const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
-      const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
+      const tokenPass = `oauth:${this.botAccount.token.access_token}`;
       this.twitchClient = new Client({
         connection: {
           maxReconnectAttempts: 5,
           timeout: 18000,
+          secure: true,
         },
         channels: [this.botAccount.channel],
         options: {
           debug: process.env.NODE_ENV === "development",
-          clientId: this.botAccount.client_id,
         },
         identity: {
-          username: this.botAccount.username, // this.botAccount.username,
-          password: tokenPass, //tokenPass,
+          username: this.botAccount.username,
+          password: tokenPass,
         },
       });
 
