@@ -136,6 +136,7 @@ export class TwitchSayHelper {
           resolve();
         }
       } catch (err: any) {
+        delete this.botAccount["token"];
         logger.error(
           { responseBody: err.response.body },
           "Failed to get an OAuthToken"
@@ -272,7 +273,10 @@ export class TwitchSayHelper {
       });
 
       this.twitchClient.on("disconnected", (reason) => {
-        logger.debug({ reason }, "Twitch Client Disconnected");
+        logger.debug(
+          { reason, status: this.twitchClient?.readyState },
+          "Twitch Client Disconnected"
+        );
       });
       this.twitchClient.on("connected", (reason) => {
         logger.debug("Twitch client connected");
