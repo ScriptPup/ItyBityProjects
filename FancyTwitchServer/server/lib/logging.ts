@@ -9,6 +9,7 @@ export const MainLogger = pino(
       "*.password",
       "twitchClient.opts.identity.password",
       "*.client_secret",
+      "*.auth_code",
     ],
   },
   pino.destination({
