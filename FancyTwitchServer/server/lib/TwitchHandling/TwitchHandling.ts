@@ -138,8 +138,13 @@ export class TwitchListener {
           "Failed to getAndListenForAccounts due to a database listener setup failure getting from twitch-bot-acct"
         );
       });
-    configDB.ref("twitch-bot-acct").on("child_changed", (ss: DataSnapshot) => {
-      const botAcct = ss.val();
+    configDB.on("child_changed", (ss: DataSnapshot) => {
+      let botAcct = ss.val();
+      if (botAcct) {
+        if (typeof botAcct === typeof [] && botAcct.length > 0) {
+          botAcct = botAcct[0];
+        }
+      }
       if (botAcct === this.botAccount) {
         logger.warn(
           "Child supposedly changed for twitch-bot-acct, but the account is the same so not re-initializing"
@@ -161,32 +166,43 @@ export class TwitchListener {
         );
         return;
       }
-      this.twitchSayClient.setBotAccount(this.botAccount);
+      if (botAcct) {
+        this.botAccount = botAcct;
+        this.twitchSayClient.setBotAccount(botAcct);
+      }
     });
-    configDB.ref("twitch-bot-acct").on("child_removed", (ss: DataSnapshot) => {
-      const botAcct = ss.val();
+    configDB.on("child_added", (ss: DataSnapshot) => {
+      let botAcct = ss.val();
+      if (botAcct) {
+        if (typeof botAcct === typeof [] && botAcct.length > 0) {
+          botAcct = botAcct[0];
+        }
+      }
       if (botAcct === this.botAccount) {
         logger.warn(
-          "Child supposedly removed for twitch-bot-acct, but the account is the same so not re-initializing"
+          "Child supposedly added for twitch-bot-acct, but the account is the same so not re-initializing"
         );
         return;
       }
       logger.debug(
         { botAcct },
-        "Child removed for twitch-bot-acct, reset botAccount and reinitializing"
+        "Child added for twitch-bot-acct, reset botAccount and reinitializing"
       );
       if (!this.twitchSayClient || !this.botAccount) {
         logger.error(
           {
             twitchSayClient: this.twitchListenClient,
             botAccount: this.botAccount,
-            event: "child_removed",
+            event: "child_added",
           },
           "Either TwitchSayClient or botAccount isn't defined, so we can't setBotAccount"
         );
         return;
       }
-      this.twitchSayClient.setBotAccount(this.botAccount);
+      if (botAcct) {
+        this.botAccount = botAcct;
+        this.twitchSayClient.setBotAccount(botAcct);
+      }
     });
   }
 
