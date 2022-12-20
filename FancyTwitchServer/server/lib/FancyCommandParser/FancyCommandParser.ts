@@ -1,6 +1,7 @@
 /** @format */
 
 import { AceBase, DataSnapshot } from "acebase";
+import internal from "stream";
 import { MainLogger } from "../logging";
 
 const logger = MainLogger.child({ file: "FancyCommandParser" });
@@ -51,6 +52,25 @@ function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPre
       logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
       invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
   }, input);
+}
+
+/**
+* Run $() code evaluations (WITHOUT any context outside of this function)
+*
+*
+* @param evalStr - The string which we're going to evaluate
+* @returns results of the evaluation
+*
+*/
+function sandboxedEval(evalStr: string) {
+  try {
+    return eval?.(`"use strict";${evalStr}`);
+  } 
+  catch (e)
+  {
+    logger.error({"eval": evalStr}, "Failed to execute eval block");
+    return evalStr;
+  }
 }
 
 /**
@@ -266,7 +286,7 @@ export class FancyCommandParser {
       logger.debug({"block": varBlock},`Parsed VarBlock`);
       this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
       logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
-      await this.getVarFromBlock(varBlock);    
+      await this.getVarFromBlock(varBlock);
       
       repReady.unshift({
         start: vbIx[0] || 0,
@@ -285,7 +305,43 @@ export class FancyCommandParser {
         ncmd.substring(repItm.end, repItm.end);
       logger.debug(`Processed ${cmd} -> ${ncmd}`);
     }
+    ncmd = this.evaluateCommand(ncmd);
+
     logger.debug(`Parse complete`);
+    return ncmd;
+  }
+
+
+  private evaluateCommand(cmd: string) {
+    logger.debug({cmd},`Evaluating $() blocks`);
+    const toParse: RegExp = new RegExp(/(?<fullblock>\$\((?<execblock>.+?)\))/, "igmd");
+    const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
+      cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
+    const repReady: Array<{start: number, end: number, replacement: string}> = new Array<{start: number, end: number, replacement: string}>();
+
+    for (let rawMatch of toRepl) {
+      logger.debug({"eval": rawMatch},`Starting execution of new eval block`);
+      const vbStr: string = rawMatch.groups?.execblock || "";
+      const vbIx: Array<number> = rawMatch.indices.groups?.fullblock;
+      const replacement: string = sandboxedEval(vbStr);
+
+      repReady.unshift({
+        start: vbIx[0] || 0,
+        end: vbIx[1] || 0 + vbStr.length,
+        replacement: replacement,
+      });
+    }
+
+    let ncmd = cmd;
+    logger.debug(`Replacing var block strings with evaluated results`);
+    for (const repItm of repReady) {
+      let repWith: AcceptedVarTypes = repItm.replacement;
+      ncmd =
+        ncmd.substring(0, Math.max(repItm.start, 0)) +
+        repWith + 
+        ncmd.substring(repItm.end, repItm.end);
+      logger.debug(`Evaluated ${cmd} -> ${ncmd}`);
+    }
     return ncmd;
   }
 
