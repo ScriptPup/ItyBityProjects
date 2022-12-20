@@ -59,7 +59,12 @@ export class TwitchListener {
   private async init() {
     logger.debug("Initializing TwitchListener");
     await this.getAndListenForAccounts();
+    logger.debug("");
     if (!this.botAccount) {
+      logger.error(
+        { acct: this.botAccount },
+        "No bot account information available, initialization halted"
+      );
       return;
     }
     if (this.twitchListenClient) {
@@ -88,7 +93,8 @@ export class TwitchListener {
       .then(() => {
         logger.debug("Created and connected new twitch client anonymously");
       });
-    this.handleTwitchMessages();
+    await this.handleTwitchMessages();
+    this.twitchListenClient.connect();
   }
 
   /**
@@ -100,8 +106,8 @@ export class TwitchListener {
    * @returns void
    *
    */
-  public async getAndListenForAccounts() {
-    configDB
+  public async getAndListenForAccounts(): Promise<void> {
+    return configDB
       .ref("twitch-bot-acct")
       .get()
       .then(async (ss: DataSnapshot) => {
@@ -118,8 +124,7 @@ export class TwitchListener {
         );
 
         this.twitchSayClient = new TwitchSayHelper(botAcct);
-        await this.twitchSayClient.isReady;
-        logger.debug("twitchSayClient initialized");
+        return await this.twitchSayClient.isReady;
       })
       .catch((err) => {
         logger.error({ err }, "Failed to getAndListenForAccounts");
@@ -160,7 +165,7 @@ export class TwitchListener {
         // If a bot account isn't setup, then do nothing
         if (this.botAccount) {
           if (
-            tags.username?.toLowerCase() !==
+            tags.username?.toLowerCase() ===
             this.botAccount.username.toLowerCase()
           ) {
             logger.debug(
