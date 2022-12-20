@@ -256,7 +256,7 @@ export class FancyCommandParser {
     for (let rawMatch of toRepl) {
       logger.debug({"block": rawMatch},`Starting parse of new block`);  
       const vbStr: string = rawMatch.groups?.varblock || "";
-      const vbIx: number[]|undefined = rawMatch.indices.groups?.varblock;
+      const vbIx: Array<number> = rawMatch.indices.groups?.varblock;
       if(vbStr == "" || vbStr[0] === "$"){ 
         logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or starts with $`);  
         continue; 
