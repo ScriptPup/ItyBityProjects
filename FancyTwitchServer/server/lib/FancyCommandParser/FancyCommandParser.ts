@@ -247,23 +247,30 @@ export class FancyCommandParser {
     this.preMiddlewares.dispatch(ctxt, input);
     cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);
-    const toParse: RegExp = new RegExp("({.+?})", "igm");
-    const toRepl: IterableIterator<RegExpMatchArray> | null =
-      cmd.matchAll(toParse);
+    const toParse: RegExp = new RegExp("(?<varblock>[$]*{.+?})", "igmd");
+    const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
+      cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
     // Run through all replacements
     logger.debug(`Start parsing varblocks`);
     const repReady = [];
-    for (const rawMatch of toRepl) {
+    for (let rawMatch of toRepl) {
+      logger.debug({"block": rawMatch},`Starting parse of new block`);  
+      const vbStr: string = rawMatch.groups?.varblock || "";
+      const vbIx: number[]|undefined = rawMatch.indices.groups?.varblock;
+      if(vbStr == "" || vbStr[0] === "$"){ 
+        logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or starts with $`);  
+        continue; 
+      }
       logger.debug({"block": rawMatch},`Parse VarBlock`);
-      const varBlock: VarBlock = new VarBlock(rawMatch[0]);
+      const varBlock: VarBlock = new VarBlock(vbStr);
       logger.debug({"block": varBlock},`Parsed VarBlock`);
       this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
       logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
       await this.getVarFromBlock(varBlock);    
       
       repReady.unshift({
-        start: rawMatch.index || 0,
-        end: rawMatch.index || 0 + rawMatch[0].length,
+        start: vbIx[0] || 0,
+        end: vbIx[1] || 0 + vbStr.length,
         block: varBlock,
       });
       logger.debug({"parsed": repReady},`VarBlock execution results resolved, block parsing complete`);
