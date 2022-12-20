@@ -2,9 +2,11 @@
 
 import { pino } from "pino";
 
+const LOGGING_LEVEL = process.env.NODE_ENV === "development" ? "debug" : "info";
+
 export const MainLogger = pino(
   {
-    level: "debug",
+    level: LOGGING_LEVEL,
     redact: [
       "*.password",
       "twitchClient.opts.identity.password",
