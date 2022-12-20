@@ -595,6 +595,24 @@ describe("FancyParser Evaluation", () => {
   });
 });
 
+describe("Execute evaluations via $()", () => {
+  let contextDB: AceBase = new AceBase("test_variables", {
+    sponsor: true,
+    logLevel: "error",
+  });
+  before(async () => {
+    return contextDB.ready;
+  });
+
+  it("Should evaluate code and return result", async () => {
+    const testCmdString = "$(var cba='abc'; `I know my ${cba}'s`)";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("I know my abc's");
+  });
+});
+
 describe("Edge Case Handling", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
