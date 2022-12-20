@@ -595,6 +595,24 @@ describe("FancyParser Evaluation", () => {
   });
 });
 
+describe("Edge Case Handling", () => {
+  let contextDB: AceBase = new AceBase("test_variables", {
+    sponsor: true,
+    logLevel: "error",
+  });
+  before(async () => {
+    return contextDB.ready;
+  });
+
+  it("Should ignore $ prefixed brackets", async () => {
+    const testCmdString = "This is a ${someVariable} {prefixBracketTest=test}";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("This is a ${someVariable} test");
+  });
+});
+
 describe("FancyParser Middleware", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
