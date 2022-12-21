@@ -631,6 +631,24 @@ describe("Edge Case Handling", () => {
   });
 });
 
+describe("Extremely basic usage", () => {
+  let contextDB: AceBase = new AceBase("test_variables", {
+    sponsor: true,
+    logLevel: "error",
+  });
+  before(async () => {
+    return contextDB.ready;
+  });
+
+  it("Should be able to echo simple string", async () => {
+    const testCmdString = "This is a test";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal(testCmdString);
+  });
+});
+
 describe("FancyParser Middleware", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
