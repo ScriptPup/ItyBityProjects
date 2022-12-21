@@ -266,12 +266,12 @@ export class FancyCommandParser {
    * @returns returned value explanation
    *
    */
-  public async parse(cmd: string, input?: any): Promise<string> {
-    const ctxt = {val: cmd};
+  public async parse(cmd: string|null, input?: any): Promise<string> {
     // Allow passing null to first param in order to re-use pre-created parser
-    if(cmd===null){
+    if(cmd === null){
       cmd = this.cmd;
     }
+    const ctxt = {val: cmd};    
     if(input) logger.debug({input},`Parsing ${cmd} with input`);
     try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
