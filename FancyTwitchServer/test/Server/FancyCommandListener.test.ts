@@ -284,7 +284,7 @@ describe("FancyCommandListener listener", () => {
           try {
             expect(ss.val()).to.eql(expected_return_command);
             expect(
-              FCL.commands.find((x) => x.name === add_command.name)
+              [...FCL.commands].find((x) => x.name === add_command.name)
             ).to.eql(expected_return_command);
             done();
           } catch (e) {
@@ -322,7 +322,7 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${add_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.eql(expected_return_command);
-            const updatedCacheCmd = FCL.commands.find(
+            const updatedCacheCmd = [...FCL.commands].find(
               (x) => x.name === add_command.name
             );
             expect(updatedCacheCmd).to.eql(expected_return_command);
@@ -353,8 +353,9 @@ describe("FancyCommandListener listener", () => {
         db.ref(`commands/${remove_command.name}`).get((ss) => {
           try {
             expect(ss.val()).to.be.null;
-            expect(FCL.commands.find((x) => x.name === remove_command.name)).to
-              .be.undefined;
+            expect(
+              [...FCL.commands].find((x) => x.name === remove_command.name)
+            ).to.be.undefined;
             done();
           } catch (e) {
             done(e);
