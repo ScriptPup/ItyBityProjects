@@ -230,7 +230,7 @@ export class TwitchListener {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
     cmds.forEach((cmd: FancyCommand) => {
-      cmd.command = cmd.command.replace(cmd.name, "", 1);
+      message.message = message.message.replace(cmd.name, "");
       logger.debug(
         { command: cmd.command, name: cmd.name },
         `Processing command`
