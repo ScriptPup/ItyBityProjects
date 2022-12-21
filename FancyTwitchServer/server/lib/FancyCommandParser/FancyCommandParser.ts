@@ -550,7 +550,7 @@ export class FancyCommandParser {
         break;
 
         default:
-          throw new Error("Operator not supported");
+          throw "Operator not supported";
       }      
       varBlock.final = curVal;
       logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Array operation complete`);
@@ -602,7 +602,7 @@ export class FancyCommandParser {
         break;
 
         default:
-          throw new Error("Operator not supported");
+          throw "Operator not supported";
       }
       varBlock.final = [...curVal];
       logger.debug({"varName": varBlock.name, "varBlock": varBlock},`Set operation complete`);
@@ -638,7 +638,7 @@ export class FancyCommandParser {
       break;
 
       default:
-        throw new Error("Operator not supported");
+        throw "Operator not supported";
     }
     await dataSnap.ref.set(curVal);
     varBlock.final = curVal;
@@ -695,6 +695,7 @@ export class VarBlock {
   public final: AcceptedVarTypes = "";
 
   constructor(varBlock: string) {
+    try {
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
       /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}|{(\w+)}/,
@@ -717,6 +718,7 @@ export class VarBlock {
       this.fallback = _fbval;
     } else { this.fallback = null; }
       logger.info({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
+  } catch (err) { logger.error({rawVarBlock: varBlock,err},"Failed to parse block!"); } 
   }
 
   public doFallback(): void {
