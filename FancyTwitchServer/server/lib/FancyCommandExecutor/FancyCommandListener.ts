@@ -48,41 +48,42 @@ export class FancyCommandListener {
     this.FCE.db.ref("commands").on("child_added", (cmdAdded: DataSnapshot) => {
       const cmd = cmdAdded.val();
       logger.debug(
-        { command: cmd },
-        "Added new child to database, adding to cache"
+        { cache: this.commands },
+        "Database command has been added, syncing internal cache"
       );
-      this.commands.add(cmd);
+      this.cache_add_command(cmd);
+      logger.debug(
+        { cache: this.commands },
+        "Database command has been added, syncing internal cache"
+      );
     });
 
     logger.debug(`Setting up acebase DB child_remove event listener`);
     this.FCE.db.ref("commands").on("child_removed", (cmdRmvd: DataSnapshot) => {
-      const cmd: FancyCommand = cmdRmvd.val();
-      const rmvVal: FancyCommand | undefined = [...this.commands].find(
-        (x) => x.name === cmd.name
-      );
       logger.debug(
-        { command: cmd, rmvVal: rmvVal },
-        "Removed child from database, removing from cache"
+        { cache: this.commands },
+        "Database command has been removed, syncing internal cache"
       );
-      if (rmvVal) {
-        this.commands.delete(rmvVal);
-      }
+      const cmd: FancyCommand = cmdRmvd.val();
+      this.cache_remove_command(cmd);
+      logger.debug(
+        { cache: this.commands },
+        "Database command has been removed, synced internal cache"
+      );
     });
 
     logger.debug(`Setting up acebase DB child_changed event listener`);
     this.FCE.db.ref("commands").on("child_changed", (cmdRmvd: DataSnapshot) => {
       const cmd: FancyCommand = cmdRmvd.val();
-      const rmvVal: FancyCommand | undefined = [...this.commands].find(
-        (x) => x.name === cmd.name
-      );
       logger.debug(
-        { command: cmd, rmvVal: rmvVal },
-        "Updated child in database, removing previous version and adding new one"
+        { cache: this.commands },
+        "Database command has been changed, syncing internal cache"
       );
-      if (rmvVal) {
-        this.commands.delete(rmvVal);
-      }
-      this.commands.add(cmd);
+      this.cache_add_command(cmd);
+      logger.debug(
+        { cache: this.commands },
+        "Database command has been changed, syncing internal cache"
+      );
     });
 
     this.IO.on("connection", (socket: Socket): void => {
@@ -94,6 +95,24 @@ export class FancyCommandListener {
       this.listenForRemove(socket);
       this.listenForList(socket);
     });
+  }
+
+  private cache_remove_command(cmd: FancyCommand) {
+    const rmvVal: FancyCommand | undefined = [...this.commands].find(
+      (x) => x.name === cmd.name
+    );
+    logger.debug(
+      { command: cmd, rmvVal: rmvVal },
+      "Removed child from database, removing from cache"
+    );
+    if (rmvVal) {
+      this.commands.delete(rmvVal);
+    }
+  }
+
+  private cache_add_command(cmd: FancyCommand) {
+    this.cache_remove_command(cmd);
+    this.commands.add(cmd);
   }
 
   /**
