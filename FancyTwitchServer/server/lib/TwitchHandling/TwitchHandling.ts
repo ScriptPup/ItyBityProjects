@@ -32,12 +32,6 @@ export class TwitchListener {
   private FCL: FancyCommandListener;
 
   /**
-   * parsCommands is a dictionary containing the command parser for each command which we've had to parse already, cached for faster re-use
-   * Currently I have no cleanup mechanism... So if a command is removed, the parser will still be in the cache. I should probably add a timeout function or something to drop items in the cache after a certain amount of time, or setup more db events to remove when it's removed from the db... But I can't be bothered rn
-   */
-  private parseCommands: { [key: string]: FancyCommandParser } = {};
-
-  /**
    * twitchListenClient is the twitch client provided at initialization which will LISTEN to commands, but will not SAY any commands
    * the LISTEN and SAY roles are split up to avoid interuptions in the service due to bearer token timeouts (although that IS very unlikely anyway)
    */
@@ -235,19 +229,10 @@ export class TwitchListener {
         { command: cmd.command, name: cmd.name },
         `Processing command`
       );
-      // If we already have the parser cached, use that
-      if (!(cmd.name in this.parseCommands)) {
-        // If we don't have the parser cached, then create it and then use it
-        const nCmdParser: FancyCommandParser = TwitchFancyPreParser(
-          new FancyCommandParser(cmd.command, commandVarsDB)
-        );
-        this.parseCommands[cmd.name] = nCmdParser;
-        logger.debug(
-          { command: cmd.command, name: cmd.name },
-          `Created new command parser`
-        );
-      }
-      const parsedCmd = this.parseCommands[cmd.name].parse(null, message);
+      const nCmdParser: FancyCommandParser = TwitchFancyPreParser(
+        new FancyCommandParser(cmd.command, commandVarsDB)
+      );
+      const parsedCmd = nCmdParser.parse(null, message);
       logger.debug({ parsedCmd }, `Parsed command '${cmd.name}'`);
       // Regardless of whether the command previously existed, or was added, parse and return it now
       msgRes.push(parsedCmd);
