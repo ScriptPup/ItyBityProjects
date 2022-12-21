@@ -283,6 +283,7 @@ export class FancyCommandParser {
     logger.debug(`Start parsing varblocks`);
     const repReady = [];
     for (let rawMatch of toRepl) {
+      try {
       logger.debug({"block": rawMatch},`Starting parse of new block`);  
       const vbStr: string = rawMatch.groups?.varblock || "";
       const vbIx: Array<number> = rawMatch.indices.groups?.varblock;
@@ -291,6 +292,7 @@ export class FancyCommandParser {
         continue; 
       }
       logger.debug({"block": rawMatch},`Parse VarBlock`);
+
       const varBlock: VarBlock = new VarBlock(vbStr);
       logger.debug({"block": varBlock},`Parsed VarBlock`);
       try { 
@@ -305,6 +307,9 @@ export class FancyCommandParser {
         block: varBlock,
       });
       logger.debug({"parsed": repReady},`VarBlock execution results resolved, block parsing complete`);
+    } catch (err) {
+      logger.error({rawMatch,err},"Failed to parse block");
+    }
     }
     let ncmd = cmd;
     logger.debug(`Replacing var block strings with parsed results`);
@@ -695,7 +700,7 @@ export class VarBlock {
   public final: AcceptedVarTypes = "";
 
   constructor(varBlock: string) {
-
+    
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
       /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}|{(\w+)}/,
