@@ -647,6 +647,15 @@ describe("Extremely basic usage", () => {
 
     expect(replacedCmd).to.equal(testCmdString);
   });
+
+  it("Should be able to make variable replacements in the middle of the command", async () => {
+    const testCmdString =
+      "This is a {testType=secret} test whcih has run {testCount=1} times";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("This is a secret test whcih has run 1 times");
+  });
 });
 
 describe("FancyParser Middleware", () => {
