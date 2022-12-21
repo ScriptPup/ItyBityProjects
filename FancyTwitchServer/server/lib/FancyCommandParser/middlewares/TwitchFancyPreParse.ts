@@ -25,23 +25,36 @@ export function TwitchFancyPreParser(
     next: Next,
     tmsg: TwitchMessage
   ): void => {
+    if (!tmsg) {
+      // This is debug instead of error, as it seems a "blank" message fires every so often.
+      // This doesn't appear to be a bug, just a weird quirk of tmi.js?
+      logger.debug({ tmsg }, "Cannot make replacements, no data provided!");
+      return;
+    }
     try {
       context.val = context.val.replace(/\@channel/i, tmsg.channel);
     } catch (err) {
-      logger.error({ tmsg, err }, "Failed to replace @channel");
+      logger.error({ tmsg: tmsg, err }, "Failed to replace @channel");
     }
-    if ("display-name" in tmsg.tags) {
-      try {
-        const username = tmsg.tags["display-name"] || "unknown";
-        context.val = context.val.replace(/\@user/i, username);
-      } catch (err) {
-        logger.error({ tmsg, err }, "Failed to replace @user");
+    if (!("tags" in tmsg)) {
+      logger.error(
+        { tmsg },
+        "Message came in with no tags, cannot make tag replacements"
+      );
+    } else {
+      if ("display-name" in tmsg.tags) {
+        try {
+          const username = tmsg.tags["display-name"] || "unknown";
+          context.val = context.val.replace(/\@user/i, username);
+        } catch (err) {
+          logger.error({ tmsg: tmsg, err }, "Failed to replace @user");
+        }
       }
     }
     try {
       context.val = context.val.replace(/\@message/i, tmsg.message);
     } catch (err) {
-      logger.error({ tmsg, err }, "Failed to replace @message");
+      logger.error({ tmsg: tmsg, err }, "Failed to replace @message");
     }
 
     const paramPattern = /\@[0-9]+/gi;
