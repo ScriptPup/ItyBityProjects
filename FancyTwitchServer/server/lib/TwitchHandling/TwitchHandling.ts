@@ -151,6 +151,7 @@ export class TwitchListener {
       return;
     }
     logger.info("Setting up listener for twitch messages");
+    this.twitchListenClient.removeAllListeners("message");
     this.twitchListenClient.on(
       "message",
       async (channel, tags, message, self) => {
@@ -188,12 +189,15 @@ export class TwitchListener {
           return;
         }
         // If the message DOES match any of the commands defined, then process them
-        logger.debug({ msgKey }, "Processing found commands");
+        logger.debug({ msgKey, cmdsToProc }, "Processing found commands");
         const finalMessages: string[] = await this.processMessageCommands(
           cmdsToProc,
           message
         );
-        logger.debug({ msgKey }, "Processed found commands");
+        logger.debug(
+          { msgKey, finalMessages: finalMessages },
+          "Processed found commands"
+        );
         // Before processing the commands, make sure the authentication token we're using is still valid, if not create a new client to use for writing
         // Once the commands have been processed, send the response for each message in the stack back to twitch
         finalMessages.forEach((msg) => {
@@ -223,8 +227,13 @@ export class TwitchListener {
     cmds: FancyCommand[],
     message: string
   ): Promise<string[]> {
+    logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
     cmds.forEach((cmd: FancyCommand) => {
+      logger.debug(
+        { command: cmd.command, name: cmd.name },
+        `Processing command`
+      );
       // If we already have the parser cached, use that
       if (!(cmd.name in this.parseCommands)) {
         // If we don't have the parser cached, then create it and then use it
@@ -232,9 +241,15 @@ export class TwitchListener {
           new FancyCommandParser(cmd.command, commandVarsDB)
         );
         this.parseCommands[cmd.name] = nCmdParser;
+        logger.debug(
+          { command: cmd.command, name: cmd.name },
+          `Created new command parser`
+        );
       }
+      const parsedCmd = this.parseCommands[cmd.name].parse(null, message);
+      logger.debug({ parsedCmd }, `Parsed command '${cmd.name}'`);
       // Regardless of whether the command previously existed, or was added, parse and return it now
-      msgRes.push(this.parseCommands[cmd.name].parse(message));
+      msgRes.push(parsedCmd);
     });
     return Promise.all(msgRes);
   }
@@ -280,13 +295,17 @@ export class TwitchListener {
    *
    */
   private findMessageCommands(message: string): FancyCommand[] {
-    const foundCommands = new Array<FancyCommand>();
+    const foundCommands = new Set<FancyCommand>();
     this.FCL.commands.forEach((cmd) => {
       const useCmd: FancyCommand | null = this.getMessageCommand(cmd, message);
       if (useCmd) {
-        foundCommands.push(useCmd);
+        foundCommands.add(useCmd);
       }
     });
-    return foundCommands;
+    logger.debug(
+      { foundCommands },
+      "Finished searching FCL commands for matches"
+    );
+    return [...foundCommands];
   }
 }
