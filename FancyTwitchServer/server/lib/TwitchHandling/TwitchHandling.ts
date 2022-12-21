@@ -13,6 +13,12 @@ import { MainLogger } from "../logging";
 
 const logger = MainLogger.child({ file: "TwitchHandling" });
 
+type MessageCommandFindResult = {
+  cmd: FancyCommand;
+  match: string;
+  type: "startsWith" | "regex";
+};
+
 /**
  * Listener class for commands, then parse them via the FancyCommandParser (with plugins)
  *
@@ -218,13 +224,17 @@ export class TwitchListener {
    *
    */
   private async processMessageCommands(
-    cmds: FancyCommand[],
+    cmds: MessageCommandFindResult[],
     message: TwitchMessage
   ): Promise<string[]> {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
-    cmds.forEach((cmd: FancyCommand) => {
-      message.message = message.message.replace(cmd.name, "");
+    cmds.forEach((findRes: MessageCommandFindResult) => {
+      const cmd = findRes.cmd;
+      message.message = message.message.replace(
+        new RegExp(`${findRes.match}[ ]*`),
+        ""
+      );
       logger.debug(
         { command: cmd.command, name: cmd.name },
         `Processing command`
@@ -251,20 +261,22 @@ export class TwitchListener {
    * @returns either null, or the command
    *
    */
+
   private getMessageCommand(
     cmd: FancyCommand,
     message: string
-  ): FancyCommand | null {
+  ): MessageCommandFindResult | null {
     // If the command is a regex, then treat it as such
     if (cmd.name[0] === "/" && cmd.name[-1] === "/") {
       const cmdRe: RegExp = new RegExp(cmd.name);
-      if (cmdRe.test(message)) {
-        return cmd;
+      const found: RegExpMatchArray | null = message.match(cmdRe);
+      if (found) {
+        return { cmd: cmd, match: found[0], type: "regex" };
       }
     }
     // If the command is NOT a regex, then check if the string STARTS with the command name
     if (message.startsWith(cmd.name)) {
-      return cmd;
+      return { cmd, match: cmd.name, type: "startsWith" };
     }
     // If the command fails all tests, return false
     return null;
@@ -280,10 +292,13 @@ export class TwitchListener {
    * @returns the commands which match the twitch message. For example, if there is a command named !help configured then a twitch message which comes in as "!help i've lost my pants!" would match
    *
    */
-  private findMessageCommands(message: string): FancyCommand[] {
-    const foundCommands = new Set<FancyCommand>();
+  private findMessageCommands(message: string): MessageCommandFindResult[] {
+    const foundCommands = new Set<MessageCommandFindResult>();
     this.FCL.commands.forEach((cmd) => {
-      const useCmd: FancyCommand | null = this.getMessageCommand(cmd, message);
+      const useCmd: MessageCommandFindResult | null = this.getMessageCommand(
+        cmd,
+        message
+      );
       if (useCmd) {
         foundCommands.add(useCmd);
       }
