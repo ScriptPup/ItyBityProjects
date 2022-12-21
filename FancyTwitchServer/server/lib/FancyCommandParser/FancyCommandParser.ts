@@ -695,7 +695,7 @@ export class VarBlock {
   public final: AcceptedVarTypes = "";
 
   constructor(varBlock: string) {
-    try {
+
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
       /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}|{(\w+)}/,
@@ -718,7 +718,6 @@ export class VarBlock {
       this.fallback = _fbval;
     } else { this.fallback = null; }
       logger.info({"cmd": varBlock, "varBlock": this},`String parsed into VarBlock`);
-  } catch (err) { logger.error({rawVarBlock: varBlock,err},"Failed to parse block!"); } 
   }
 
   public doFallback(): void {
