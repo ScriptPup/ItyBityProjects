@@ -230,22 +230,33 @@ export class TwitchListener {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
     cmds.forEach((findRes: MessageCommandFindResult) => {
-      const cmd = findRes.cmd;
-      message.message = message.message.replace(
-        new RegExp(`${findRes.match}[ ]*`),
-        ""
+      let parsedCmd: Promise<string> = new Promise<string>((res) =>
+        res(
+          "Ooo... This is embarasing, but looks like there's something wrong with this command!"
+        )
       );
-      logger.debug(
-        { command: cmd.command, name: cmd.name },
-        `Processing command`
-      );
-      const nCmdParser: FancyCommandParser = TwitchFancyPreParser(
-        new FancyCommandParser(cmd.command, commandVarsDB)
-      );
-      const parsedCmd = nCmdParser.parse(null, message);
-      logger.debug({ parsedCmd }, `Parsed command '${cmd.name}'`);
-      // Regardless of whether the command previously existed, or was added, parse and return it now
-      msgRes.push(parsedCmd);
+      try {
+        const cmd = findRes.cmd;
+        message.message = message.message.replace(
+          new RegExp(`${findRes.match}[ ]*`),
+          ""
+        );
+        logger.debug(
+          { command: cmd.command, name: cmd.name },
+          `Processing command`
+        );
+        try {
+          const nCmdParser: FancyCommandParser = TwitchFancyPreParser(
+            new FancyCommandParser(cmd.command, commandVarsDB)
+          );
+          parsedCmd = nCmdParser.parse(null, message);
+          logger.debug({ parsedCmd }, `Parsed command '${cmd.name}'`);
+        } catch (err) {}
+        // Regardless of whether the command previously existed, or was added, parse and return it now
+        msgRes.push(parsedCmd);
+      } catch (err) {
+        logger.error({ findRes, message }, "Failed to process message command");
+      }
     });
     return Promise.all(msgRes);
   }
