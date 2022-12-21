@@ -2,6 +2,9 @@
 
 import { Next, FancyCommandParser } from "../FancyCommandParser";
 import { TwitchMessage } from "../../../../shared/obj/TwitchObjects";
+import { MainLogger } from "../../logging";
+
+const logger = MainLogger.child({ file: "TwitchFancyPrepParse" });
 
 /**
  * FancyCommandParser middleware which will replace some variables with data from a twitch message
@@ -22,12 +25,24 @@ export function TwitchFancyPreParser(
     next: Next,
     tmsg: TwitchMessage
   ): void => {
-    context.val = context.val.replace(/\@channel/i, tmsg.channel);
-    if ("display-name" in tmsg.tags) {
-      const username = tmsg.tags["display-name"] || "unknown";
-      context.val = context.val.replace(/\@user/i, username);
+    try {
+      context.val = context.val.replace(/\@channel/i, tmsg.channel);
+    } catch (err) {
+      logger.error({ tmsg, err }, "Failed to replace @channel");
     }
-    context.val = context.val.replace(/\@message/i, tmsg.message);
+    if ("display-name" in tmsg.tags) {
+      try {
+        const username = tmsg.tags["display-name"] || "unknown";
+        context.val = context.val.replace(/\@user/i, username);
+      } catch (err) {
+        logger.error({ tmsg, err }, "Failed to replace @user");
+      }
+    }
+    try {
+      context.val = context.val.replace(/\@message/i, tmsg.message);
+    } catch (err) {
+      logger.error({ tmsg, err }, "Failed to replace @message");
+    }
 
     const paramPattern = /\@[0-9]+/gi;
     const paramReplacements: IterableIterator<RegExpMatchArray> =
@@ -40,7 +55,11 @@ export function TwitchFancyPreParser(
         continue;
       }
       const paramIX = Number.parseInt(param.replace("@", ""));
-      context.val = context.val.replace(param, msgWords[paramIX]);
+      try {
+        context.val = context.val.replace(param, msgWords[paramIX]);
+      } catch (err) {
+        logger.error({ tmsg, err }, `Failed to replace @${paramIX}`);
+      }
     }
     next();
   };
