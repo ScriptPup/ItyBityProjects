@@ -44,11 +44,6 @@ export class FancyCommandListener {
    */
   public init() {
     logger.debug(`Fancy Command Listener initializing`);
-    this.FCE.getAllCommands().then((cmdList) => {
-      cmdList.forEach((cmd) => {
-        this.commands.push(cmd.val());
-      });
-    });
 
     logger.debug(`Setting up acebase DB child_added event listener`);
     this.FCE.db.ref("commands").on("child_added", (cmdAdded: DataSnapshot) => {
