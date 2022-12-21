@@ -3,7 +3,6 @@
 import { FancyCommandExecutor, getUserType } from "./FancyCommandExecutor";
 import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
-import { FancyConfig } from "../FancyConifg/FancyConfig";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 
@@ -27,7 +26,7 @@ export class FancyCommandListener {
    * @returns returns the FancyCommandListener class instance
    *
    */
-  public commands: FancyCommand[] = new Array<FancyCommand>();
+  public commands: Set<FancyCommand> = new Set<FancyCommand>();
 
   constructor(IO: Server, testing: boolean = false) {
     this.IO = IO;
@@ -52,30 +51,38 @@ export class FancyCommandListener {
         { command: cmd },
         "Added new child to database, adding to cache"
       );
-      this.commands.push(cmd);
+      this.commands.add(cmd);
     });
 
     logger.debug(`Setting up acebase DB child_remove event listener`);
     this.FCE.db.ref("commands").on("child_removed", (cmdRmvd: DataSnapshot) => {
       const cmd: FancyCommand = cmdRmvd.val();
-      const rmvAt: number = this.commands.findIndex((x) => x.name === cmd.name);
+      const rmvVal: FancyCommand | undefined = [...this.commands].find(
+        (x) => x.name === cmd.name
+      );
       logger.debug(
-        { command: cmd, rmvIX: rmvAt },
+        { command: cmd, rmvVal: rmvVal },
         "Removed child from database, removing from cache"
       );
-      this.commands.splice(rmvAt, 1);
+      if (rmvVal) {
+        this.commands.delete(rmvVal);
+      }
     });
 
     logger.debug(`Setting up acebase DB child_changed event listener`);
     this.FCE.db.ref("commands").on("child_changed", (cmdRmvd: DataSnapshot) => {
       const cmd: FancyCommand = cmdRmvd.val();
-      const rmvAt: number = this.commands.findIndex((x) => x.name === cmd.name);
+      const rmvVal: FancyCommand | undefined = [...this.commands].find(
+        (x) => x.name === cmd.name
+      );
       logger.debug(
-        { command: cmd, rmvIX: rmvAt },
+        { command: cmd, rmvVal: rmvVal },
         "Updated child in database, removing previous version and adding new one"
       );
-      this.commands.splice(rmvAt, 1);
-      this.commands.push(cmd);
+      if (rmvVal) {
+        this.commands.delete(rmvVal);
+      }
+      this.commands.add(cmd);
     });
 
     this.IO.on("connection", (socket: Socket): void => {
