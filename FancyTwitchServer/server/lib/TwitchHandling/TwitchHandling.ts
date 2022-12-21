@@ -2,7 +2,7 @@
 
 import { DataSnapshot } from "acebase";
 import { Client } from "tmi.js";
-import { BotAccount } from "../../../shared/obj/TwitchObjects";
+import { BotAccount, TwitchMessage } from "../../../shared/obj/TwitchObjects";
 import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
@@ -192,7 +192,7 @@ export class TwitchListener {
         logger.debug({ msgKey, cmdsToProc }, "Processing found commands");
         const finalMessages: string[] = await this.processMessageCommands(
           cmdsToProc,
-          message
+          { message, channel, tags }
         );
         logger.debug(
           { msgKey, finalMessages: finalMessages },
@@ -225,11 +225,12 @@ export class TwitchListener {
    */
   private async processMessageCommands(
     cmds: FancyCommand[],
-    message: string
+    message: TwitchMessage
   ): Promise<string[]> {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
     cmds.forEach((cmd: FancyCommand) => {
+      cmd.command = cmd.command.replace(cmd.name, "", 1);
       logger.debug(
         { command: cmd.command, name: cmd.name },
         `Processing command`
