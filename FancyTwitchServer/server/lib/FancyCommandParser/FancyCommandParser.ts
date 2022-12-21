@@ -190,6 +190,10 @@ export class FancyCommandParser {
   */
   private cmdDB: AceBase;
   /**
+  * cmd is the command template to be parsed each time
+  */
+  private cmd: string = "";
+  /**
   * middlewars is a list of middlewares to run anytime before each database lookup occurs
   * I don't actually have a usecase for this... It's how I did the initial design before I realized it probably made more sense to modify the raw string
   * So... Yeah. I just didn't want to toss it out in case it was useful later. Maybe it's bloat? We'll see
@@ -217,6 +221,7 @@ export class FancyCommandParser {
     this.middlewares = middlewares || new VarBlockMiddleware();
     if(null !== cmd)
     {
+      this.cmd = cmd;
       this.Ready = this.parse(cmd as string);
     }
     else {
@@ -263,6 +268,10 @@ export class FancyCommandParser {
    */
   public async parse(cmd: string, input?: any): Promise<string> {
     const ctxt = {val: cmd};
+    // Allow passing null to first param in order to re-use pre-created parser
+    if(cmd===null){
+      cmd = this.cmd;
+    }
     if(input) logger.debug({input},`Parsing ${cmd} with input`);
     try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
