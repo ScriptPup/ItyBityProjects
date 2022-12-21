@@ -264,7 +264,7 @@ export class FancyCommandParser {
   public async parse(cmd: string, input?: any): Promise<string> {
     const ctxt = {val: cmd};
     if(input) logger.debug({input},`Parsing ${cmd} with input`);
-    this.preMiddlewares.dispatch(ctxt, input);
+    try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);
     const toParse: RegExp = new RegExp("(?<varblock>[$]*{.+?})", "igmd");
@@ -284,7 +284,9 @@ export class FancyCommandParser {
       logger.debug({"block": rawMatch},`Parse VarBlock`);
       const varBlock: VarBlock = new VarBlock(vbStr);
       logger.debug({"block": varBlock},`Parsed VarBlock`);
-      this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
+      try { 
+        this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
+      } catch (err) { logger.error({err},"use middleware(s) exited with a failure"); }
       logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
       await this.getVarFromBlock(varBlock);
       
