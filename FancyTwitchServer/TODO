@@ -1,8 +1,13 @@
 # Bug Fixes Needed:
 
-$() evaluations should not be broken by nested ( or ).
+## $() evaluations should not be broken by nested ( or ).
 
-@1 @2, etc not working correctly for twitch message replacement
+## @1 @2, etc not working correctly for twitch message replacement
+
+## UI Bugs
+
+1. Deletes don't always update for some reason
+2. Updates don't always update for some reason
 
 # Additional Features needed:
 
