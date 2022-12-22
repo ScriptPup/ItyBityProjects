@@ -703,13 +703,15 @@ export class VarBlock {
     
     logger.debug({"cmd": varBlock},`Parse varBlock string into VarBlock object`);
     const reBreakBlock: RegExp = new RegExp(
-      /\{(\w+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}|{(\w+)}/,
+      /\{([\w| ]+)([[\+|-]=|=|[\+]{1,2}|[\-]{1,2}|\*|\/])([\w| |\'|\"|,|\-|=|\*|\&|\^|\%|\$|\#|\@|\!]+|\[.+\]|\(.+\))(\|(.*))*}|{(\w+)([[\+]{1,2}|[\-]{1,2}])\}|{(\w+)}/,
       "igm"
     );
     const breakout = [...varBlock.matchAll(reBreakBlock)];
+    const value = breakout[0][5];
     logger.debug({"cmd": varBlock,"matches": breakout},`Broke out matches with regex`);
     this.origin = varBlock;
     this.name = breakout[0][1] || breakout[0][6] || breakout[0][8];
+    this.name = this.name.replace(/ /g, '_'); // Replace spaces with _ for the variable names
     this.opr = breakout[0][2] || breakout[0][7] || "*";        
     // calculate type-correct value (and type) of `value`
     logger.debug(`calculate type-correct value (and type) of value`);
