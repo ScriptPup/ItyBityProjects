@@ -316,9 +316,9 @@ export class FancyCommandParser {
     for (const repItm of repReady) {
       let repWith: AcceptedVarTypes = repItm.block.final;
       ncmd =
-        ncmd.substring(0, Math.max(repItm.start, 0)) +
+        ncmd.substring(0, repItm.start) +
         repWith + 
-        ncmd.substring(repItm.end, repItm.end);
+        ncmd.substring(repItm.end, ncmd.length);
       logger.debug(`Processed ${cmd} -> ${ncmd}`);
     }
     ncmd = this.evaluateCommand(ncmd);
