@@ -32,7 +32,7 @@ export function TwitchFancyPreParser(
       return;
     }
     try {
-      context.val = context.val.replace(/\@channel/i, tmsg.channel);
+      context.val = context.val.replace(/\@channel/gi, tmsg.channel);
     } catch (err) {
       logger.error({ tmsg: tmsg, err }, "Failed to replace @channel");
     }
@@ -45,14 +45,14 @@ export function TwitchFancyPreParser(
       if ("display-name" in tmsg.tags) {
         try {
           const username = tmsg.tags["display-name"] || "unknown";
-          context.val = context.val.replace(/\@user/i, username);
+          context.val = context.val.replace(/\@user/gi, username);
         } catch (err) {
           logger.error({ tmsg: tmsg, err }, "Failed to replace @user");
         }
       }
     }
     try {
-      context.val = context.val.replace(/\@message/i, tmsg.message);
+      context.val = context.val.replace(/\@message/gi, tmsg.message);
     } catch (err) {
       logger.error({ tmsg: tmsg, err }, "Failed to replace @message");
     }
