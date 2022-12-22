@@ -611,9 +611,26 @@ describe("Execute evaluations via $()", () => {
 
     expect(replacedCmd).to.equal("I know my abc's");
   });
+
+  it("Should be able to evaluate using data from variables", async () => {
+    const testCmdString = "One time I $(var action='{testFlew=flew}'; action)";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("One time I flew");
+  });
+
+  it("Should be able to use arrays", async () => {
+    const testCmdString =
+      "This variable type is an array: $(var arr='{testFlewArr=[flew,ran,jumped]}'.split(','); Array.isArray(arr); )";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("This variable type is an array: true");
+  });
 });
 
-describe("Edge Case Handling", () => {
+describe("FancyParser Middleware", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
     logLevel: "error",
@@ -621,13 +638,16 @@ describe("Edge Case Handling", () => {
   before(async () => {
     return contextDB.ready;
   });
-
-  it("Should ignore $ prefixed brackets", async () => {
-    const testCmdString = "This is a ${someVariable} {prefixBracketTest=test}";
-    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
-    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
-
-    expect(replacedCmd).to.equal("This is a ${someVariable} test");
+  describe("FancyParser Pre", () => {
+    it("Should apply changes before parsing", async () => {
+      const FCP: FancyCommandParser = new FancyCommandParser(null, contextDB);
+      const testMiddleware = (context: { val: string }, next: Next): void => {
+        context.val = context.val.replace("brownies", "salad");
+      };
+      FCP.preParse(testMiddleware);
+      const res: string = await FCP.parse("I really enjoy brownies");
+      expect(res).to.equal("I really enjoy salad");
+    });
   });
 });
 
@@ -666,7 +686,7 @@ describe("Extremely basic usage", () => {
   });
 });
 
-describe("FancyParser Middleware", () => {
+describe("Advanced Usage", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
     logLevel: "error",
@@ -674,15 +694,12 @@ describe("FancyParser Middleware", () => {
   before(async () => {
     return contextDB.ready;
   });
-  describe("FancyParser Pre", () => {
-    it("Should apply changes before parsing", async () => {
-      const FCP: FancyCommandParser = new FancyCommandParser(null, contextDB);
-      const testMiddleware = (context: { val: string }, next: Next): void => {
-        context.val = context.val.replace("brownies", "salad");
-      };
-      FCP.preParse(testMiddleware);
-      const res: string = await FCP.parse("I really enjoy brownies");
-      expect(res).to.equal("I really enjoy salad");
-    });
+
+  it("Should ignore $ prefixed brackets", async () => {
+    const testCmdString = "This is a ${someVariable} {prefixBracketTest=test}";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("This is a ${someVariable} test");
   });
 });
