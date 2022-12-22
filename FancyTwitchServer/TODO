@@ -1,6 +1,8 @@
-# Bug Fixes:
+# Bug Fixes Needed:
 
 $() evaluations should not be broken by nested ( or ).
+
+@1 @2, etc not working correctly for twitch message replacement
 
 # Additional Features needed:
 
