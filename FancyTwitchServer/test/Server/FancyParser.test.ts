@@ -387,7 +387,7 @@ describe("FancyParser Evaluation", () => {
   // * TEST VARIABLE SUBTRACTION
   // * Able to make assignment via - operator {var-$something}
   // **********************************
-  describe("Addition Assigments", async () => {
+  describe("Subtraction Assigments", async () => {
     // **********************************
     // * TEST NUMERIC SUBTRACTION
     // **********************************
