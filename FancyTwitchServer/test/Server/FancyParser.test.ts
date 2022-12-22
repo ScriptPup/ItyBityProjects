@@ -656,6 +656,14 @@ describe("Extremely basic usage", () => {
 
     expect(replacedCmd).to.equal("This is a secret test whcih has run 1 times");
   });
+
+  it("Should be able to make variable replacements with space-separated varnames", async () => {
+    const testCmdString = "This is a {test Type=secret} message";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("This is a secret message");
+  });
 });
 
 describe("FancyParser Middleware", () => {
