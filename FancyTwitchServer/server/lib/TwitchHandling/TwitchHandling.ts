@@ -1,7 +1,6 @@
 /** @format */
 
 import { DataSnapshot } from "acebase";
-import { Client } from "tmi.js";
 import { BotAccount, TwitchMessage } from "../../../shared/obj/TwitchObjects";
 import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
@@ -37,12 +36,6 @@ export class TwitchListener {
    */
   private FCL: FancyCommandListener;
 
-  /**
-   * twitchListenClient is the twitch client provided at initialization which will LISTEN to commands, but will not SAY any commands
-   * the LISTEN and SAY roles are split up to avoid interuptions in the service due to bearer token timeouts (although that IS very unlikely anyway)
-   */
-  private twitchListenClient: Client | null = null;
-
   private twitchSayClient?: TwitchSayHelper;
 
   constructor(FCL: FancyCommandListener) {
@@ -67,34 +60,7 @@ export class TwitchListener {
       );
       return;
     }
-    if (this.twitchListenClient) {
-      if (this.twitchListenClient.readyState() === "OPEN") {
-        try {
-          await this.twitchListenClient.disconnect();
-        } catch (err) {
-          logger.error(
-            { err, twitchListenClient: this.twitchListenClient },
-            "Tried to disconnect twitch client, but failed"
-          );
-        }
-      }
-    }
-    logger.debug("Creating new twitch client, connection anonymously");
-
-    this.twitchListenClient = new Client({
-      channels: [this.botAccount.channel],
-      options: { debug: process.env.NODE_ENV === "development" },
-    });
-    this.twitchListenClient
-      .connect()
-      .catch((err) => {
-        logger.error({ err }, "Failed to connect twitch client aononymously");
-      })
-      .then(() => {
-        logger.debug("Created and connected new twitch client anonymously");
-      });
     await this.handleTwitchMessages();
-    this.twitchListenClient.connect();
   }
 
   /**
@@ -144,15 +110,15 @@ export class TwitchListener {
       );
       return;
     }
-    if (!this.twitchListenClient) {
+    if (!this.twitchSayClient) {
       logger.error(
-        "The twitchListenClient is null, so we can't do anything, sorry"
+        "The twitchSayClient is null, so we can't do anything, sorry"
       );
       return;
     }
     logger.info("Setting up listener for twitch messages");
-    this.twitchListenClient.removeAllListeners("message");
-    this.twitchListenClient.on(
+    this.twitchSayClient.twitchClient?.removeAllListeners("message");
+    this.twitchSayClient.twitchClient?.on(
       "message",
       async (channel, tags, message, self) => {
         const msgKey = `${tags["tmi-sent-ts"]?.toString()}:${message.substring(
@@ -200,13 +166,30 @@ export class TwitchListener {
         );
         // Before processing the commands, make sure the authentication token we're using is still valid, if not create a new client to use for writing
         // Once the commands have been processed, send the response for each message in the stack back to twitch
-        finalMessages.forEach((msg) => {
+        finalMessages.forEach(async (msg) => {
           if (!this.twitchSayClient) return; // Shouldn't need this, given the parent has it, but typescript is too stupid to figure that out
           logger.debug(
             { msgKey, msg },
             "Sending reply based on command parsing"
           );
-          this.twitchSayClient.say(channel, msg);
+          try {
+            await this.twitchSayClient.say(channel, msg);
+          } catch (err) {
+            logger.error(
+              { err },
+              `Failed to 'say' ${msg} in ${channel} chat, reconnecting and trying again`
+            );
+            this.twitchSayClient.connectTwitchClient().then(() => {
+              try {
+                this.twitchSayClient?.say(channel, msg);
+              } catch (err) {
+                logger.fatal(
+                  { err },
+                  `Failed to 'say' ${msg} after reconnecting, something is wrong!`
+                );
+              }
+            });
+          }
         });
       }
     );

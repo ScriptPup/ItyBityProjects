@@ -11,7 +11,7 @@ export class TwitchSayHelper {
   /**
    * twitchClient is the client which is used internally to actually send data back to twitch, it will be destroyed and replaced when the bearer token expires
    */
-  private twitchClient?: Client;
+  public twitchClient?: Client;
 
   /**
    * botAccount is the property which contains information relevant to the bot used to communicate with twitch
@@ -204,7 +204,7 @@ export class TwitchSayHelper {
    * @returns void promise
    *
    */
-  private async connectTwitchClient(
+  public async connectTwitchClient(
     skipAuthCheck: boolean = false
   ): Promise<void> {
     logger.debug(
