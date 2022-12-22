@@ -1,6 +1,17 @@
-Client
-- Use pop-up modal to setup bot configuration
-Server
-- Listen for setting changes for bot configuration
+# Bug Fixes:
 
-FINISH IMPLEMENTING OAUTH AND TEST
+$() evaluations should not be broken by nested ( or ).
+
+# Additional Features needed:
+
+## "Hidden" variable sets
+
+Maybe something like `{!var=something}`
+
+The idea is you can do something like
+
+```
+name: !hearmeout something is off here...
+command: The last time we heard you out, you said "{hearMeOut}". {!hearMeOut=@message}
+expected result: The last time we heard you out, you said "If this works I'll eat my hat"
+```
