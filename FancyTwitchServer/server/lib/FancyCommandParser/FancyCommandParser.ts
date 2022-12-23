@@ -330,7 +330,7 @@ export class FancyCommandParser {
 
   private evaluateCommand(cmd: string) {
     logger.debug({cmd},`Evaluating $() blocks`);
-    const toParse: RegExp = new RegExp(/(?<fullblock>\$\((?<execblock>.+?)\)\$)/, "igmd");
+    const toParse: RegExp = new RegExp(/(?<fullblock>\$\((?<execblock>[\s\S]+?)\)\$)/, "igmd");
     const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
       cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
     const repReady: Array<{start: number, end: number, replacement: string}> = new Array<{start: number, end: number, replacement: string}>();
