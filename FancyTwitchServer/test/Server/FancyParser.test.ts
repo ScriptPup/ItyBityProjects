@@ -595,7 +595,7 @@ describe("FancyParser Evaluation", () => {
   });
 });
 
-describe("Execute evaluations via $()", () => {
+describe("Execute evaluations via $()$", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
     logLevel: "error",
@@ -605,7 +605,7 @@ describe("Execute evaluations via $()", () => {
   });
 
   it("Should evaluate code and return result", async () => {
-    const testCmdString = "$(var cba='abc'; `I know my ${cba}'s`)";
+    const testCmdString = "$(var cba='abc'; `I know my ${cba}'s`)$";
     const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
     const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
 
@@ -613,7 +613,7 @@ describe("Execute evaluations via $()", () => {
   });
 
   it("Should be able to evaluate using data from variables", async () => {
-    const testCmdString = "One time I $(var action='{testFlew=flew}'; action)";
+    const testCmdString = "One time I $(var action='{testFlew=flew}'; action)$";
     const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
     const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
 
@@ -622,7 +622,7 @@ describe("Execute evaluations via $()", () => {
 
   it("Should be able to use arrays", async () => {
     const testCmdString =
-      "This variable type is an array: $(var arr='{testFlewArr=[flew,ran,jumped]}'.split(','); Array.isArray(arr); )";
+      "This variable type is an array: $(var arr='{testFlewArr=[flew,ran,jumped]}'.split(','); Array.isArray(arr); )$";
     const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
     const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
 
