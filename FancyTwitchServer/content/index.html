@@ -1,8 +1,39 @@
 <!-- @format -->
-
-<h1>Placeholder index page</h1>
-
-This page will eventually be fancy looking. For now, here are some links.
-
-<p><a href="/setup">Setup</a></p>
-<p><a href="/chatrelay">Chat Relay</a></p>
+<html>
+  <head>
+    <link rel="shortcut icon" href="#" />
+    <link rel="stylesheet" href="../style/main.css" />
+  </head>
+  <body>
+    <header id="content-head">
+      <span><h1 id="page-title"><a href="/">Fancy Twitch Services</a></h1></span>
+    </header>
+    <article class="main columnar" id="content-main">
+      <div class="frontLink">
+        <a href="/setup"
+          ><span>Setup</span>
+          <span class="sub">This link will bring you to the setup page, which is where you can define your twitch application details, and sign-in as the bot account you want to use.</span class="sub">
+        </a>
+      </div>
+      <div class="frontLink">
+        <a href="/chatrelay" target="_blank"
+          ><span>Chat Relay</span>
+          <span class="sub">Use this link to go to a web-page which will simply spit all chats out.
+            <br /><br />
+            Use the paramaters: ?channel=[mychannel]&fade=[fade_timeout]&swipe=[true|false] to control behavior
+            <br /><br />
+            In the future, may add some helper pop-up before redirecting to make this more convenient (like kapchat does).
+        </span class="sub">
+        </a>
+      </div>
+    </article>
+    <footer id="content-foot">
+      <div class="left-align bottom-align">
+        <sub><a href="/attribution">Thanks and Attribution!</a></sub>
+      </div>
+      <div class="right-align bottom-align">
+        <sub id="created-by"> Created by ScriptPup, have fun! </sub>
+      </div>
+    </footer>
+  </body>
+</html>
