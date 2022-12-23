@@ -24,3 +24,14 @@ expected result: The last time we heard you out, you said "If this works I'll ea
 ## Implement timeout settings so you users can't spam things insecently 
     - User timeout
     - Global timeout
+
+## Add custom command extension
+
+Allow for a custom command action to be called instead of going through the parser. I imagine it would look something like this:
+
+```
+name: !fanart
+command: ~cycleArt
+expected: performs custom action that cycles the fan-art displayed by a custom page
+expected: Either replies with an output, or doesn't reply at all
+```
