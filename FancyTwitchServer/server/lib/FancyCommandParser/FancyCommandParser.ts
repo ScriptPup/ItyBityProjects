@@ -351,7 +351,7 @@ export class FancyCommandParser {
     let ncmd = cmd;
     logger.debug(`Replacing var block strings with evaluated results`);
     for (const repItm of repReady) {
-      let repWith: AcceptedVarTypes = repItm.replacement;
+      let repWith: AcceptedVarTypes = repItm.replacement || "";
       ncmd =
         ncmd.substring(0, Math.max(repItm.start, 0)) +
         repWith + 
