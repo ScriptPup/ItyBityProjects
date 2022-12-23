@@ -628,6 +628,16 @@ describe("Execute evaluations via $()$", () => {
 
     expect(replacedCmd).to.equal("This variable type is an array: true");
   });
+
+  it("Should be able to handle advanced use-cases", async () => {
+    `We've heard you out about @message $(let msgs = "{@user_heard+(@message)}".split(","); rand_msg=msgs.sort(() =>0.5-Math.random())[0]; console.log("Chose msg",rand_msg); )$`;
+    const cmdExpression = "`I found out about ${msgs[0]}`;";
+    const testCmdString = `$(let msgs = "{user_heard=(something,items)}".split(","); ${cmdExpression} )$`;
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("I found out about something");
+  });
 });
 
 describe("FancyParser Middleware", () => {
