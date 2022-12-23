@@ -57,21 +57,21 @@ export function TwitchFancyPreParser(
       logger.error({ tmsg: tmsg, err }, "Failed to replace @message");
     }
 
-    const paramPattern = /\@[0-9]+/gi;
+    const paramPattern = /(?<pos_param>\@[0-9]+)/dgim;
     const paramReplacements: IterableIterator<RegExpMatchArray> =
       context.val.matchAll(paramPattern);
     const msgWords = tmsg.message.split(" ");
-    let ix = 0;
-    for (const [param] of paramReplacements) {
-      ix++;
-      if (ix === 1) {
+    for (const paramMatch of paramReplacements) {
+      logger.debug({ paramMatch }, `Replacing positional param`);
+      const param: string | undefined = paramMatch.groups?.pos_param;
+      if (!param) {
         continue;
       }
       const paramIX = Number.parseInt(param.replace("@", ""));
       try {
-        context.val = context.val.replace(param, msgWords[paramIX]);
+        context.val = context.val.replace(param, msgWords[paramIX - 1]);
       } catch (err) {
-        logger.error({ tmsg, err }, `Failed to replace @${paramIX}`);
+        logger.error({ tmsg, err }, `Failed to replace @${paramIX - 1}`);
       }
     }
     next();

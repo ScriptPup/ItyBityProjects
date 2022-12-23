@@ -81,7 +81,7 @@ describe("TwitchFancyPreParse Middleware", () => {
 
     it("Should replace numbered params with the corresponding word from the mssage", async () => {
       const command: string =
-        "So I see your first word is @1, second word is @2 and third word is @2";
+        "So I see your first word is @1, second word is @2 and third word is @3";
       const res: string = await FCP.parse(command, twitchMessage);
       expect(res).to.equal(
         "So I see your first word is This, second word is is and third word is a"
