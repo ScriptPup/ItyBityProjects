@@ -36,7 +36,7 @@ body {
 
 
 
-.main{
+.main {
     background-color: pallete.$background-accent;
     width: 95%;
     min-height: 80%;
@@ -49,6 +49,9 @@ body {
     & .plaintext { 
       margin-left: 15px;
     }
+}
+.main.columnar {
+    flex-direction: column;
 }
 
 
@@ -223,12 +226,6 @@ body {
   bottom: 3px;
 }
 
-
-#page-title {
-  color: pallete.$main-font-color;
-  margin-left: 20px;
-  line-height: 0.76;
-}
 #created-by {
   text-align: right;
   color: pallete.$tertiary-font-color;
@@ -358,7 +355,7 @@ font-variation-settings:
       box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
       -webkit-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
       -moz-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;    
-      background-color: pallete.$accent-font-color;
+      background-color: pallete.$background-accent-alt;
       margin-left: 10px; 
       margin-bottom: 8px;
       & > summary {
@@ -414,5 +411,79 @@ font-variation-settings:
       }
   }
 }
+
+.frontLink {
+    min-height: 50px;
+    width: 50%;
+    align-items: center;
+    display: flex;
+    justify-items: center;        
+    vertical-align: middle;
+    align-content: center;
+    &::before {
+        content: "";
+        background-color: pallete.$hr-gradient-inner;
+        opacity: 0.6;
+        top: 0;
+        left: -10px; 
+        position: absolute;
+        display: block;
+        width: 10px;
+        height: 100%;
+        border-radius: 4px 0px 0px 4px;
+    }
+    position: relative;
+    box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
+    -webkit-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
+    -moz-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;    
+    background-color: pallete.$accent-font-color;
+    margin-left: 60px; 
+    margin-top: 8px;
+    & > a {
+        position: relative;
+        text-decoration: none;
+        margin-top: auto;
+        font-size: large;
+        list-style: none;
+        padding-left: 10px;
+        padding-top: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+
+        span:nth-child(1) {
+            text-decoration: underline;
+        }
+
+        &:hover {
+            cursor: pointer;
+        }
+        
+        span.sub {
+            margin-top: 5px;
+            display: block;
+            text-align: bottom;
+            font-size: small;
+            font-weight: normal;
+            bottom: 8px;
+            color: pallete.$deemphasised-font-color;
+        }
+
+    }
+    border-radius: 0px 4px 4px 0px;
+}
+
+
+
+#page-title {
+    color: pallete.$main-font-color;
+    margin-left: 20px;
+    line-height: 0.76;
+    & a {
+      text-decoration: none;
+      color: pallete.$main-font-color;
+    }
+  }
 
 @import "./icons.scss";
