@@ -64,11 +64,13 @@ function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPre
 */
 function sandboxedEval(evalStr: string) {
   try {
-    return eval?.(`"use strict";${evalStr}`);
+    const res = eval?.(`"use strict";${evalStr}`);
+    logger.debug({evalStr,res},"Command evaluated");
+    return res;
   } 
-  catch (e)
+  catch (err)
   {
-    logger.error({"eval": evalStr}, "Failed to execute eval block");
+    logger.error({"eval": evalStr, err}, "Failed to execute eval block");
     return evalStr;
   }
 }
@@ -276,19 +278,25 @@ export class FancyCommandParser {
     try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);
-    const toParse: RegExp = new RegExp("(?<varblock>[$]*{.+?})", "igmd");
+    const toParse: RegExp = new RegExp("(?<varblock>[$|function\(\)|=>]*{.+?})", "igmd");
     const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
       cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
     // Run through all replacements
     logger.debug(`Start parsing varblocks`);
     const repReady = [];
     for (let rawMatch of toRepl) {
-      try {
-      logger.debug({"block": rawMatch},`Starting parse of new block`);  
+      try {      
       const vbStr: string = rawMatch.groups?.varblock || "";
+      logger.debug({"string": vbStr, "block": rawMatch, startsWithArrow: vbStr.startsWith("=>") },`Starting parse of new block`);
       const vbIx: Array<number> = rawMatch.indices.groups?.varblock;
-      if(vbStr == "" || vbStr[0] === "$"){ 
-        logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or starts with $`);  
+      if(
+        vbStr == "" 
+        || vbStr.startsWith("$") 
+        || vbStr.startsWith("function()") 
+        || vbStr.startsWith("=>") 
+      ){ 
+        
+        logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or is preceeded with characters indicating it's likely intended to perform something functionally`);  
         continue; 
       }
       logger.debug({"block": rawMatch},`Parse VarBlock`);
@@ -351,7 +359,7 @@ export class FancyCommandParser {
     let ncmd = cmd;
     logger.debug(`Replacing var block strings with evaluated results`);
     for (const repItm of repReady) {
-      let repWith: AcceptedVarTypes = repItm.replacement || "";
+      let repWith: AcceptedVarTypes = repItm.replacement !== "undefined" ? repItm.replacement : "" || "";
       ncmd =
         ncmd.substring(0, Math.max(repItm.start, 0)) +
         repWith + 
