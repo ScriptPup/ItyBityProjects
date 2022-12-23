@@ -335,7 +335,10 @@ font-variation-settings:
           min-width: 135px;
       }
       & > textarea {
+          max-height: 1000px;
           min-width: 325px;
+          height: auto;
+          resize:vertical;
       }
   }
   &-item {
