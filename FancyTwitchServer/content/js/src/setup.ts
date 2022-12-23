@@ -13,6 +13,20 @@ let $: JQueryStatic;
 let FCC: FancyCommandClient;
 
 /**
+ * Simple function to resize textarea to fit contents better. Why this isn't builtin to the HTML spec, no idea
+ * https://stackoverflow.com/questions/995168/textarea-to-resize-based-on-content-length
+ *
+ *
+ * @param element - the TextArea element to resize
+ * @returns void
+ *
+ */
+function textAreaAdjust(element: HTMLElement) {
+  element.style.height = "1px";
+  element.style.height = 25 + element.scrollHeight + "px";
+}
+
+/**
  * Sets the information-contents panel to display the HTML provided
  *
  *
@@ -66,6 +80,27 @@ const addCommand = async (
     .find(`.select-usableby option[value="${usableBy}"]`)
     .prop("selected", true);
   $(domContent).attr("id", name);
+  $(domContent)
+    .find("textarea")
+    .on("keyup", (evnt) => {
+      textAreaAdjust(evnt.target);
+    });
+
+  $(domContent)
+    .find("summary")
+    .on("click", (evnt) => {
+      const elem: HTMLElement = evnt.delegateTarget.parentNode as HTMLElement;
+      console.log(elem);
+      if (elem.hasAttribute("open")) {
+        return;
+      }
+      console.log("resizing");
+      $(domContent)
+        .find("textarea")
+        .each((ix, elem) => {
+          setTimeout(() => textAreaAdjust(elem), 1);
+        });
+    });
   setupButtons($(domContent));
   $("#command-list").append(domContent);
   if (expand) {
