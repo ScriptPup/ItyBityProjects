@@ -147,7 +147,8 @@ body {
           width: 100%;
           margin-left: 0px; 
       }
-      overflow-y: auto;                
+      overflow-y: auto;       
+      overflow-x: hidden;         
   }
   &-left {
       flex-grow: 1;
