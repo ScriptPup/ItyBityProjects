@@ -2,73 +2,87 @@
 
 <hr />
 
-## Name
+## Command Name
 
 The name of the command is what the server will "listen" for, thios
 
+## May Call
 
-# Contextual Variables
+The access level a twitch user is required to have in order to trigger the command.
 
-The variable structure which can be used to store variable information and replace the block with the results.
+> Note: Every LOWER option, includes all of the HIGHER ones. So the owner can ALWAYS execute a command.
 
-For example:
+## Command to Exec
+
+The command which will be executed upon the name being called by a twitch user with the prerequisite (or higher) access level.
+
+Allong with supporting normal text replies, commands support several avanced functions.
+- Variables (Server)
+- Substitutions
+- Expressions
+
+You can learn more about each from their specific tabs! Just for fun though, there are some example commands below that will give an idea of some potentially neat uses!
+
+<details> 
+
+<summary>Example Commands</summary>
+
+__Command__: `!hearmeout`
+
+__Description__: Store previous "heard me out" statements, and randomly replay one of them when the command is used again.
+
+__Used Like__: `!hearmeout People assume streamers are paid way more than they are`
+
+__Results in__: `We've hear you out about "People assume streamers are paid way more than they are".` and IF that twitch user has used !hearmeout before, it will continue ` But remember when you said "some other thing you said before"`
 
 ```
-You've gained {evil++} points of evil total!
+We've heard you out about "@message". $(
+let msgs = "{@user_heard+(@message)}".split(",");
+let fmsgs = msgs.filter(x=>x !== "@message");
+msgs.length > 0 ? `But remember when you said "${msgs.sort(() =>0.5-Math.random())[0]}"?` : "";;
+)$
 ```
 
-Will result in `You've gained 1 point of evil total!`the first time you run it. 
+----
 
-The second time it will say `You've gained 2 points of evil total!` and so on and so forth.
+__Command__: `!swearjar`
 
-## Supported variable syntax
+__Description__: Store a global count of how many times the swear-jar has been paid to, and how many times it's been called on a particular person.
 
-### General interfacing
-- Delete variable: `{varName=null}`
-- Reference variable: `{varName}`
+__Used Like__: `!swearjar some_twitch_user`
 
-> Note: When deleting a variable, the operator MUST NOT have a space before or after `null`.
+__Results in__: `some_twitch_user has had to pay the swear jar 1 time, the swear jar has been paid 1 times`
 
-### NUMERIC interfacing
+```
+@1 has had to pay the swear jar {swearjar_users/@1++} time, the swear jar has been paid {swearjar++} times.
+```
 
-- Set variable to one: `{varName=1}`
-- Increment by one: `{varName++}`
-- Increment by two: `{varName+2}`
-- Increment by multiplitive: `{varName*2|1}`
-- Decrement by one: `{varName--|0}`
-- Decrement by two: `{varName-1|0}`
-- Decrement by dividend: `{varName/2|0}`
+----
 
-> Note: I thought about implementing like square roots and powers and such, but honestly I can't think of a use-case so it seems like a waste of time. Proove me wrong with a use-case and I'll think about it.
+__Command__: `!reminder`
 
-### TEXT interfacing
+__Description__: Stores a reminder for the particular user which will be displayed next time they request a reminder.
 
-- Set text value: `{varName=whatever}`
-- Add to text value: `{varName+ happens|something}`
-   > Note the space before. EVERYTHING to the right of the operator will be included (with the exception of numbers, which will always trim out space around them)
+__Used Like__: `!reminder I think other_twitch_user is pretty neat`
 
-### LIST (array) interfacing
+__Results in__: `Last reminder you set was "I'm pretty tired today", we'll remind you about "I think other_twitch_user is pretty neat" next time.`
 
-- Set list value: `{varName=[whatever]}`
-- Add item to list: `{varName+[happens,will]}`
-- Remove item from list: `{varName-[0]}`
-   > List are index-based. This means to remove an item, you pass the position of the item you want to remove (starting at 0), NOT the value of the item. You may pass multiple indexies to remove.
+```
+Last reminder you set was "{@user_reminder}", we'll remind you about "{@user_reminder=@message}" next time.
+```
 
-### SET interfacing
+Of course these are all just examples, but they provide some ideas for how flexible the command framework is!
 
-Set values are essentially unique lists. If you want a list to not repeat, use this.
+</details>
 
-- Set the set value: `{varName=(whatever)}`
-- Add item to set: `{varName+(happens,happens)}`
-   > Note: In the above example, happens will only actually be added once.
-- Remove item from set: `{varName-(whatever)}`
+<details> 
+<summary>Disclaimers</summary>
 
-> Note: Sets are often represented as a list within `{}`, however `{}` is being used for the variable block boundary and I don't want to deal with trying to detect which is which, so we're going to use `()` instead.
 
-### Fallbacks
+FIRST and foremost - This software is provided as-is without any warranty, guarantee, or promised support. If you do find a problem, please [raise an issue](https://github.com/ScriptPup/TwitchHelpers/issues); but I do NOT promise I'll ever have a chance to resolve it. Same thing with feature requests, put in an issue and tag as a feature request; i may or may not get to it.
 
-All variable assignemnts support a fallback.
+SECOND - This is an open-source project. This means that it's intentionally left for others to use and do what they want with it. If you want to enhance the project, please feel free to make the enhancements and make a PR (pull request) on github. The software is provided under the `GNU GENERAL PUBLIC LICENSE`. If you aren't sure what that means, checkout the `LICENSE` file at the root directory of this project.
 
-Fallbacks are what a variable will default to if something goes wrong. For example, if a variable that you're trying to multiply doesn't exist yet, or trying to divide by 0. 
+THIRD - While I do my best to take security into consideration, there ARE some areas for potential abuse. While as far as I've been able to determine these are relativley small - and I won't be listing them here so no one gets any additional ideas 😉 - I am warning you now that, as with any user-interfacable product, there is always a risk of some particularly mallicious and motivated agent figuring out how to use the features provided outside of its intended purposes. If this happens I AM very sorry and would request you [raise an issue](https://github.com/ScriptPup/TwitchHelpers/issues), but I am in no way responsible or obliged to act upon the report in any particular way.
 
-By default, the fallback value is 1.
+</details>
