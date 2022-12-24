@@ -34,10 +34,26 @@ function textAreaAdjust(element: HTMLElement) {
  * @returns void
  *
  */
-const setInformationContents = (html: string): void => {
+const setInformationContents = async (
+  inf: string | null = "basic"
+): Promise<void> => {
+  if (!converter) {
+    converter = new (await import("showdown")).Converter();
+  }
+  const html = converter.makeHtml(await getInformationContents(inf));
   const info: HTMLElement | null = document.getElementById(
     "information-contents"
   );
+  $("#information-options")
+    .find("li")
+    .each((ix, li) => {
+      const li_inf = $(li).attr("inf");
+      if (inf === li_inf) {
+        $(li).addClass("selected");
+      } else {
+        $(li).removeClass("selected");
+      }
+    });
   if (null === info) {
     throw new Error("Information-contents not found, unable to load data in");
   }
@@ -191,8 +207,32 @@ const connectServer = (): void => {
  * @returns a promise with the markdown contents
  *
  */
-const getInformationContents = async (): Promise<string> => {
-  return fetch("/markdown/information.md", {
+const getInformationContents = async (
+  info?: string | null
+): Promise<string> => {
+  const infoParam = info
+    ? info
+    : new URLSearchParams(window.location.search).get("info") || "basic";
+  return fetch(`/markdown/${infoParam}.md`, {
+    headers: {
+      "Content-Type": "text/plain",
+    },
+  })
+    .then((res: Response) => {
+      return res.text().then((txt: string) => {
+        if (txt.startsWith("Error")) {
+          return getNotFoundMDMessage();
+        }
+        return txt;
+      });
+    })
+    .catch(() => {
+      return getNotFoundMDMessage();
+    });
+};
+
+const getNotFoundMDMessage = async (): Promise<string> => {
+  return fetch(`/markdown/not_found.md`, {
     headers: {
       "Content-Type": "text/plain",
     },
@@ -329,6 +369,11 @@ const authorizedApplication = async () => {
   if (!window.location.search) {
     return;
   }
+  const parsedURLParams = new URLSearchParams(window.location.search);
+  const botCode = parsedURLParams.get("code");
+  if (!botCode) {
+    return;
+  }
   const state = localStorage.getItem("auth-verify-code");
   const rawBotData = localStorage.getItem("auth-verify-cache");
   if (!rawBotData) {
@@ -340,7 +385,6 @@ const authorizedApplication = async () => {
   const botAccount = JSON.parse(rawBotData);
 
   try {
-    const parsedURLParams = new URLSearchParams(window.location.search);
     const stateVerify = parsedURLParams.get("state");
     if (state !== stateVerify) {
       throw new Error(
@@ -349,7 +393,7 @@ const authorizedApplication = async () => {
     }
 
     // If we've verified everything satisfactorially, then send the botAccount data to the server
-    botAccount["auth_code"] = parsedURLParams.get("code");
+    botAccount["auth_code"] = botCode;
     if (!botAccount.auth_code) {
       throw new Error("Somehow the authorization code doesn't exist!");
     }
@@ -380,10 +424,7 @@ const authorizedApplication = async () => {
  */
 const setupPage = async () => {
   $ = (await import("jquery")).default;
-
-  converter = new (await import("showdown")).Converter();
-  let html = converter.makeHtml(await getInformationContents());
-  setInformationContents(html);
+  setInformationContents();
 
   // Setup actions to do when the server says we got new commands, or existing ones have been removed.
   connectServer();
@@ -404,6 +445,18 @@ const setupButtonListeners = async () => {
     console.log("Opening bot template modal");
     showBotTemplate();
   });
+  $("#information-options")
+    .find("li")
+    .on("click", (evnt) => {
+      const infPg = $(evnt.delegateTarget).attr("inf");
+      console.log(`Clicked info option ${infPg}`);
+      if (infPg) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("info", infPg);
+        window.history.pushState({}, "", url);
+        setInformationContents(infPg);
+      }
+    });
 };
 
 /**
