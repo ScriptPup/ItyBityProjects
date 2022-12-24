@@ -240,73 +240,6 @@ font-variation-settings:
 }
 
 
-.markdown {
-  color: pallete.$tertiary-font-color;
-  font-weight: lighter;
-  position: relative;
-  box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
-  -webkit-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
-  -moz-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;    
-  border-radius: 4px 0px 0px 4px;
-  & > hr {
-      width: 94%;
-      padding-top: 0px;
-      margin-top: 0px;
-      margin-left: auto;
-      margin-right: auto;
-  }
-  &::before {
-      content: "";
-      background-color: pallete.$hr-gradient-inner;
-      opacity: 0.6;
-      top: 0;
-      position: absolute;
-      display: block;
-      width: 10px;
-      height: 100%;
-      border-radius: 4px 0px 0px 4px;
-  }
-  & > :nth-child(1) {
-      padding-top: 15px;
-      margin-bottom: 10px;        
-  }
-  & > * {
-      margin-left: 20px;
-  }
-  & h1,& h2,& h3,& h4 {
-      color: pallete.$main-font-color;
-  }
-  & h1 {
-      font-size: 1.5em;
-  }
-  & h2 {
-      font-size: 1em;
-  }
-  & h3 {
-      font-size: 0.8em;
-  }
-  & h4 {
-      font-size: 0.6em;
-  }
-  code {        
-      background: rgb(172 229 255 / 44%);
-      font-family: monospace;
-      color: black;
-      border-radius: .2rem;
-      margin-right: 3px;
-  }
-  pre > code {
-      padding: 4px;
-      word-wrap: break-word;
-      box-decoration-break: clone;
-      padding: .1rem .3rem .2rem;
-  }
-  p > code {
-      padding-left: 4px;
-      padding-right: 4px;
-  }
-}
-
 .command {
   &-component {        
       position: relative;
@@ -436,7 +369,7 @@ font-variation-settings:
     box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
     -webkit-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;
     -moz-box-shadow: -7px 9px 18px -8px rgba(168, 168, 168, 0.37) inset;    
-    background-color: pallete.$accent-font-color;
+    background-color: pallete.$background-accent-alt;
     margin-left: 60px; 
     margin-top: 8px;
     & > a {
