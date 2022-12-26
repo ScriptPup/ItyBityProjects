@@ -606,11 +606,11 @@ describe("Execute evaluations via ^()^", () => {
 
   it("Should evaluate code and return result", async () => {
     const testCmdString =
-      "^(var blockCheck= 1==2 ? ${cba} : ${abc}; blockCheck; )^";
+      "^(var blockCheck= 1==2 ? '{cba}' : '{abc}'; blockCheck; )^";
     const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
     const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
 
-    expect(replacedCmd).to.equal("${abc}");
+    expect(replacedCmd).to.equal("{abc}");
   });
 });
 
