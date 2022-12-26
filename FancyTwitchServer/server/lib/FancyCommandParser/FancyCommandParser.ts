@@ -280,7 +280,7 @@ export class FancyCommandParser {
     logger.debug(`Parsing ${cmd}`);
     // Run all pre-execution evaluations
     cmd = this.evaluatePreCommand(cmd);
-    const toParse: RegExp = new RegExp("(?<varblock>[$|function\(\)|=>]*{.+?})", "igmd");
+    const toParse: RegExp = new RegExp("(?<varblock>[$|function\(\)|=>|\)]*{.+?})", "igmd");
     const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
       cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
     
@@ -298,6 +298,7 @@ export class FancyCommandParser {
           || vbStr.startsWith("$") 
           || vbStr.startsWith("function()") 
           || vbStr.startsWith("=>") 
+          || vbStr.startsWith("){") 
         ){ 
           
           logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or is preceeded with characters indicating it's likely intended to perform something functionally`);  
