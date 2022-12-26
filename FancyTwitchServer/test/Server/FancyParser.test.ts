@@ -620,6 +620,14 @@ describe("Execute evaluations via ^()^", () => {
 
     expect(replacedCmd).to.equal("2");
   });
+  it("Should be able to evaluate code in the middle of a larger string", async () => {
+    const testCmdString =
+      "^(var blockCheck= 1==2 ? '{preVarBlock=1}' : '{preVarBlock=2}'; blockCheck; )^ is my favorite number!";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("2 is my favorite number!");
+  });
 });
 
 describe("Execute evaluations via $()$", () => {
@@ -664,6 +672,15 @@ describe("Execute evaluations via $()$", () => {
     const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
 
     expect(replacedCmd).to.equal("I found out about something");
+  });
+
+  it("Should be able to evaluate code in the middle of a larger string", async () => {
+    const testCmdString =
+      "$(var cba='abc'; `I know my ${cba}'s and you don't!`)$";
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+    expect(replacedCmd).to.equal("I know my abc's and you don't!");
   });
 });
 
@@ -738,5 +755,33 @@ describe("Advanced Usage", () => {
     const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
 
     expect(replacedCmd).to.equal("This is a ${someVariable} test");
+  });
+
+  it("Should be able to pre execute, variable replace, and execute in one command", async () => {
+    const testCmdString = `$(
+      const postExecuteCheck = (result)=>{
+        if(result === "scriptpup"){
+          return true;
+        }
+        return false;
+      };
+      var execVar="^(const preExecuteCheck = (check)=>{
+        if(check.length > 0){
+          return "{varName=scriptpup}";
+        }
+        return "varName=notscriptpup";
+      };
+      preExecuteCheck("test");
+      )^";
+      postExecuteCheck(execVar);
+    )$`;
+    const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+    const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+    try {
+      expect(replacedCmd).to.equal("true");
+    } catch (err) {
+      console.error("Failed, full replaced command", replacedCmd);
+      throw err;
+    }
   });
 });
