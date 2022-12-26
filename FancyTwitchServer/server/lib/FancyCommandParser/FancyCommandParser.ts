@@ -375,7 +375,7 @@ export class FancyCommandParser {
       ncmd =
         ncmd.substring(0, Math.max(repItm.start, 0)) +
         repWith + 
-        ncmd.substring(repItm.end, repItm.end);
+        ncmd.substring(repItm.end, ncmd.length);
       logger.debug(`Evaluated ${cmd} -> ${ncmd}`);
     }
     return ncmd;
@@ -416,7 +416,7 @@ export class FancyCommandParser {
         ncmd =
           ncmd.substring(0, Math.max(repItm.start, 0)) +
           repWith + 
-          ncmd.substring(repItm.end, repItm.end);
+          ncmd.substring(repItm.end, ncmd.length);
         logger.debug(`PreEvaluated ${cmd} -> ${ncmd}`);
       }
       return ncmd;
