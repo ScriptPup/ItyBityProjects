@@ -7,7 +7,7 @@ name: Node.js CI
 
 defaults:
   run:
-    working-directory: OBS-local-server
+    working-directory: FancyTwitchServer
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: OBS-local-server/package-lock.json
+          cache-dependency-path: FancyTwitchServer/package-lock.json
       - run: npm ci
       - run: npm run build
       - run: npm test
