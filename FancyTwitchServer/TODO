@@ -36,16 +36,6 @@ expected: performs custom action that cycles the fan-art displayed by a custom p
 expected: Either replies with an output, or doesn't reply at all
 ```
 
-## Add pre-server variable replacement expressions
-
-Add expressions which work like 
-
-```
-^("@message".length > 0 ? {varname}=@message : "Message hasn't ever been set")^
-```
-
-This will allow a lot more powerful command structures. The ^()^ commands will run JUST BEFORE the variable replacement. This means all pre-parse middlewares will run BEFORE the pre-server expressions.
-
 ## Treat blank as the same as null for variable replacements
 
 {varname=} should == {varname=null}
