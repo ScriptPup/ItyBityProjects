@@ -187,6 +187,19 @@ describe("FancyParser Evaluation", () => {
         ]);
       });
     });
+
+    // **********************************
+    // * TEST ARRAY ASSIGNMENT BEHAVIORS
+    // **********************************
+    describe("Global assignment", async () => {
+      it("Should treat varName= as varName", async () => {
+        const testCmdString = "{myEqualsVar=test} {myEqualsVar=}";
+        const parsedBlock = new FancyCommandParser(testCmdString, contextDB);
+        const replacedCmd: string = await parsedBlock.Ready; // Wait for the parser to finish before running tests
+
+        expect(replacedCmd).to.equal("test test");
+      });
+    });
   }); // End testing equal assignments {var=$something}
 
   // **********************************
