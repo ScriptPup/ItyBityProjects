@@ -278,46 +278,50 @@ export class FancyCommandParser {
     try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
     logger.debug(`Parsing ${cmd}`);
+    // Run all pre-execution evaluations
+    cmd = this.evaluatePreCommand(cmd);
     const toParse: RegExp = new RegExp("(?<varblock>[$|function\(\)|=>]*{.+?})", "igmd");
     const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
       cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
-    // Run through all replacements
+    
+    
+      // Run through all replacements
     logger.debug(`Start parsing varblocks`);
     const repReady = [];
     for (let rawMatch of toRepl) {
       try {      
-      const vbStr: string = rawMatch.groups?.varblock || "";
-      logger.debug({"string": vbStr, "block": rawMatch, startsWithArrow: vbStr.startsWith("=>") },`Starting parse of new block`);
-      const vbIx: Array<number> = rawMatch.indices.groups?.varblock;
-      if(
-        vbStr == "" 
-        || vbStr.startsWith("$") 
-        || vbStr.startsWith("function()") 
-        || vbStr.startsWith("=>") 
-      ){ 
-        
-        logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or is preceeded with characters indicating it's likely intended to perform something functionally`);  
-        continue; 
-      }
-      logger.debug({"block": rawMatch},`Parse VarBlock`);
+        const vbStr: string = rawMatch.groups?.varblock || "";
+        logger.debug({"string": vbStr, "block": rawMatch, startsWithArrow: vbStr.startsWith("=>") },`Starting parse of new block`);
+        const vbIx: Array<number> = rawMatch.indices.groups?.varblock;
+        if(
+          vbStr == "" 
+          || vbStr.startsWith("$") 
+          || vbStr.startsWith("function()") 
+          || vbStr.startsWith("=>") 
+        ){ 
+          
+          logger.debug({"block": rawMatch},`Stopping parse because vbStr isn't defined, or is preceeded with characters indicating it's likely intended to perform something functionally`);  
+          continue; 
+        }
+        logger.debug({"block": rawMatch},`Parse VarBlock`);
 
-      const varBlock: VarBlock = new VarBlock(vbStr);
-      logger.debug({"block": varBlock},`Parsed VarBlock`);
-      try { 
-        this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
-      } catch (err) { logger.error({err},"use middleware(s) exited with a failure"); }
-      logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
-      await this.getVarFromBlock(varBlock);
-      
-      repReady.unshift({
-        start: vbIx[0] || 0,
-        end: vbIx[1] || 0 + vbStr.length,
-        block: varBlock,
-      });
-      logger.debug({"parsed": repReady},`VarBlock execution results resolved, block parsing complete`);
-    } catch (err) {
-      logger.error({rawMatch,err},"Failed to parse block");
-    }
+        const varBlock: VarBlock = new VarBlock(vbStr);
+        logger.debug({"block": varBlock},`Parsed VarBlock`);
+        try { 
+          this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
+        } catch (err) { logger.error({err},"use middleware(s) exited with a failure"); }
+        logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
+        await this.getVarFromBlock(varBlock);
+        
+        repReady.unshift({
+          start: vbIx[0] || 0,
+          end: vbIx[1] || 0 + vbStr.length,
+          block: varBlock,
+        });
+        logger.debug({"parsed": repReady},`VarBlock execution results resolved, block parsing complete`);
+      } catch (err) {
+        logger.error({rawMatch,err},"Failed to parse block");
+      }
     }
     let ncmd = cmd;
     logger.debug(`Replacing var block strings with parsed results`);
@@ -335,9 +339,16 @@ export class FancyCommandParser {
     return ncmd;
   }
 
-
+  /**
+  * Evaluates POST-variable command block `$()$` and returns the command after parsing is complete
+  *
+  *
+  * @param cmd - The full command string to check for $()$ command blocks within
+  * @returns The modified command text to parse
+  *
+  */
   private evaluateCommand(cmd: string) {
-    logger.debug({cmd},`Evaluating $() blocks`);
+    logger.debug({cmd},`Evaluating $()$ blocks`);
     const toParse: RegExp = new RegExp(/(?<fullblock>\$\((?<execblock>[\s\S]+?)\)\$)/, "igmd");
     const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
       cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
@@ -368,6 +379,47 @@ export class FancyCommandParser {
     }
     return ncmd;
   }
+
+    /**
+  * Evaluates PRE-variable command block `^()^` and returns the command after parsing is complete
+  *
+  *
+  * @param cmd - The full command string to check for $()$ command blocks within
+  * @returns The modified command text to parse
+  *
+  */
+    private evaluatePreCommand(cmd: string) {
+      logger.debug({cmd},`Evaluating ^()^ blocks`);
+      const toParse: RegExp = new RegExp(/(?<fullblock>\^\((?<execblock>[\s\S]+?)\)\^)/, "igmd");
+      const toRepl: IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }> | null =
+        cmd.matchAll(toParse) as IterableIterator<RegExpMatchArray & { indices: {[key: string]: {[key: string]: Array<number>}} }>;
+      const repReady: Array<{start: number, end: number, replacement: string}> = new Array<{start: number, end: number, replacement: string}>();
+  
+      for (let rawMatch of toRepl) {
+        logger.debug({"eval": rawMatch},`Starting execution of new eval block`);
+        const vbStr: string = rawMatch.groups?.execblock || "";
+        const vbIx: Array<number> = rawMatch.indices.groups?.fullblock;
+        const replacement: string = sandboxedEval(vbStr);
+  
+        repReady.unshift({
+          start: vbIx[0] || 0,
+          end: vbIx[1] || 0 + vbStr.length,
+          replacement: replacement,
+        });
+      }
+  
+      let ncmd = cmd;
+      logger.debug(`Replacing var block strings with evaluated results`);
+      for (const repItm of repReady) {
+        let repWith: AcceptedVarTypes = (repItm.replacement !== "undefined" && repItm.replacement !== "null") ? repItm.replacement : "" || "";
+        ncmd =
+          ncmd.substring(0, Math.max(repItm.start, 0)) +
+          repWith + 
+          ncmd.substring(repItm.end, repItm.end);
+        logger.debug(`PreEvaluated ${cmd} -> ${ncmd}`);
+      }
+      return ncmd;
+    }
 
   /**
    * Given a variable block, return the appropriate DB value item
