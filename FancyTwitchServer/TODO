@@ -19,8 +19,6 @@ command: The last time we heard you out, you said "{hearMeOut}". {!hearMeOut=@me
 expected result: The last time we heard you out, you said "If this works I'll eat my hat"
 ```
 
-## Implement user level checks so you can choose which commands are/aren't allowed
-
 ## Implement timeout settings so you users can't spam things insecently 
     - User timeout
     - Global timeout
