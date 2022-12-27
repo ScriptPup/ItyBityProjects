@@ -35,7 +35,3 @@ command: ~cycleArt
 expected: performs custom action that cycles the fan-art displayed by a custom page
 expected: Either replies with an output, or doesn't reply at all
 ```
-
-## Treat blank as the same as null for variable replacements
-
-{varname=} should == {varname=null}
