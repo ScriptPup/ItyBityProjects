@@ -4,8 +4,8 @@ export enum UserTypes {
   OWNER,
   MODERATOR,
   VIP,
-  REGULAR,
   SUBSCRIBER,
+  REGULAR,
   FOLLOWER,
   EVERYONE,
 }
