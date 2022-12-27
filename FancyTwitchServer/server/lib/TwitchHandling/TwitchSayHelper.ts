@@ -1,6 +1,8 @@
 /** @format */
 
-import { Client } from "tmi.js";
+// import { Client } from "tmi.js";
+import { StaticAuthProvider } from "@twurple/auth";
+import { ChatClient } from "@twurple/chat";
 import { BotAccount } from "../../../shared/obj/TwitchObjects";
 import { got } from "got-cjs";
 import { MainLogger } from "../logging";
@@ -11,7 +13,7 @@ export class TwitchSayHelper {
   /**
    * twitchClient is the client which is used internally to actually send data back to twitch, it will be destroyed and replaced when the bearer token expires
    */
-  public twitchClient?: Client;
+  public twitchClient?: ChatClient;
 
   /**
    * botAccount is the property which contains information relevant to the bot used to communicate with twitch
@@ -264,30 +266,22 @@ export class TwitchSayHelper {
         return;
       }
       // const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
-      const tokenPass = `oauth:${this.botAccount.token.access_token}`;
-      this.twitchClient = new Client({
-        connection: {
-          maxReconnectAttempts: 5,
-          timeout: 18000,
-          secure: true,
-        },
+      const authProvider: StaticAuthProvider = new StaticAuthProvider(
+        this.botAccount.client_id,
+        this.botAccount.token.access_token
+      );
+      this.twitchClient = new ChatClient({
+        authProvider,
         channels: [this.botAccount.channel],
-        options: {
-          debug: process.env.NODE_ENV === "development",
-        },
-        identity: {
-          username: this.botAccount.username,
-          password: tokenPass,
-        },
       });
 
-      this.twitchClient.on("disconnected", (reason) => {
+      this.twitchClient.onDisconnect((reason) => {
         logger.debug(
-          { reason, status: this.twitchClient?.readyState },
+          { reason, connected_status: this.twitchClient?.isConnected },
           "Twitch Client Disconnected"
         );
       });
-      this.twitchClient.on("connected", (reason) => {
+      this.twitchClient.onConnect(() => {
         logger.debug("Twitch client connected");
       });
 
