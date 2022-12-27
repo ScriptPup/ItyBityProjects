@@ -1,8 +1,12 @@
 /** @format */
 
 import { DataSnapshot } from "acebase";
-import { BotAccount, TwitchMessage } from "../../../shared/obj/TwitchObjects";
-import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
+import {
+  BotAccount,
+  TwitchMessage,
+  TwitchMessageTags,
+} from "../../../shared/obj/TwitchObjects";
+import { FancyCommand, UserTypes } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
@@ -144,7 +148,7 @@ export class TwitchListener {
         }
         // If a bot account IS setup, then do stuff!
         logger.debug({ msgKey }, "Twitch message being processed");
-        const cmdsToProc = this.findMessageCommands(message);
+        const cmdsToProc = this.findMessageCommands({ message, tags });
         logger.debug(
           { cmdsToProc, msgKey },
           "Commands matching the message found"
@@ -286,9 +290,23 @@ export class TwitchListener {
    * @returns the commands which match the twitch message. For example, if there is a command named !help configured then a twitch message which comes in as "!help i've lost my pants!" would match
    *
    */
-  private findMessageCommands(message: string): MessageCommandFindResult[] {
+  private findMessageCommands({
+    message,
+    tags,
+  }: {
+    message: string;
+    tags: TwitchMessageTags;
+  }): MessageCommandFindResult[] {
     const foundCommands = new Set<MessageCommandFindResult>();
     this.FCL.commands.forEach((cmd) => {
+      const actualUserLevel: UserTypes = this.getUserLevel(tags);
+      if (actualUserLevel <= cmd.usableBy) {
+        logger.debug(
+          { usableBy: cmd.usableBy, actualUserLevel, cmd: cmd.name },
+          "Not evaluating command eligibility due to incompatible user level"
+        );
+        return;
+      }
       const useCmd: MessageCommandFindResult | null = this.getMessageCommand(
         cmd,
         message
@@ -302,5 +320,39 @@ export class TwitchListener {
       "Finished searching FCL commands for matches"
     );
     return [...foundCommands];
+  }
+
+  /**
+   * Returns the user types of a user, given its twitch tags
+   *
+   * @remarks
+   * There may be a better way to do this
+   *
+   * @param tags - The twitch tags passed with the message
+   * @returns The HIGHEST permissiveness level of a user
+   *
+   */
+  private getUserLevel(tags: TwitchMessageTags): UserTypes {
+    if (tags.badges?.broadcaster || tags.badges?.admin) {
+      return UserTypes.OWNER;
+    }
+    if (tags.mod) {
+      return UserTypes.MODERATOR;
+    }
+    if (tags.badges?.vip) {
+      return UserTypes.VIP;
+    }
+    if (tags.badges?.subscriber) {
+      return UserTypes.SUBSCRIBER;
+    }
+    // TODO: Need to figure out how to tell if someone is a follower
+    // if(tags.follower?) {
+    //   return UserTypes.FOLLOWER;
+    // }
+    // TODO: Need to figure out how to tell if someone is a regular
+    // if(tags.regular){
+    //   return UserTypes.REGULAR;
+    // }
+    else return UserTypes.EVERYONE;
   }
 }
