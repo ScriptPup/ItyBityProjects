@@ -13,6 +13,7 @@ import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
 import { TwitchSayHelper } from "./TwitchSayHelper";
 import { MainLogger } from "../logging";
+import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 
 const logger = MainLogger.child({ file: "TwitchHandling" });
 
@@ -121,10 +122,15 @@ export class TwitchListener {
       return;
     }
     logger.info("Setting up listener for twitch messages");
-    this.twitchSayClient.twitchClient?.removeAllListeners("message");
-    this.twitchSayClient.twitchClient?.on(
-      "message",
-      async (channel, tags, message, self) => {
+    // this.twitchSayClient.twitchClient?.removeAllListeners("message");
+    this.twitchSayClient.twitchClient?.onMessage(
+      async (
+        channel: string,
+        user: string,
+        message: string,
+        msgObj: TwitchPrivateMessage
+      ) => {
+        const tags = msgObj.tags as TwitchMessageTags;
         const msgKey = `${tags["tmi-sent-ts"]?.toString()}:${message.substring(
           0,
           8
