@@ -1,13 +1,11 @@
 /** @format */
-import { ChatUserstate } from "tmi.js";
 
 export type TwitchMessage = {
   message: string;
   channel: string;
-  tags: TwitchMessageTags;
+  userInfo: TwitchUserInfo;
+  emotes: TwitchMessageTagEmotes;
 };
-
-export type TwitchMessageTags = ChatUserstate;
 
 export type TwitchMessageTagEmotes = { [emoteid: string]: string[] };
 
@@ -15,6 +13,12 @@ export type TwitchMessageTagParsedEmotes = {
   name: string;
   start: number;
   end: number;
+};
+
+export type TwitchUserInfo = {
+  displayName: string;
+  badgeURIs?: [string];
+  color?: string;
 };
 
 export type BotAccount = {

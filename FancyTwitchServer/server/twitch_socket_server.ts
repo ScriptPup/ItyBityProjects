@@ -3,14 +3,13 @@
 "use strict";
 import type { Listener } from "@d-fischer/typed-event-emitter";
 
-import * as tmi from "tmi.js";
 import { Server } from "socket.io";
 import { Server as httpServer } from "http";
 import { get as httpsGet } from "https";
 import { EventEmitter } from "events";
 import { ChatClient } from "@twurple/chat";
 import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
-import { TwitchMessageTags } from "../shared/obj/TwitchObjects";
+import { TwitchMessage } from "../shared/obj/TwitchObjects";
 import { MainLogger } from "./lib/logging";
 
 const logger = MainLogger.child({ file: "twitch_socket_server" });
@@ -57,23 +56,21 @@ class TwitchBadges {
 }
 
 // Lookup the badge URIs so we can display the images nicely
-const transformTags = (
+const transformBadges = (
   badges: TwitchBadges,
-  tags: tmi.ChatUserstate
-): tmi.ChatUserstate => {
+  msgBadges?: Map<string, string>
+): [string] | undefined => {
   const badgeURIs: [string] = new Array() as [string];
   try {
-    const badgeList = tags.badges;
-    if (!badgeList) {
-      return tags;
+    if (!msgBadges) {
+      return;
     }
-    for (let [key, version] of Object.entries(badgeList)) {
+    for (let [key, version] of msgBadges.entries()) {
       const uri = badges.getBadgeURI(key, version as string);
       if (uri) badgeURIs.push(uri);
     }
   } catch {}
-  tags.badgeURIs = badgeURIs;
-  return tags;
+  return badgeURIs;
 };
 
 export const ServeTwitchChat = (server: httpServer): Server => {
@@ -110,13 +107,24 @@ export const ServeTwitchChat = (server: httpServer): Server => {
           message: string,
           msgObj: TwitchPrivateMessage
         ) => {
+          const twitchMessage: TwitchMessage = {
+            channel,
+            message,
+            userInfo: {
+              displayName: msgObj.userInfo.displayName,
+              badgeURIs: transformBadges(badges, msgObj.userInfo.badges),
+              color: msgObj.userInfo.color,
+            },
+            emotes: Object.fromEntries(msgObj.emoteOffsets),
+          };
           logger.debug(
-            { socketID: socket.id, channel, user, msgObj },
+            {
+              socketID: socket.id,
+              twitchMessage,
+            },
             "Message recieved and sent on to socket"
           );
-          let tags = msgObj.tags as TwitchMessageTags;
-          tags = transformTags(badges, tags);
-          socket.emit("message", { channel, tags, message, user });
+          socket.emit("message", twitchMessage);
         }
       );
       socket.on("disconnect", () => {
