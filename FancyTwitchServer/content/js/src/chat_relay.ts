@@ -1,7 +1,6 @@
 /** @format */
 
 import {
-  TwitchMessageTags,
   TwitchMessageTagEmotes,
   TwitchMessageTagParsedEmotes,
   TwitchMessage,
@@ -25,13 +24,13 @@ const channel = params.get("channel"),
  * @returns void
  *
  */
-const createBadgeImages = (tags: TwitchMessageTags, parent: Element): void => {
-  if (tags.hasOwnProperty("badgeURIs")) {
-    for (let i = 0; i < tags.badgeURIs.length; i++) {
+const createBadgeImages = (parent: Element, badgeURIs?: [string]): void => {
+  if (badgeURIs) {
+    for (let i = 0; i < badgeURIs.length; i++) {
       const image_urls = new Array();
       let image_url: string = "";
       let image_count = 1;
-      for (let [key, uri] of Object.entries(tags.badgeURIs[i])) {
+      for (let [key, uri] of Object.entries(badgeURIs[i])) {
         if (key.startsWith("image_url")) {
           if (image_url === "") image_url = uri as string;
 
@@ -133,12 +132,15 @@ const replaceWithEmotes = (
  * @returns an HTML string, with any pre-existing HTML escaped and emote images agged as img elements
  *
  */
-const parseMessage = (message: string, tags: TwitchMessageTags): string => {
+const parseMessage = (
+  message: string,
+  emotes: TwitchMessageTagEmotes
+): string => {
   let parsedMsg = escapeHTML(message);
-  if (tags.emotes) {
+  if (emotes) {
     parsedMsg = replaceWithEmotes(
       message,
-      tags.emotes,
+      emotes,
       parsedMsg.length - message.length
     );
   }
@@ -235,7 +237,7 @@ const escapeHTML = (message: string) => {
  * @returns void
  *
  */
-const createChatRecord = (tags: TwitchMessageTags, message: string) => {
+const createChatRecord = (twitchMessage: TwitchMessage) => {
   const chat_box: HTMLElement | null = document.getElementById("chat_box");
   if (null === chat_box) {
     throw new Error("Chatbox not found, can't add new chat record!");
@@ -248,12 +250,15 @@ const createChatRecord = (tags: TwitchMessageTags, message: string) => {
   chatRecord.classList.add("chat_line");
   const chatNick = document.createElement("span");
   chatNick.classList.add("nick");
-  chatNick.innerText = tags["display-name"] || "unknown";
-  chatNick.style.color = tags.color || "";
+  chatNick.innerText = twitchMessage.userInfo.displayName;
+  chatNick.style.color = twitchMessage.userInfo.color || "";
   const chatBadges = document.createElement("span");
   chatBadges.classList.add("badges");
   const chatMessage = document.createElement("span");
-  chatMessage.innerHTML = parseMessage(message, tags);
+  chatMessage.innerHTML = parseMessage(
+    twitchMessage.message,
+    twitchMessage.emotes
+  );
   chatMessage.classList.add("message");
 
   const chatTail = document.createElement("div");
@@ -261,7 +266,7 @@ const createChatRecord = (tags: TwitchMessageTags, message: string) => {
   const chatTailInner = document.createElement("div");
   chatTailInner.classList.add("inner");
 
-  createBadgeImages(tags, chatBadges);
+  createBadgeImages(chatBadges, twitchMessage.userInfo.badgeURIs);
   chatTail.appendChild(chatTailInner);
   chatWrapper.appendChild(chatRecord);
   chatRecord.appendChild(chatTail);
@@ -291,8 +296,7 @@ const setupSockets = async (): Promise<void> => {
   });
   client.emit("join", { channel, fade, bot_activity });
   client.on("message", (res: TwitchMessage) => {
-    const { channel, tags, message } = res;
-    createChatRecord(tags, message);
+    createChatRecord(res);
     if (debug) {
       console.log(res);
     }

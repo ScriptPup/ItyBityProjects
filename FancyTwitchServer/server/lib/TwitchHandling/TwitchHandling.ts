@@ -4,7 +4,7 @@ import { DataSnapshot } from "acebase";
 import {
   BotAccount,
   TwitchMessage,
-  TwitchMessageTags,
+  TwitchUserInfo,
 } from "../../../shared/obj/TwitchObjects";
 import { FancyCommand, UserTypes } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
@@ -130,11 +130,10 @@ export class TwitchListener {
         message: string,
         msgObj: TwitchPrivateMessage
       ) => {
-        const tags = msgObj.tags as TwitchMessageTags;
-        const msgKey = `${tags["tmi-sent-ts"]?.toString()}:${message.substring(
-          0,
-          8
-        )}`;
+        const tags = msgObj.tags;
+        const msgKey = `${tags
+          .get("tmi-sent-ts")
+          ?.toString()}:${message.substring(0, 8)}`;
         logger.debug(
           { channel, tags, message, msgKey },
           "Twitch message recieved"
@@ -142,7 +141,7 @@ export class TwitchListener {
         // If a bot account isn't setup, then do nothing
         if (this.botAccount) {
           if (
-            tags.username?.toLowerCase() ===
+            tags.get("username")?.toLowerCase() ===
             this.botAccount.username.toLowerCase()
           ) {
             logger.debug(
@@ -225,7 +224,7 @@ export class TwitchListener {
    */
   private async processMessageCommands(
     cmds: MessageCommandFindResult[],
-    message: TwitchMessage
+    message: any
   ): Promise<string[]> {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
@@ -308,7 +307,7 @@ export class TwitchListener {
     tags,
   }: {
     message: string;
-    tags: TwitchMessageTags;
+    tags: any;
   }): MessageCommandFindResult[] {
     const foundCommands = new Set<MessageCommandFindResult>();
     this.FCL.commands.forEach((cmd) => {
@@ -345,19 +344,19 @@ export class TwitchListener {
    * @returns The HIGHEST permissiveness level of a user
    *
    */
-  private getUserLevel(tags: TwitchMessageTags): UserTypes {
-    if (tags.badges?.broadcaster || tags.badges?.admin) {
-      return UserTypes.OWNER;
-    }
-    if (tags.mod) {
-      return UserTypes.MODERATOR;
-    }
-    if (tags.badges?.vip) {
-      return UserTypes.VIP;
-    }
-    if (tags.badges?.subscriber) {
-      return UserTypes.SUBSCRIBER;
-    }
+  private getUserLevel(tags: TwitchUserInfo): UserTypes {
+    // if (tags.get("badges")?.get("broadcaster") || tags.badges?.admin) {
+    //   return UserTypes.OWNER;
+    // }
+    // if (tags.mod) {
+    //   return UserTypes.MODERATOR;
+    // }
+    // if (tags.badges?.vip) {
+    //   return UserTypes.VIP;
+    // }
+    // if (tags.badges?.subscriber) {
+    //   return UserTypes.SUBSCRIBER;
+    // }
     // TODO: Need to figure out how to tell if someone is a follower
     // if(tags.follower?) {
     //   return UserTypes.FOLLOWER;
@@ -366,6 +365,6 @@ export class TwitchListener {
     // if(tags.regular){
     //   return UserTypes.REGULAR;
     // }
-    else return UserTypes.EVERYONE;
+    return UserTypes.EVERYONE;
   }
 }
