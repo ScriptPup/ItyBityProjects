@@ -172,6 +172,13 @@ export class TwitchListener {
         // Once the commands have been processed, send the response for each message in the stack back to twitch
         finalMessages.forEach(async (msg) => {
           if (!this.twitchSayClient) return; // Shouldn't need this, given the parent has it, but typescript is too stupid to figure that out
+          if (msg === "") {
+            logger.debug(
+              { msg },
+              "Skipping message because it returned an empty string, we don't need to send that"
+            );
+            return;
+          }
           logger.debug(
             { msgKey, msg },
             "Sending reply based on command parsing"

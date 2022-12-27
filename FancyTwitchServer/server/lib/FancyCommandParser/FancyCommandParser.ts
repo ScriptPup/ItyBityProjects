@@ -277,6 +277,9 @@ export class FancyCommandParser {
     if(input) logger.debug({input},`Parsing ${cmd} with input`);
     try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
+    if(cmd==="BREAK"){
+      return "";
+    }
     logger.debug(`Parsing ${cmd}`);
     // Run all pre-execution evaluations
     cmd = this.evaluatePreCommand(cmd);
