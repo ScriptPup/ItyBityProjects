@@ -27,6 +27,9 @@ expected result: The last time we heard you out, you said "If this works I'll ea
 
 Allow for a custom command action to be called instead of going through the parser. I imagine it would look something like this:
 
+- Use PreMiddleware for this
+- Return "BREAK" from any PreMiddleware to stop execution after the middleware
+
 ```
 name: !fanart
 command: ~cycleArt
