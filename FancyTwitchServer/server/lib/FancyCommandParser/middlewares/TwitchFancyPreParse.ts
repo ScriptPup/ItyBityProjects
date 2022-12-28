@@ -2,9 +2,9 @@
 
 import { Next, FancyCommandParser } from "../FancyCommandParser";
 import { TwitchMessage } from "../../../../shared/obj/TwitchObjects";
-import { MainLogger } from "../../logging";
+import { TestLogger } from "../../logging";
 
-const logger = MainLogger.child({ file: "TwitchFancyPrepParse" });
+const logger = TestLogger.child({ file: "TwitchFancyPrepParse" });
 
 /**
  * FancyCommandParser middleware which will replace some variables with data from a twitch message
@@ -49,6 +49,8 @@ export function TwitchFancyPreParser(
         } catch (err) {
           logger.error({ tmsg: tmsg, err }, "Failed to replace @user");
         }
+      } else {
+        logger.error({ tmsg }, "Failed to replace @user");
       }
     }
     try {
