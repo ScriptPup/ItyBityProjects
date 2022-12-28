@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "clean": "rimraf dist",
+    "clean-tests": "rimraf test_variables.acebase",
     "build-server": "tsc -p tsconfig.json --pretty",
     "build-client": "npx webpack",
     "build": "npm-run-all build-server build-client --parallel",
@@ -16,7 +17,8 @@
     "server-watch": "nodemon --watch",
     "watch:server": "npm-run-all --parallel watch:build-server server-watch",
     "start": "npm-run-all clean build --parallel watch:build watch:server --print-label",
-    "test": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
+    "run-tests": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
+    "test": "npm-run-all clean-tests run-tests clean-tests",
     "server-logs": "Type .\\logs\\Server.log | pino-pretty",
     "listener-logs": "Type .\\server\\logs\\FancyCommandListener.log | pino-pretty",
     "test-logs": "Type .\\test\\logs\\FancyCommandListener.test.log | pino-pretty",
