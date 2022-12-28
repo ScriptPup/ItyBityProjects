@@ -14,6 +14,7 @@ import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFa
 import { TwitchSayHelper } from "./TwitchSayHelper";
 import { MainLogger } from "../logging";
 import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
+import { ChatUser } from "@twurple/chat";
 
 const logger = MainLogger.child({ file: "TwitchHandling" });
 
@@ -130,18 +131,12 @@ export class TwitchListener {
         message: string,
         msgObj: TwitchPrivateMessage
       ) => {
-        const tags = msgObj.tags;
-        const msgKey = `${tags
-          .get("tmi-sent-ts")
-          ?.toString()}:${message.substring(0, 8)}`;
-        logger.debug(
-          { channel, tags, message, msgKey },
-          "Twitch message recieved"
-        );
+        const msgKey = `${new Date().toString()}:${message.substring(0, 8)}`;
+        logger.debug({ channel, message, msgKey }, "Twitch message recieved");
         // If a bot account isn't setup, then do nothing
         if (this.botAccount) {
           if (
-            tags.get("username")?.toLowerCase() ===
+            msgObj.userInfo.userName.toLowerCase() ===
             this.botAccount.username.toLowerCase()
           ) {
             logger.debug(
@@ -153,7 +148,10 @@ export class TwitchListener {
         }
         // If a bot account IS setup, then do stuff!
         logger.debug({ msgKey }, "Twitch message being processed");
-        const cmdsToProc = this.findMessageCommands({ message, tags });
+        const cmdsToProc = this.findMessageCommands({
+          message,
+          userInfo: msgObj.userInfo,
+        });
         logger.debug(
           { cmdsToProc, msgKey },
           "Commands matching the message found"
@@ -167,7 +165,7 @@ export class TwitchListener {
         logger.debug({ msgKey, cmdsToProc }, "Processing found commands");
         const finalMessages: string[] = await this.processMessageCommands(
           cmdsToProc,
-          { message, channel, tags }
+          { message, channel }
         );
         logger.debug(
           { msgKey, finalMessages: finalMessages },
@@ -304,14 +302,14 @@ export class TwitchListener {
    */
   private findMessageCommands({
     message,
-    tags,
+    userInfo,
   }: {
     message: string;
-    tags: any;
+    userInfo: ChatUser;
   }): MessageCommandFindResult[] {
     const foundCommands = new Set<MessageCommandFindResult>();
     this.FCL.commands.forEach((cmd) => {
-      const actualUserLevel: UserTypes = this.getUserLevel(tags);
+      const actualUserLevel: UserTypes = this.getUserLevel(userInfo);
       if (actualUserLevel <= cmd.usableBy) {
         logger.debug(
           { usableBy: cmd.usableBy, actualUserLevel, cmd: cmd.name },
@@ -335,34 +333,34 @@ export class TwitchListener {
   }
 
   /**
-   * Returns the user types of a user, given its twitch tags
+   * Returns the user types of a user, given its twitch user information
    *
    * @remarks
    * There may be a better way to do this
    *
-   * @param tags - The twitch tags passed with the message
+   * @param chatUsr - The twitch chat user passed with the message
    * @returns The HIGHEST permissiveness level of a user
    *
    */
-  private getUserLevel(tags: TwitchUserInfo): UserTypes {
-    // if (tags.get("badges")?.get("broadcaster") || tags.badges?.admin) {
-    //   return UserTypes.OWNER;
-    // }
-    // if (tags.mod) {
-    //   return UserTypes.MODERATOR;
-    // }
-    // if (tags.badges?.vip) {
-    //   return UserTypes.VIP;
-    // }
-    // if (tags.badges?.subscriber) {
-    //   return UserTypes.SUBSCRIBER;
-    // }
+  private getUserLevel(chatUsr: ChatUser): UserTypes {
+    if (chatUsr.isBroadcaster) {
+      return UserTypes.OWNER;
+    }
+    if (chatUsr.isMod) {
+      return UserTypes.MODERATOR;
+    }
+    if (chatUsr.isVip) {
+      return UserTypes.VIP;
+    }
+    if (chatUsr.isSubscriber) {
+      return UserTypes.SUBSCRIBER;
+    }
     // TODO: Need to figure out how to tell if someone is a follower
-    // if(tags.follower?) {
+    // if(chatUsr.follower?) {
     //   return UserTypes.FOLLOWER;
     // }
     // TODO: Need to figure out how to tell if someone is a regular
-    // if(tags.regular){
+    // if(chatUsr.regular){
     //   return UserTypes.REGULAR;
     // }
     return UserTypes.EVERYONE;
