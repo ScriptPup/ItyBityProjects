@@ -16,7 +16,7 @@ describe("TwitchFancyPreParse Middleware", () => {
   let twitchMessage = createMock<TwitchMessage>();
   twitchMessage.channel = "scriptpup";
   twitchMessage.message = "This is a test message";
-  twitchMessage.tags["display-name"] = "xx_somejerk_xx";
+  twitchMessage.userInfo.displayName = "xx_somejerk_xx";
   let FCP: FancyCommandParser;
   before(async () => {
     return contextDB.ready;
@@ -28,7 +28,7 @@ describe("TwitchFancyPreParse Middleware", () => {
     it("Should replace @user", async () => {
       const command: string = "@user";
       const res: string = await FCP.parse(command, twitchMessage);
-      expect(res).to.equal(twitchMessage.tags["display-name"]);
+      expect(res).to.equal(twitchMessage.userInfo.displayName);
     });
     it("Should replace @channel", async () => {
       const command: string = "@channel";
@@ -44,7 +44,7 @@ describe("TwitchFancyPreParse Middleware", () => {
     it("Should replace @User", async () => {
       const command: string = "@User";
       const res: string = await FCP.parse(command, twitchMessage);
-      expect(res).to.equal(twitchMessage.tags["display-name"]);
+      expect(res).to.equal(twitchMessage.userInfo.displayName);
     });
     it("Should replace @Channel", async () => {
       const command: string = "@Channel";

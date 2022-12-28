@@ -42,9 +42,9 @@ export function TwitchFancyPreParser(
         "Message came in with no tags, cannot make tag replacements"
       );
     } else {
-      if ("display-name" in tmsg.tags) {
+      if (tmsg.userInfo.displayName) {
         try {
-          const username = tmsg.tags["display-name"] || "unknown";
+          const username = tmsg.userInfo.displayName || "unknown";
           context.val = context.val.replace(/\@user/gi, username);
         } catch (err) {
           logger.error({ tmsg: tmsg, err }, "Failed to replace @user");
