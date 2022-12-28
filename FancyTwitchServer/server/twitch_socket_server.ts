@@ -9,7 +9,10 @@ import { get as httpsGet } from "https";
 import { EventEmitter } from "events";
 import { ChatClient } from "@twurple/chat";
 import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
-import { TwitchMessage } from "../shared/obj/TwitchObjects";
+import {
+  getTwitchMessageObject,
+  TwitchMessage,
+} from "../shared/obj/TwitchObjects";
 import { MainLogger } from "./lib/logging";
 
 const logger = MainLogger.child({ file: "twitch_socket_server" });
@@ -107,16 +110,15 @@ export const ServeTwitchChat = (server: httpServer): Server => {
           message: string,
           msgObj: TwitchPrivateMessage
         ) => {
-          const twitchMessage: TwitchMessage = {
+          const twitchMessage: TwitchMessage = getTwitchMessageObject({
             channel,
             message,
-            userInfo: {
-              displayName: msgObj.userInfo.displayName,
-              badgeURIs: transformBadges(badges, msgObj.userInfo.badges),
-              color: msgObj.userInfo.color,
-            },
-            emotes: Object.fromEntries(msgObj.emoteOffsets),
-          };
+            msgObj,
+          });
+          twitchMessage.userInfo.badgeURIs = transformBadges(
+            badges,
+            msgObj.userInfo.badges
+          );
           logger.debug(
             {
               socketID: socket.id,

@@ -1,5 +1,7 @@
 /** @format */
 
+import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
+
 export type TwitchMessage = {
   message: string;
   channel: string;
@@ -33,5 +35,25 @@ export type BotAccount = {
     expires_in: number;
     token_type: string;
     access_timestamp?: Date;
+  };
+};
+
+export const getTwitchMessageObject = ({
+  channel,
+  message,
+  msgObj,
+}: {
+  channel: string;
+  message: string;
+  msgObj: TwitchPrivateMessage;
+}): TwitchMessage => {
+  return {
+    channel,
+    message,
+    userInfo: {
+      displayName: msgObj.userInfo.displayName,
+      color: msgObj.userInfo.color,
+    },
+    emotes: Object.fromEntries(msgObj.emoteOffsets),
   };
 };

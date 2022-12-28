@@ -3,6 +3,7 @@
 import { DataSnapshot } from "acebase";
 import {
   BotAccount,
+  getTwitchMessageObject,
   TwitchMessage,
   TwitchUserInfo,
 } from "../../../shared/obj/TwitchObjects";
@@ -131,6 +132,11 @@ export class TwitchListener {
         message: string,
         msgObj: TwitchPrivateMessage
       ) => {
+        const twitchMessage: TwitchMessage = getTwitchMessageObject({
+          channel,
+          message,
+          msgObj,
+        });
         const msgKey = `${new Date().toString()}:${message.substring(0, 8)}`;
         logger.debug({ channel, message, msgKey }, "Twitch message recieved");
         // If a bot account isn't setup, then do nothing
@@ -165,7 +171,7 @@ export class TwitchListener {
         logger.debug({ msgKey, cmdsToProc }, "Processing found commands");
         const finalMessages: string[] = await this.processMessageCommands(
           cmdsToProc,
-          { message, channel }
+          twitchMessage
         );
         logger.debug(
           { msgKey, finalMessages: finalMessages },
@@ -222,7 +228,7 @@ export class TwitchListener {
    */
   private async processMessageCommands(
     cmds: MessageCommandFindResult[],
-    message: any
+    message: TwitchMessage
   ): Promise<string[]> {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
@@ -309,8 +315,11 @@ export class TwitchListener {
   }): MessageCommandFindResult[] {
     const foundCommands = new Set<MessageCommandFindResult>();
     this.FCL.commands.forEach((cmd) => {
-      const actualUserLevel: UserTypes = this.getUserLevel(userInfo);
-      if (actualUserLevel <= cmd.usableBy) {
+      const actualUserLevel: Number = Number.parseInt(
+        this.getUserLevel(userInfo).toString()
+      );
+      const usableBy: Number = Number.parseInt(cmd.usableBy.toString());
+      if (actualUserLevel > usableBy) {
         logger.debug(
           { usableBy: cmd.usableBy, actualUserLevel, cmd: cmd.name },
           "Not evaluating command eligibility due to incompatible user level"
