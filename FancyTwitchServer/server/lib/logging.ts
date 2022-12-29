@@ -4,6 +4,30 @@ import { pino } from "pino";
 
 const LOGGING_LEVEL = process.env.NODE_ENV === "development" ? "debug" : "info";
 
+const transport = pino.transport({
+  targets: [
+    { target: "pino-pretty", level: "debug", options: { destination: 1 } },
+    {
+      target: "pino/file",
+      level: "trace",
+      options: {
+        destination: `${__dirname}/../../logs/Server.log`,
+        mkdir: true,
+        append: false,
+        writable: true,
+      },
+    },
+  ],
+});
+const destination = pino.destination({
+  mkdir: true,
+  writable: true,
+  dest: `${__dirname}/../../logs/Server.log`,
+  append: false,
+});
+const logDestination =
+  process.env.NODE_ENV === "development" ? transport : destination;
+
 export const MainLogger = pino(
   {
     level: LOGGING_LEVEL,
@@ -14,12 +38,7 @@ export const MainLogger = pino(
       "*.auth_code",
     ],
   },
-  pino.destination({
-    mkdir: true,
-    writable: true,
-    dest: `${__dirname}/../../logs/Server.log`,
-    append: false,
-  })
+  logDestination
 );
 
 export const TestLogger = pino(
