@@ -47,7 +47,7 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
             }
           }
         }
-        configDB.ref("twitch-bot-acct").set([acct]);
+        await configDB.ref("twitch-bot-acct").set([acct]);
         sendTwitchBotConfig(socket);
         // Refresh the TwitchSayHelper when the account changes
         if (TL) {
