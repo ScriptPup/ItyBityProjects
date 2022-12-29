@@ -333,9 +333,28 @@ const showBotTemplate = async () => {
       localStorage.setItem("auth-verify-code", state);
       localStorage.setItem("auth-verify-cache", JSON.stringify(botAccount));
 
-      // TODO: it would be wise to change this from a straight localhost redirect to get the information from the server somehow... But that sounds like a PITA RN
-      const twitchAuthURI = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${botAccount.client_id}&redirect_uri=http://localhost:9000%2Fsetup&scope=chat%3Aread+chat%3Aedit+channel%3Amoderate+whispers%3Aread+whispers%3Aedit+channel_editor&token_type=bearer&state=${state}`;
-      $(window).attr("location", twitchAuthURI);
+      const scopes = [
+        "channel:read:redemptions",
+        "chat:read",
+        "chat:edit",
+        "channel:moderate",
+        "whispers:read",
+        "whispers:edit",
+        "channel_editor",
+      ].join(" ");
+
+      const twitchAuthURI = new URL(`https://id.twitch.tv/oauth2/authorize`);
+      twitchAuthURI.searchParams.append("response_type", "code");
+      twitchAuthURI.searchParams.append("client_id", botAccount.client_id);
+      twitchAuthURI.searchParams.append(
+        "redirect_uri",
+        "http://localhost:9000/setup"
+      );
+      twitchAuthURI.searchParams.append("scope", scopes);
+      twitchAuthURI.searchParams.append("token_type", "bearer");
+      twitchAuthURI.searchParams.append("state", state);
+
+      $(window).attr("location", twitchAuthURI.toString());
     });
     newModal.find("#modal-cancel").on("click", () => {
       newModal.remove();
