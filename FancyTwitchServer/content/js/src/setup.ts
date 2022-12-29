@@ -340,8 +340,7 @@ const showBotTemplate = async () => {
         "channel:moderate",
         "whispers:read",
         "whispers:edit",
-        "channel_editor",
-      ].join(" ");
+      ].join("+");
 
       const twitchAuthURI = new URL(`https://id.twitch.tv/oauth2/authorize`);
       twitchAuthURI.searchParams.append("response_type", "code");
@@ -350,11 +349,11 @@ const showBotTemplate = async () => {
         "redirect_uri",
         "http://localhost:9000/setup"
       );
-      twitchAuthURI.searchParams.append("scope", scopes);
+      // twitchAuthURI.searchParams.append("scope", scopes);
       twitchAuthURI.searchParams.append("token_type", "bearer");
       twitchAuthURI.searchParams.append("state", state);
 
-      $(window).attr("location", twitchAuthURI.toString());
+      $(window).attr("location", twitchAuthURI.toString() + "&scope=" + scopes);
     });
     newModal.find("#modal-cancel").on("click", () => {
       newModal.remove();
