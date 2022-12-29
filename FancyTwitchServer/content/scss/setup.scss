@@ -1,2 +1,42 @@
+@use "pallete";
 @import "./main.scss";  
 @import "./markdown.scss";  
+
+.panel-button {
+    &.inactive {
+        &:hover {
+            box-shadow: initial;
+            -webkit-box-shadow: initial;
+            -moz-box-shadow: initial;
+            cursor: pointer;
+        }
+    }
+    position: relative;
+    #btn-new-opts {
+        display: none;
+        position: absolute;
+        width: 100%;
+        top: 40%;
+        left: 1.5;
+        z-index: 1;
+        background-color: pallete.$button-background;
+        border-radius: 0 0 4px 4px;
+        padding-left: 0px;
+        li {
+            color: white;
+            list-style: none;
+            margin-left: 0;
+            padding: 4px;
+            // padding-right: 8px;
+            &:hover {
+                box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+                -webkit-box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+                -moz-box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+                cursor: pointer;
+            }
+        }
+    }
+    &:hover #btn-new-opts {
+        display: block;
+    }
+}

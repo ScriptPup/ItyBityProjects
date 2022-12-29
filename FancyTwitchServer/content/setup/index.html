@@ -74,7 +74,7 @@
       <div id="commands" class="panel-left">
         <header class="panel-header">
           <h2>Command Panel</h2>
-          <span class="panel-button" id="btn-new-cmd">
+          <span class="panel-button inactive">
             <span class="add-img">
               <svg
                 preserveAspectRatio="xMidYMid meet"
@@ -84,7 +84,11 @@
                 <path d="M22 38.5V26H9.5v-4H22V9.5h4V22h12.5v4H26v12.5Z" />
               </svg>
             </span>
-            <span class="msg">New Command</span>
+            <ul id="btn-new-opts">
+              <li id="btn-new-cmd">Command</li>
+              <li id="btn-new-redeem">Redemption</li>
+            </ul>
+            <span class="msg">New</span>
           </span>
         </header>
         <hr />
