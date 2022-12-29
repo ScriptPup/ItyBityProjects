@@ -18,7 +18,7 @@ export class TwitchSayHelper {
   /**
    * botAccount is the property which contains information relevant to the bot used to communicate with twitch
    */
-  private botAccount: BotAccount;
+  public botAccount: BotAccount;
   /**
    * The TwitchSayHelper is provided to avoid race conditions when multiple messages come in on top of eachother
    * If multiple commands have to be sent back to the twitch service while a new token is being negotated we don't want the entire thing to fail.
