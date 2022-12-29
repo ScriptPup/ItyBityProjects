@@ -69,7 +69,9 @@ export class TwitchListener {
     }
     await this.handleTwitchMessages();
     try {
+      logger.debug("Setting up twitch redemption listeners");
       await this.handleTwitchRedemptions();
+      logger.debug("Setup twitch redemption listeners");
     } catch (err) {
       logger.error({ err }, "Failed to setup twitch redemption listeners");
     }
