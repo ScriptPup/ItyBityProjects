@@ -5,7 +5,6 @@ import {
   BotAccount,
   getTwitchMessageObject,
   TwitchMessage,
-  TwitchUserInfo,
 } from "../../../shared/obj/TwitchObjects";
 import { FancyCommand, UserTypes } from "../../../shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
@@ -16,6 +15,7 @@ import { TwitchSayHelper } from "./TwitchSayHelper";
 import { MainLogger } from "../logging";
 import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 import { ChatUser } from "@twurple/chat";
+import { TwitchRedemptionHelper } from "./TwitchRedemptionHelper";
 
 const logger = MainLogger.child({ file: "TwitchHandling" });
 
@@ -68,6 +68,11 @@ export class TwitchListener {
       return;
     }
     await this.handleTwitchMessages();
+    try {
+      await this.handleTwitchRedemptions();
+    } catch (err) {
+      logger.error({ err }, "Failed to setup twitch redemption listeners");
+    }
   }
 
   /**
@@ -214,6 +219,21 @@ export class TwitchListener {
       }
     );
     logger.info("Listening for twitch messages");
+  }
+
+  private async handleTwitchRedemptions(): Promise<void> {
+    if (!this.twitchSayClient) {
+      logger.error(
+        "Failed to setup twitch redemptions due to twitchSayClient not existing"
+      );
+      return;
+    }
+    try {
+      await TwitchRedemptionHelper(this.twitchSayClient);
+    } catch (err) {
+      logger.error({ err }, "Failed to setup twitch redemptions");
+    }
+    return;
   }
 
   /**
