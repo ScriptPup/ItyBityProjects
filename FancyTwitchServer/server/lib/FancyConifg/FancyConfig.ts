@@ -34,10 +34,9 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
           configDB.ref("twitch-bot-acct[0]").remove();
           return;
         }
+
+        let oldAcct: any = (await configDB.ref("twitch-bot-acct").get()).val();
         if (acct.client_secret === "*****") {
-          let oldAcct: any = (
-            await configDB.ref("twitch-bot-acct").get()
-          ).val();
           if (typeof oldAcct === typeof []) {
             oldAcct = oldAcct[0];
           }
@@ -46,6 +45,11 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
               acct.client_secret = oldAcct.client_secret;
             }
           }
+        }
+
+        if (oldAcct !== acct) {
+          // When making changes to the account, if the details don't match what they used to be, then drop the old token to force the system register a new one
+          await configDB.ref("twitch-bot-token").remove();
         }
         await configDB.ref("twitch-bot-acct").set([acct]);
         sendTwitchBotConfig(socket);
