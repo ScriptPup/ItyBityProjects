@@ -47,7 +47,7 @@ export interface FancyClientItemBase {
 
 export const getUserType = (userType: string): UserTypes => {
   let userTypeParsed: string | UserTypes = userType;
-  if (Number.parseInt(userType)) {
+  if (!isNaN(Number.parseFloat(userType))) {
     userTypeParsed = UserTypes[Number.parseInt(userType)];
   }
   switch (userTypeParsed.toString().toLowerCase()) {
