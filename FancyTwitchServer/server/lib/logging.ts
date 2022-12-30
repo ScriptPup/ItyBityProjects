@@ -26,7 +26,7 @@ const destination = pino.destination({
   append: false,
 });
 const logDestination =
-  process.env.NODE_ENV === "development" ? transport : destination;
+  process.env.NODE_INFO === "stream" ? transport : destination;
 
 export const MainLogger = pino(
   {
