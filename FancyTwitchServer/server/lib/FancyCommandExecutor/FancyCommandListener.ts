@@ -162,7 +162,10 @@ export class FancyCommandListener {
   private async listenForAdd(socket: Socket): Promise<void> {
     logger.debug({ function: `listenForAdd` }, "Start");
     socket.on("command-add", async ({ name, command, usableBy }) => {
-      logger.debug({ function: `listenForAdd` }, "Add fired");
+      logger.debug(
+        { function: `listenForAdd`, command: { name, command, usableBy } },
+        "Add fired"
+      );
       const allowed: UserTypes = getUserType(usableBy);
       await this.FCE.addCommand({ name, command, usableBy: allowed });
       logger.debug(
