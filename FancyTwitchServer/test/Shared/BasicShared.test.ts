@@ -13,11 +13,11 @@ describe("UserType Parsing", () => {
     it("Should convert 5 to UserType.FOLLOWER", () => {
       expect(getUserType("5")).to.equal(UserTypes.FOLLOWER);
     });
-    it("Should convert 4 to UserType.SUBSCRIBER", () => {
-      expect(getUserType("4")).to.equal(UserTypes.SUBSCRIBER);
+    it("Should convert 4 to UserType.REGULAR", () => {
+      expect(getUserType("4")).to.equal(UserTypes.REGULAR);
     });
-    it("Should convert 3 to UserType.REGULAR", () => {
-      expect(getUserType("3")).to.equal(UserTypes.REGULAR);
+    it("Should convert 3 to UserType.SUBSCRIBER", () => {
+      expect(getUserType("3")).to.equal(UserTypes.SUBSCRIBER);
     });
     it("Should convert 2 to UserType.VIP", () => {
       expect(getUserType("2")).to.equal(UserTypes.VIP);
