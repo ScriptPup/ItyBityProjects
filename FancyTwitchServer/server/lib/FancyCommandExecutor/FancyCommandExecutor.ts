@@ -6,28 +6,7 @@
 import { AceBase, DataReference, DataSnapshotsArray } from "acebase";
 import { commandDB } from "../DatabaseRef";
 import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
-import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
-
-export const getUserType = (userType: string) => {
-  switch (userType) {
-    case "owner":
-      return UserTypes.OWNER;
-    case "moderator":
-      return UserTypes.MODERATOR;
-    case "vip":
-      return UserTypes.VIP;
-    case "regular":
-      return UserTypes.REGULAR;
-    case "subscriber":
-      return UserTypes.SUBSCRIBER;
-    case "follower":
-      return UserTypes.FOLLOWER;
-    case "everyone":
-      return UserTypes.EVERYONE;
-    default:
-      return UserTypes.EVERYONE;
-  }
-};
+import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 
 export class FancyCommandExecutor {
   /**

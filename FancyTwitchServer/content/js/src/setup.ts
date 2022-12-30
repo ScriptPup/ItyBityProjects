@@ -1,16 +1,24 @@
 /** @format */
+import { readdir } from "fs";
 import type { Converter } from "showdown";
-import type { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
+import {
+  FancyCommand,
+  FancyRedemption,
+  getUserType,
+} from "../../../shared/obj/FancyCommandTypes";
 import { UserTypes } from "../../../shared/obj/FancyCommandTypes";
 import { BotAccount } from "../../../shared/obj/TwitchObjects";
 import { FancyCommandClient } from "./lib/FancyCommandClient";
+import { FancyRedemptionClient } from "./lib/FancyRedemptionClient";
 
 let converter: Converter;
 let command_template: string | null = null;
+let redemption_template: string | null = null;
 let bot_form_template: string | null = null;
 let $: JQueryStatic;
 
 let FCC: FancyCommandClient;
+let FRC: FancyRedemptionClient;
 
 /**
  * Simple function to resize textarea to fit contents better. Why this isn't builtin to the HTML spec, no idea
@@ -85,7 +93,7 @@ const addCommand = async (
   if (null === contents) {
     throw new Error("No content template found, unable to display information");
   }
-
+  console.log("Added command", { name, command, usableBy, expand });
   contents = contents
     .replaceAll("{name}", name)
     .replaceAll("{command}", command)
@@ -117,7 +125,7 @@ const addCommand = async (
           setTimeout(() => textAreaAdjust(elem), 1);
         });
     });
-  setupButtons($(domContent));
+  setupCommandButtons($(domContent));
   $("#command-list").append(domContent);
   if (expand) {
     $(domContent).attr("open", "true");
@@ -125,29 +133,115 @@ const addCommand = async (
 };
 
 /**
- * Add listeners to the child buttons (save, delete)
+ * Add a new command to the page command list, given the FancyCommand pieces
+ *
+ * @remarks
+ * Technically the ClientFancyCommand type pieces are what we're looking for
+ *
+ * @param name - The name of the command
+ * @param command - The command which which will be run when the command is called
+ * @param usableBy - Who is able to call the command
+ * @returns void
+ */
+const addRedemption = async (
+  redemption: FancyRedemption,
+  expand: boolean = false
+) => {
+  if (null === redemption_template) {
+    await getTemplateContents();
+  }
+
+  let contents: string | null = redemption_template;
+  if (null === contents) {
+    throw new Error("No content template found, unable to display information");
+  }
+
+  contents = contents
+    .replaceAll("{name}", redemption.name)
+    .replaceAll("{prompt}", redemption.prompt)
+    .replaceAll("{command}", redemption.command)
+    .replaceAll("{cost}", redemption.cost.toString())
+    .replaceAll(
+      "{max_per_stream}",
+      redemption.max_per_stream?.toString() || "0"
+    )
+    .replaceAll(
+      "{max_per_user_per_stream}",
+      redemption.max_per_user_per_stream?.toString() || "0"
+    )
+    .replaceAll(
+      "{global_cooldown}",
+      redemption.global_cooldown?.toString() || "0"
+    );
+
+  let domContent: JQuery.Node[] = $.parseHTML(contents);
+
+  // Set the currently selected options for dropdowns
+  $(domContent)
+    .find(`#select-userinput option[value="${redemption.user_input}"]`)
+    .prop("selected", true);
+  $(domContent)
+    .find(`#select-enabled option[value="${redemption.enabled}"]`)
+    .prop("selected", true);
+
+  $(domContent).attr("id", redemption.name.replace(" ", "_"));
+  $(domContent)
+    .find("textarea")
+    .on("keyup", (evnt) => {
+      textAreaAdjust(evnt.target);
+    });
+
+  // When the details element is opened, resize the textareas to show the entire command
+  $(domContent)
+    .find("summary")
+    .on("click", (evnt) => {
+      const elem: HTMLElement = evnt.delegateTarget.parentNode as HTMLElement;
+      console.log(elem);
+      if (elem.hasAttribute("open")) {
+        return;
+      }
+      console.log("resizing");
+      $(domContent)
+        .find("textarea")
+        .each((ix, elem) => {
+          setTimeout(() => textAreaAdjust(elem), 1);
+        });
+    });
+
+  setupRedeemButtons($(domContent));
+  $("#command-list").append(domContent);
+  if (expand) {
+    $(domContent).attr("open", "true");
+  }
+};
+
+/**
+ * Add listeners to the child buttons (save, delete) for commands
  *
  *
  * @param element - the parent command element which we want to subscribe actions to
  * @returns void
  *
  */
-const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
-  element.find(".save-item").on("click", () => {
+const setupCommandButtons = (element: JQuery<JQuery.Node[]>): void => {
+  element.find("#save-command").on("click", () => {
     const name: string =
       element.find(".command-name").val()?.toString() || "!unknown";
     const command: string =
       element.find(".command-execute").val()?.toString() || "";
-    const usableBy: string =
-      element.find(".select-usableby option:selected").val()?.toString() ||
-      "everyone";
+    const usableBy: UserTypes =
+      getUserType(
+        element.find(".select-usableby option:selected").val()?.toString() ||
+          "6"
+      ) || UserTypes.EVERYONE;
     console.log(`Saving ${name}`);
     if (!FCC) {
       throw new Error(
         "Fancy command client not initialized, unable to setup buttons!"
       );
     }
-    console.log(`Adding command`, { name, command, usableBy });
+    const ncmd: FancyCommand = { name, command, usableBy };
+    console.log(`Adding command`, ncmd);
     FCC.addCommand({ name, command, usableBy });
     element.remove();
   });
@@ -156,6 +250,71 @@ const setupButtons = (element: JQuery<JQuery.Node[]>): void => {
       element.find(".command-name").val()?.toString() || "!unknown";
     console.log(`Removing ${name}`);
     FCC.removeCommand(name);
+  });
+};
+
+/**
+ * Add listeners to the child buttons (save, delete) for redemptions
+ *
+ *
+ * @param element - the parent command element which we want to subscribe actions to
+ * @returns void
+ *
+ */
+const setupRedeemButtons = (element: JQuery<JQuery.Node[]>): void => {
+  element.find("#save-redemption").on("click", () => {
+    const name: string =
+      element.find(".command-name").val()?.toString() || "!unknown";
+    const prompt: string =
+      element.find(".command-prompt").val()?.toString() || "";
+    const command: string =
+      element.find(".command-execute").val()?.toString() || "";
+    const cost: number = Number.parseInt(
+      element.find(".command-cost").val()?.toString() || "1"
+    );
+    const max_per_stream: number = Number.parseInt(
+      element.find(".command-max_per_stream").val()?.toString() || "0"
+    );
+    const max_per_user_per_stream: number = Number.parseInt(
+      element.find(".command-max_per_user_per_stream").val()?.toString() || "0"
+    );
+    const global_cooldown: number = Number.parseInt(
+      element.find(".command-global_cooldown").val()?.toString() || "0"
+    );
+    const user_input: boolean =
+      element.find(".select-userinput option:selected").val()?.toString() ===
+        "true" || false;
+    const enabled: boolean =
+      element.find(".select-enabled option:selected").val()?.toString() ===
+        "true" || true;
+
+    const redemptionItem: FancyRedemption = {
+      name,
+      command,
+      prompt,
+      cost,
+      max_per_stream,
+      max_per_user_per_stream,
+      global_cooldown,
+      user_input,
+      enabled,
+    };
+
+    console.log(`Saving ${name}`);
+    if (!FRC) {
+      throw new Error(
+        "Fancy command client not initialized, unable to setup buttons!"
+      );
+    }
+    console.log(`Adding command`, redemptionItem);
+    FRC.addCommand(redemptionItem);
+    element.remove();
+  });
+  element.find(".remove-item").on("click", () => {
+    const name: string =
+      element.find(".command-name").val()?.toString() || "!unknown";
+    console.log(`Removing ${name}`);
+    FRC.removeCommand(name);
   });
 };
 
@@ -176,11 +335,37 @@ const removeCommand = (name: string): void => {
 };
 
 /**
- * Sets up the FancyCommandClient to listen for changes, and initialize the global object to allow interfacing with the server
+ * Creates clients for FancyCommands and FancyRedemptions
+ * Once they've been created, will call setup functions to prep them for listening
  *
  */
 const connectServer = (): void => {
   FCC = new FancyCommandClient();
+  FRC = new FancyRedemptionClient();
+
+  setupFCC();
+  setupFRC();
+  authorizedApplication();
+};
+
+/**
+ * Sets up the FancyCommandClient to listen for changes, and initialize the global object to allow interfacing with the server
+ *
+ */
+const setupFRC = (): void => {
+  FRC.onAdd((cmd: FancyRedemption) => {
+    addRedemption(cmd);
+  });
+  FRC.onRemove(({ name }) => {
+    removeCommand(name);
+  });
+};
+
+/**
+ * Sets up the FancyCommandClient to listen for changes, and initialize the global object to allow interfacing with the server
+ *
+ */
+const setupFCC = (): void => {
   FCC.onAdd((cmd: FancyCommand) => {
     const [name, command, usableBy] = [
       cmd.name,
@@ -197,7 +382,6 @@ const connectServer = (): void => {
   FCC.onRemove(({ name }) => {
     removeCommand(name);
   });
-  authorizedApplication();
 };
 
 /**
@@ -253,16 +437,33 @@ const getNotFoundMDMessage = async (): Promise<string> => {
  *
  */
 const getTemplateContents = async () => {
-  return fetch("/html_templates/command-item.html", {
-    headers: {
-      "Content-Type": "text/plain",
-    },
-  }).then((res) => {
+  const cmdItm: Promise<void | Response> = fetch(
+    "/html_templates/command-item.html",
+    {
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    }
+  ).then((res) => {
     return res.text().then((txt) => {
       command_template = txt;
       return;
     });
   });
+  const redeemItm: Promise<void | Response> = fetch(
+    "/html_templates/redemption-item.html",
+    {
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    }
+  ).then((res) => {
+    return res.text().then((txt) => {
+      redemption_template = txt;
+      return;
+    });
+  });
+  return Promise.all([cmdItm, redeemItm]);
 };
 
 /**
