@@ -1,7 +1,11 @@
 /** @format */
 
-import { FancyCommandExecutor, getUserType } from "./FancyCommandExecutor";
-import { UserTypes, FancyCommand } from "../../../shared/obj/FancyCommandTypes";
+import { FancyCommandExecutor } from "./FancyCommandExecutor";
+import {
+  UserTypes,
+  FancyCommand,
+  getUserType,
+} from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";

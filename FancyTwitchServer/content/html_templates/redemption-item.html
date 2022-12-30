@@ -1,20 +1,25 @@
 <!-- @format -->
 
-<details class="command-item">
+<details class="command-item redemption-item">
   <summary class="command-title">{name}</summary>
   <div class="command-component left-component" subtitle="Command Name">
-    <input name="command-name" class="command-name" value="{name}" />
+    <input name="redemption-title" class="command-name" value="{name}" />
   </div>
 
-  <div class="command-component right-component" subtitle="May Call">
-    <select class="select-usableby">
-      <option value="owner">Owner</option>
-      <option value="moderator">Moderator</option>
-      <option value="vip">VIP</option>
-      <option value="regular">Regular</option>
-      <option value="subscriber">Subscriber</option>
-      <option value="follower">Follower</option>
-      <option value="everyone">Everyone</option>
+  <div
+    class="command-component right-component"
+    subtitle="User Input Required?"
+  >
+    <select id="select-userinput">
+      <option value="false">No</option>
+      <option value="true">Yes</option>
+    </select>
+  </div>
+
+  <div class="command-component right-component" subtitle="Enabled?">
+    <select id="select-enabled">
+      <option value="false">No</option>
+      <option value="true">Yes</option>
     </select>
   </div>
 
@@ -22,12 +27,12 @@
 
   <div class="command-component" subtitle="Command to Exec">
     <textarea class="command-execute" name="command-execute">
-{command}</textarea
+  {command}</textarea
     >
   </div>
 
   <footer>
-    <span class="save-item panel-button" id="save-command">Save</span>
+    <span class="save-item panel-button" id="save-redemption">Save</span>
     <span class="remove-item">
       <svg
         xmlns="http://www.w3.org/2000/svg"

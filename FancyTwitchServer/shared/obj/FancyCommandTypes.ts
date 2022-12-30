@@ -27,3 +27,45 @@ export type ClientFancyCommand = {
   command: string;
   usableBy: string;
 };
+
+export type FancyRedemption = {
+  name: string;
+  prompt: string;
+  command: string;
+  cost: number;
+  max_per_stream?: number;
+  max_per_user_per_stream?: number;
+  global_cooldown?: number;
+  user_input?: boolean;
+  enabled?: boolean;
+  color?: string;
+};
+
+export interface FancyClientItemBase {
+  name: string;
+}
+
+export const getUserType = (userType: string): UserTypes => {
+  let userTypeParsed: string = userType;
+  if (Number.isInteger(userType)) {
+    userTypeParsed = UserTypes[Number.parseInt(userType)];
+  }
+  switch (userTypeParsed) {
+    case "owner":
+      return UserTypes.OWNER;
+    case "moderator":
+      return UserTypes.MODERATOR;
+    case "vip":
+      return UserTypes.VIP;
+    case "regular":
+      return UserTypes.REGULAR;
+    case "subscriber":
+      return UserTypes.SUBSCRIBER;
+    case "follower":
+      return UserTypes.FOLLOWER;
+    case "everyone":
+      return UserTypes.EVERYONE;
+    default:
+      return UserTypes.EVERYONE;
+  }
+};
