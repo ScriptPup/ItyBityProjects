@@ -1,13 +1,13 @@
 /** @format */
 
 export enum UserTypes {
-  OWNER,
-  MODERATOR,
-  VIP,
-  SUBSCRIBER,
-  REGULAR,
-  FOLLOWER,
-  EVERYONE,
+  OWNER = 0,
+  MODERATOR = 1,
+  VIP = 2,
+  SUBSCRIBER = 3,
+  REGULAR = 4,
+  FOLLOWER = 5,
+  EVERYONE = 6,
 }
 export type FancyCommand = {
   name: string;
@@ -46,11 +46,11 @@ export interface FancyClientItemBase {
 }
 
 export const getUserType = (userType: string): UserTypes => {
-  let userTypeParsed: string = userType;
-  if (Number.isInteger(userType)) {
+  let userTypeParsed: string | UserTypes = userType;
+  if (Number.parseInt(userType)) {
     userTypeParsed = UserTypes[Number.parseInt(userType)];
   }
-  switch (userTypeParsed) {
+  switch (userTypeParsed.toString().toLowerCase()) {
     case "owner":
       return UserTypes.OWNER;
     case "moderator":
