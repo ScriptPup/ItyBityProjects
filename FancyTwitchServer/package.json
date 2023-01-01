@@ -16,7 +16,7 @@
     "server": "npm-run-all clean build-server server-start",
     "server-watch": "nodemon --watch",
     "watch:server": "npm-run-all --parallel watch:build-server server-watch",
-    "start": "npm-run-all clean build --parallel watch:build watch:server --print-label",
+    "start": "npm-run-all clean --parallel watch:build watch:server --print-label",
     "run-tests": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
     "test": "npm-run-all clean-tests run-tests clean-tests",
     "server-logs": "Type .\\logs\\Server.log | pino-pretty",
