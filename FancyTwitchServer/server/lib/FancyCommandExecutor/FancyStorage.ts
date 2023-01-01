@@ -25,7 +25,7 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
   /**
    * ThedbPath is the reference path within which we should store objects
    */
-  protected dbPath: string = "undefined";
+  public dbPath: string = "undefined";
 
   /**
    * Construct the FancyStorage class
