@@ -2,9 +2,9 @@
 
 import { Next, FancyCommandParser } from "../FancyCommandParser";
 import { TwitchMessage } from "../../../../shared/obj/TwitchObjects";
-import { TestLogger } from "../../logging";
+import { MainLogger } from "../../logging";
 
-const logger = TestLogger.child({ file: "TwitchFancyPrepParse" });
+const logger = MainLogger.child({ file: "TwitchFancyPrepParse" });
 
 /**
  * FancyCommandParser middleware which will replace some variables with data from a twitch message
