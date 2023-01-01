@@ -7,8 +7,10 @@ import { AceBase, DataReference, DataSnapshotsArray } from "acebase";
 import { commandDB } from "../DatabaseRef";
 import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
 import { FancyClientItemBase } from "../../../shared/obj/FancyCommandTypes";
+import { MainLogger } from "../logging";
 
 export abstract class FancyStorage<T extends FancyClientItemBase> {
+  private logger = MainLogger.child({ file: this.constructor.name });
   /**
    * Ready is a Promise which will evaluate to True when AceBase is initialized and ready for use
    */
@@ -55,6 +57,10 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
    */
   public addCommand(ncmd: T): Promise<DataReference> {
     return this.Ready.then(() => {
+      this.logger.debug(
+        { path: `${this.dbPath}/${ncmd.name}` },
+        `Adding command`
+      );
       return this.db.ref(`${this.dbPath}/${ncmd.name}`).set(ncmd);
     });
   }
@@ -69,6 +75,7 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
    */
   public removeCommand(key: string): Promise<DataReference> {
     return this.Ready.then(() => {
+      this.logger.debug({ path: `${this.dbPath}/${key}` }, `Removing command`);
       return this.db.ref(`${this.dbPath}/${key}`).remove();
     });
   }
@@ -84,6 +91,7 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
    */
   public getAllCommands(): Promise<DataSnapshotsArray> {
     return this.Ready.then(() => {
+      this.logger.debug({ path: `${this.dbPath}` }, `Getting all commands`);
       return this.db.query(`${this.dbPath}`).take(1000).get();
     });
   }
@@ -100,6 +108,7 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
    *
    */
   public async updateCommand(key: string, cmd: T): Promise<T> {
+    this.logger.debug({ path: `${this.dbPath}/${key}` }, `Updating command`);
     const item = this.db.ref(`${this.dbPath}/${key}`);
     await item.set(cmd);
     return cmd;
@@ -114,9 +123,14 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
    *
    */
   public async getCommand(key: string): Promise<T> {
+    this.logger.debug({ path: `${this.dbPath}/${key}` }, `Getting command`);
     const content = this.db.ref(`${this.dbPath}/${key}`).get();
     return new Promise((res, rej) => {
       content.then((snapshot) => {
+        this.logger.debug(
+          { path: `${this.dbPath}/${key}`, data: snapshot },
+          `Got command`
+        );
         res(snapshot.val());
       });
     });
@@ -134,8 +148,9 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
    * @dangerous
    */
   public flushCommands(): Promise<QueryRemoveResult[]> {
+    this.logger.debug({ path: `${this.dbPath}` }, `Flushing commands`);
     return this.Ready.then(() => {
-      return this.db.ref("${this.dbPath}").query().remove();
+      return this.db.ref(`${this.dbPath}`).query().remove();
     });
   }
 }
