@@ -43,6 +43,7 @@ export type FancyRedemption = {
 
 export interface FancyClientItemBase {
   name: string;
+  usableBy?: UserTypes | string;
 }
 
 export const getUserType = (userType: string): UserTypes => {
