@@ -50,7 +50,7 @@ export class FancyListener<T extends FancyClientItemBase> {
 
     this.logger.debug(`Setting up acebase DB child_added event listener`);
     this.FS.db
-      .ref(this.evtPrefix)
+      .ref(this.FS.dbPath)
       .on("child_added", (cmdAdded: DataSnapshot) => {
         const cmd = cmdAdded.val();
         this.logger.debug(
@@ -66,7 +66,7 @@ export class FancyListener<T extends FancyClientItemBase> {
 
     this.logger.debug(`Setting up acebase DB child_remove event listener`);
     this.FS.db
-      .ref(this.evtPrefix)
+      .ref(this.FS.dbPath)
       .on("child_removed", (cmdRmvd: DataSnapshot) => {
         this.logger.debug(
           { cache: this.commands },
@@ -82,7 +82,7 @@ export class FancyListener<T extends FancyClientItemBase> {
 
     this.logger.debug(`Setting up acebase DB child_changed event listener`);
     this.FS.db
-      .ref(this.evtPrefix)
+      .ref(this.FS.dbPath)
       .on("child_changed", (cmdRmvd: DataSnapshot) => {
         const cmd: FancyCommand = cmdRmvd.val();
         this.logger.debug(

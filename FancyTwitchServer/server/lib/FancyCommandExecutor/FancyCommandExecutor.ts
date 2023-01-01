@@ -8,7 +8,7 @@ import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
 import { FancyStorage } from "./FancyStorage";
 
 export class FancyCommandExecutor extends FancyStorage<FancyCommand> {
-  protected override dbPath: string = "commands";
+  public override dbPath: string = "commands";
 
   /**
    * Add or update a variable in the AceBase database
