@@ -12,6 +12,7 @@ import {
   FancyCommand,
   UserTypes,
 } from "../../shared/obj/FancyCommandTypes";
+import { FancyCommandExecutor } from "../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 
 const logger = pino(
   { level: "debug" },
@@ -64,8 +65,9 @@ describe("FancyCommandListener listener", () => {
       } catch {}
     });
     beforeEach((done) => {
+      const FCS: FancyCommandExecutor = new FancyCommandExecutor();
       IO = new SocketServer();
-      FCL = new FancyCommandListener(IO, true);
+      FCL = new FancyCommandListener(IO, FCS, true);
       IO.listen(8081);
       client_io = SocketClient(end_point, opts);
       done();
@@ -195,15 +197,16 @@ describe("FancyCommandListener listener", () => {
           { test: "Database changes setup (before)" },
           "Starting setup"
         );
+        const FCS: FancyCommandExecutor = new FancyCommandExecutor();
         // Setup socket server
         IO = new SocketServer();
-        FCL = new FancyCommandListener(IO, true);
-        await FCL.FCE.Ready;
+        FCL = new FancyCommandListener(IO, FCS, true);
+        await FCL.FS.Ready;
         logger.debug(
           { test: "Database changes setup (before)" },
           "FCE database ready"
         );
-        db = FCL.FCE.db;
+        db = FCL.FS.db;
 
         // Prep database entries to change
         const add_command2: { [key: string]: string | number } = {

@@ -8,6 +8,7 @@ import { TwitchListener } from "./server/lib/TwitchHandling/TwitchHandling";
 import { startSimpleHTTP } from "./server/simple_static_filehost";
 import { FancyCommandListener } from "./server/lib/FancyCommandExecutor/FancyCommandListener";
 import { FancyConfig } from "./server/lib/FancyConifg/FancyConfig";
+import { FancyCommandExecutor } from "./server/lib/FancyCommandExecutor/FancyCommandExecutor";
 
 console.log(`Starting in env ${process.env.NODE_ENV}`);
 
@@ -16,7 +17,8 @@ const port: number = Number.parseInt(process.argv[2]) || 9000;
 const http: httpServer = startSimpleHTTP();
 const io: socketServer = ServeTwitchChat(http);
 // Setup a command listener which will handle incoming requests to modify commands stored in the local DB
-const FCL: FancyCommandListener = new FancyCommandListener(io);
+const FCE: FancyCommandExecutor = new FancyCommandExecutor();
+const FCL: FancyCommandListener = new FancyCommandListener(io, FCE);
 // Configure basic twitch listener
 const TL: TwitchListener = new TwitchListener(FCL);
 // Setup socket to listen for bot account commands and inform the TwitchListener when bot account information is changed
