@@ -6,7 +6,7 @@ import {
   getUserType,
 } from "../../../shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
-import { DataSnapshot } from "acebase";
+import { DataReference, DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 import { FancyStorage } from "./FancyStorage";
 
@@ -49,46 +49,52 @@ export class FancyListener<T extends FancyClientItemBase> {
     this.logger.debug(`Fancy Command Listener initializing`);
 
     this.logger.debug(`Setting up acebase DB child_added event listener`);
-    this.FS.db.ref("commands").on("child_added", (cmdAdded: DataSnapshot) => {
-      const cmd = cmdAdded.val();
-      this.logger.debug(
-        { cache: this.commands },
-        "Database command has been added, syncing internal cache"
-      );
-      this.cache_add_command(cmd);
-      this.logger.debug(
-        { cache: this.commands },
-        "Database command has been added, syncing internal cache"
-      );
-    });
+    this.FS.db
+      .ref(this.evtPrefix)
+      .on("child_added", (cmdAdded: DataSnapshot) => {
+        const cmd = cmdAdded.val();
+        this.logger.debug(
+          { cache: this.commands, cmd },
+          "Database command has been added, syncing internal cache"
+        );
+        this.cache_add_command(cmd);
+        this.logger.debug(
+          { cache: this.commands },
+          "Database command has been added, synced internal cache"
+        );
+      });
 
     this.logger.debug(`Setting up acebase DB child_remove event listener`);
-    this.FS.db.ref("commands").on("child_removed", (cmdRmvd: DataSnapshot) => {
-      this.logger.debug(
-        { cache: this.commands },
-        "Database command has been removed, syncing internal cache"
-      );
-      const cmd: FancyCommand = cmdRmvd.val();
-      this.cache_remove_command(cmd);
-      this.logger.debug(
-        { cache: this.commands },
-        "Database command has been removed, synced internal cache"
-      );
-    });
+    this.FS.db
+      .ref(this.evtPrefix)
+      .on("child_removed", (cmdRmvd: DataSnapshot) => {
+        this.logger.debug(
+          { cache: this.commands },
+          "Database command has been removed, syncing internal cache"
+        );
+        const cmd: FancyCommand = cmdRmvd.val();
+        this.cache_remove_command(cmd);
+        this.logger.debug(
+          { cache: this.commands },
+          "Database command has been removed, synced internal cache"
+        );
+      });
 
     this.logger.debug(`Setting up acebase DB child_changed event listener`);
-    this.FS.db.ref("commands").on("child_changed", (cmdRmvd: DataSnapshot) => {
-      const cmd: FancyCommand = cmdRmvd.val();
-      this.logger.debug(
-        { cache: this.commands },
-        "Database command has been changed, syncing internal cache"
-      );
-      this.cache_add_command(cmd);
-      this.logger.debug(
-        { cache: this.commands },
-        "Database command has been changed, syncing internal cache"
-      );
-    });
+    this.FS.db
+      .ref(this.evtPrefix)
+      .on("child_changed", (cmdRmvd: DataSnapshot) => {
+        const cmd: FancyCommand = cmdRmvd.val();
+        this.logger.debug(
+          { cache: this.commands },
+          "Database command has been changed, syncing internal cache"
+        );
+        this.cache_add_command(cmd);
+        this.logger.debug(
+          { cache: this.commands },
+          "Database command has been changed, syncing internal cache"
+        );
+      });
 
     this.IO.on("connection", (socket: Socket): void => {
       this.logger.debug(
@@ -169,11 +175,12 @@ export class FancyListener<T extends FancyClientItemBase> {
       if (command.usableBy) {
         command.usableBy = getUserType(command.usableBy.toString());
       }
-      await this.FS.addCommand(command);
+      const dataref: DataReference = await this.FS.addCommand(command);
       this.logger.debug(
         {
           function: `listenForAdd`,
           command: command,
+          ref_snapshot: await (await dataref.get()).val(),
         },
         "Command added"
       );

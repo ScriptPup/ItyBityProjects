@@ -201,7 +201,7 @@ describe("FancyRedemptionListener listener", () => {
           { test: "Database changes setup (before)" },
           "FCE database ready"
         );
-        db = FCL.FS.db;
+        db = FCS.db;
 
         // Prep database entries to change
         const add_command2: FancyRedemption = {
@@ -272,16 +272,21 @@ describe("FancyRedemptionListener listener", () => {
       );
       client_io.once("redemption-add", (res) => {
         logger.debug(
-          { test: "Should add the command to the DB" },
+          { test: "Should add the command to the DB", result_from_add: res },
           "Recieved reply from server regarding add"
         );
         db.ref(`redemptions/${add_command.name}`).get((ss) => {
+          const val = ss.val();
           logger.debug(
-            { test: "Should add the command to the DB" },
+            {
+              test: "Should add the command to the DB",
+              searched_for: `redemptions/${add_command.name}`,
+              data: val,
+            },
             "Recieved acknowledgement from server"
           );
           try {
-            expect(ss.val()).to.eql(expected_return_command);
+            expect(val).to.eql(expected_return_command);
             expect(
               [...FCL.commands].find((x) => x.name === add_command.name)
             ).to.eql(expected_return_command);
@@ -373,7 +378,7 @@ describe("FancyRedemptionListener listener", () => {
       );
       client_io.once("redemption-list", (cmdList: FancyRedemption[]) => {
         logger.debug(
-          { test: "Should list all commands from the DB" },
+          { test: "Should list all commands from the DB", cmdList },
           "Recieved acknowledgement from server"
         );
         try {
