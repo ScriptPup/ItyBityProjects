@@ -3,7 +3,9 @@
 @import "./markdown.scss";  
 
 .panel-button {
-    min-width: 100px;
+    .new-panel-button {
+        min-width: 100px;
+    }    
     &.inactive {
         &:hover {
             box-shadow: initial;
