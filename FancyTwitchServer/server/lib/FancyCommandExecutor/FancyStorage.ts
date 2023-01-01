@@ -61,7 +61,15 @@ export abstract class FancyStorage<T extends FancyClientItemBase> {
         { path: `${this.dbPath}/${ncmd.name}` },
         `Adding command`
       );
-      return this.db.ref(`${this.dbPath}/${ncmd.name}`).set(ncmd);
+      return this.db.ref(`${this.dbPath}/${ncmd.name}`).set(ncmd, (err) => {
+        if (!err) {
+          return;
+        }
+        this.logger.error(
+          { err, path: `${this.dbPath}/${ncmd.name}` },
+          "Command add errored"
+        );
+      });
     });
   }
 
