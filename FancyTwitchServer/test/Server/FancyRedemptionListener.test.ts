@@ -378,7 +378,7 @@ describe("FancyRedemptionListener listener", () => {
         );
         try {
           cmdList.forEach((cmd: FancyRedemption) => {
-            expect(cmd).to.have.all.keys("name", "command", "usableBy");
+            expect(cmd).to.have.all.keys("name", "command", "prompt", "cost");
           });
           done();
         } catch (e) {
