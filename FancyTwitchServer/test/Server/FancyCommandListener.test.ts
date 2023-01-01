@@ -13,16 +13,9 @@ import {
   UserTypes,
 } from "../../shared/obj/FancyCommandTypes";
 import { FancyCommandExecutor } from "../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
+import { TestLogger } from "../logging";
 
-const logger = pino(
-  { level: "debug" },
-  pino.destination({
-    mkdir: true,
-    writable: true,
-    dest: `${__dirname}/logs/FancyCommandListener.test.log`,
-    append: false,
-  })
-);
+const logger = TestLogger.child({ file: "FancyCommandListener.test" });
 
 const end_point = "http://localhost:8081";
 const opts = { forceNew: true, reconnect: true };
