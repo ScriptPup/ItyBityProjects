@@ -11,6 +11,7 @@ import { MainLogger } from "../logging";
 import { FancyStorage } from "./FancyStorage";
 
 export class FancyListener<T extends FancyClientItemBase> {
+  protected evtPrefix: string = "undefined";
   private logger = MainLogger.child({ file: this.constructor.name });
   private IO: Server;
   /**
@@ -160,7 +161,7 @@ export class FancyListener<T extends FancyClientItemBase> {
    */
   private async listenForAdd(socket: Socket): Promise<void> {
     this.logger.debug({ function: `listenForAdd` }, "Start");
-    socket.on("command-add", async (command: T) => {
+    socket.on(`${this.evtPrefix}-add`, async (command: T) => {
       this.logger.debug(
         { function: `listenForAdd`, command: command },
         "Add fired"
@@ -176,7 +177,7 @@ export class FancyListener<T extends FancyClientItemBase> {
         },
         "Command added"
       );
-      this.IO.to("setup-commands").emit("command-add", command);
+      this.IO.to("setup-commands").emit(`${this.evtPrefix}-add`, command);
     });
     this.logger.debug({ function: `listenForAdd` }, "Listening");
   }
@@ -191,14 +192,14 @@ export class FancyListener<T extends FancyClientItemBase> {
    */
   private async listenForRemove(socket: Socket): Promise<void> {
     this.logger.debug({ function: `listenForRemove` }, "Start");
-    socket.on("command-remove", async ({ name }) => {
+    socket.on(`${this.evtPrefix}-remove`, async ({ name }) => {
       this.logger.debug({ function: `listenForRemove` }, "Remove fired");
       await this.FS.removeCommand(name);
       this.logger.debug(
         { function: `listenForRemove`, command: { name } },
         "Command removed"
       );
-      this.IO.to("setup-commands").emit("command-remove", { name });
+      this.IO.to("setup-commands").emit(`${this.evtPrefix}-remove`, { name });
     });
     this.logger.debug({ function: `listenForRemove` }, "Listening");
   }
@@ -211,7 +212,7 @@ export class FancyListener<T extends FancyClientItemBase> {
    */
   private async listenForList(socket: Socket): Promise<void> {
     this.logger.debug({ function: `listenForList` }, "Start");
-    socket.on("command-list", async () => {
+    socket.on(`${this.evtPrefix}-list`, async () => {
       this.logger.debug(
         { function: `listenForList` },
         "Command list requested"
@@ -219,7 +220,7 @@ export class FancyListener<T extends FancyClientItemBase> {
       const cmdList: FancyCommand[] = await (
         await this.FS.getAllCommands()
       ).getValues();
-      socket.emit("command-list", cmdList);
+      socket.emit(`${this.evtPrefix}-list`, cmdList);
     });
   }
 }
