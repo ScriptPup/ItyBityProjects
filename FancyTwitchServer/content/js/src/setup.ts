@@ -282,11 +282,11 @@ const setupRedeemButtons = (element: JQuery<JQuery.Node[]>): void => {
       element.find(".command-global_cooldown").val()?.toString() || "0"
     );
     const user_input: boolean =
-      element.find(".select-userinput option:selected").val()?.toString() ===
-        "true" || false;
+      element.find("#select-userinput option:selected").val()?.toString() ===
+      "true";
     const enabled: boolean =
-      element.find(".select-enabled option:selected").val()?.toString() ===
-        "true" || true;
+      element.find("#select-enabled option:selected").val()?.toString() ===
+      "true";
 
     const redemptionItem: FancyRedemption = {
       name,
@@ -300,7 +300,7 @@ const setupRedeemButtons = (element: JQuery<JQuery.Node[]>): void => {
       enabled,
     };
 
-    console.log(`Saving ${name}`);
+    console.log(`Saving ${name}`, redemptionItem);
     if (!FRC) {
       throw new Error(
         "Fancy command client not initialized, unable to setup buttons!"
