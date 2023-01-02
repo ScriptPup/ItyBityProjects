@@ -649,6 +649,9 @@ const setupButtonListeners = async () => {
   $("#btn-new-cmd").on("click", () => {
     addCommand("!", "", "everyone", true);
   });
+  $("#btn-new-redeem").on("click", () => {
+    addRedemption({ name: "", prompt: "", cost: 1, command: "" }, true);
+  });
   $("#btn-bot-settings").on("click", () => {
     showBotTemplate();
   });
