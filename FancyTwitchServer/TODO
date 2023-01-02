@@ -7,6 +7,9 @@
 
 # Additional Features needed:
 
+## Redemptions
+- Add link to twitch: when "Manage Here?" is set to "Yes", then when the server recieved the add request it should check if a redemption of that name already exists. If so, check if it's owned by this application; if so, so then modify it. If there is one and it's not owned by this app then fail with an error. If there's no command, create it and register it as owned.
+
 ## "Hidden" variable sets
 
 Maybe something like `{!var=something}`
