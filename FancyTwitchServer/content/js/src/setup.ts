@@ -93,7 +93,6 @@ const addCommand = async (
   if (null === contents) {
     throw new Error("No content template found, unable to display information");
   }
-  console.log("Added command", { name, command, usableBy, expand });
   contents = contents
     .replaceAll("{name}", name)
     .replaceAll("{command}", command)
@@ -114,11 +113,9 @@ const addCommand = async (
     .find("summary")
     .on("click", (evnt) => {
       const elem: HTMLElement = evnt.delegateTarget.parentNode as HTMLElement;
-      console.log(elem);
       if (elem.hasAttribute("open")) {
         return;
       }
-      console.log("resizing");
       $(domContent)
         .find("textarea")
         .each((ix, elem) => {
@@ -183,6 +180,9 @@ const addRedemption = async (
   $(domContent)
     .find(`#select-enabled option[value="${redemption.enabled}"]`)
     .prop("selected", true);
+  $(domContent)
+    .find(`#select-linked option[value="${redemption.linked}"]`)
+    .prop("selected", true);
 
   $(domContent).attr("id", redemption.name.replace(" ", "_"));
   $(domContent)
@@ -196,11 +196,9 @@ const addRedemption = async (
     .find("summary")
     .on("click", (evnt) => {
       const elem: HTMLElement = evnt.delegateTarget.parentNode as HTMLElement;
-      console.log(elem);
       if (elem.hasAttribute("open")) {
         return;
       }
-      console.log("resizing");
       $(domContent)
         .find("textarea")
         .each((ix, elem) => {
@@ -234,21 +232,18 @@ const setupCommandButtons = (element: JQuery<JQuery.Node[]>): void => {
         element.find(".select-usableby option:selected").val()?.toString() ||
           "6"
       ) || UserTypes.EVERYONE;
-    console.log(`Saving ${name}`);
     if (!FCC) {
       throw new Error(
         "Fancy command client not initialized, unable to setup buttons!"
       );
     }
     const ncmd: FancyCommand = { name, command, usableBy };
-    console.log(`Adding command`, ncmd);
     FCC.addCommand({ name, command, usableBy });
     element.remove();
   });
   element.find(".remove-item").on("click", () => {
     const name: string =
       element.find(".command-name").val()?.toString() || "!unknown";
-    console.log(`Removing ${name}`);
     FCC.removeCommand(name);
   });
 };
@@ -287,6 +282,9 @@ const setupRedeemButtons = (element: JQuery<JQuery.Node[]>): void => {
     const enabled: boolean =
       element.find("#select-enabled option:selected").val()?.toString() ===
       "true";
+    const linked: boolean =
+      element.find("#select-linked option:selected").val()?.toString() ===
+      "true";
 
     const redemptionItem: FancyRedemption = {
       name,
@@ -297,23 +295,21 @@ const setupRedeemButtons = (element: JQuery<JQuery.Node[]>): void => {
       max_per_user_per_stream,
       global_cooldown,
       user_input,
+      linked,
       enabled,
     };
 
-    console.log(`Saving ${name}`, redemptionItem);
     if (!FRC) {
       throw new Error(
         "Fancy command client not initialized, unable to setup buttons!"
       );
     }
-    console.log(`Adding command`, redemptionItem);
     FRC.addCommand(redemptionItem);
     element.remove();
   });
   element.find(".remove-item").on("click", () => {
     const name: string =
       element.find(".command-name").val()?.toString() || "!unknown";
-    console.log(`Removing ${name}`);
     FRC.removeCommand(name);
   });
 };
@@ -372,11 +368,6 @@ const setupFCC = (): void => {
       cmd.command,
       UserTypes[cmd.usableBy],
     ];
-    console.log("Running addCommand", {
-      name,
-      command,
-      usableBy,
-    });
     addCommand(name, command, usableBy.toLowerCase());
   });
   FCC.onRemove(({ name }) => {
@@ -563,7 +554,6 @@ const showBotTemplate = async () => {
       throw new Error("Socket not connected, cannot send data to server");
     }
     FCC.socket.once("get-bot-acct", (res) => {
-      console.log("Recieved get-bot-acct", res);
       if (null === res) {
         newModal.find("input").val("");
         return;
@@ -617,7 +607,6 @@ const authorizedApplication = async () => {
       throw new Error("Somehow the authorization code doesn't exist!");
     }
 
-    console.log("Bot account authorized and linked!");
     saveBotData(botAccount);
   } finally {
     // Remove query string from navigation, we don't want the user to refresh the page and end up invalidating their token
@@ -661,14 +650,12 @@ const setupButtonListeners = async () => {
     addCommand("!", "", "everyone", true);
   });
   $("#btn-bot-settings").on("click", () => {
-    console.log("Opening bot template modal");
     showBotTemplate();
   });
   $("#information-options")
     .find("li")
     .on("click", (evnt) => {
       const infPg = $(evnt.delegateTarget).attr("inf");
-      console.log(`Clicked info option ${infPg}`);
       if (infPg) {
         const url = new URL(window.location.href);
         url.searchParams.set("info", infPg);

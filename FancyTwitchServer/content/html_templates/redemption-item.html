@@ -2,7 +2,7 @@
 
 <details class="command-item redemption-item">
   <summary class="command-title">{name}</summary>
-  <div class="command-component left-component" subtitle="Command Name">
+  <div class="command-component left-component" subtitle="Redemption Name">
     <input name="redemption-title" class="command-name" value="{name}" />
   </div>
 
@@ -27,10 +27,60 @@
 
   <br />
 
+  <div class="command-component" subtitle="Twitch User Prompt">
+    <textarea class="command-prompt" name="command-prompt">{prompt}</textarea>
+  </div>
   <div class="command-component" subtitle="Command to Exec">
     <textarea class="command-execute" name="command-execute">
 {command}</textarea
     >
+  </div>
+
+  <br />
+
+  <div class="command-component right-component" subtitle="Points Cost">
+    <input
+      type="number"
+      name="command-cost"
+      class="command-cost"
+      value="{cost}"
+    />
+  </div>
+
+  <div class="command-component right-component" subtitle="Stream Limit">
+    <input
+      type="number"
+      name="command-max_per_stream"
+      class="command-max_per_stream"
+      value="{max_per_stream}"
+    />
+  </div>
+
+  <br />
+
+  <div class="command-component right-component" subtitle="User Limit">
+    <input
+      type="number"
+      name="command-max_per_user_per_stream"
+      class="command-max_per_user_per_stream"
+      value="{max_per_user_per_stream}"
+    />
+  </div>
+  <div class="command-component right-component" subtitle="Cooldown">
+    <input
+      type="number"
+      name="command-global_cooldown"
+      class="command-global_cooldown"
+      value="{global_cooldown}"
+    />
+  </div>
+
+  <br />
+  <div class="command-component right-component" subtitle="Manage Here?">
+    <select id="select-linked">
+      <option value="false">No</option>
+      <option value="true">Yes</option>
+    </select>
   </div>
 
   <footer>

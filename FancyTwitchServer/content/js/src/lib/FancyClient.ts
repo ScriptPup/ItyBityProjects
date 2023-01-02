@@ -231,6 +231,10 @@ export abstract class FancyBaseClient<T extends FancyClientItemBase> {
     if (!middlewares.length) {
       return;
     }
+    console.log(`Adding ${context.name}`, {
+      context: context,
+      class: this.constructor.name,
+    });
     const mw: FancyCommandClientMiddleware<T> = middlewares[0];
     return mw(context, () => {
       this.doAdd(context, middlewares.slice(1));

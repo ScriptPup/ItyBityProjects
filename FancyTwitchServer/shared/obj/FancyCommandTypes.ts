@@ -38,6 +38,7 @@ export type FancyRedemption = {
   global_cooldown?: number;
   user_input?: boolean;
   enabled?: boolean;
+  linked?: boolean;
   color?: string;
 };
 
