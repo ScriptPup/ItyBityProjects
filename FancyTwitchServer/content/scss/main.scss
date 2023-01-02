@@ -303,6 +303,9 @@ font-variation-settings:
               cursor: pointer;
           }
       }
+      &.redemption-item {
+        background-color: pallete.$background-redemption;
+      }
       
       & .command {
           &-execute {
