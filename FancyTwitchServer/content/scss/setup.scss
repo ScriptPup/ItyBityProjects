@@ -3,8 +3,8 @@
 @import "./markdown.scss";  
 
 .panel-button {
-    .new-panel-button {
-        min-width: 130px;
+    &.new-panel-button {
+        min-width: 100px;
     }    
     &.inactive {
         &:hover {
