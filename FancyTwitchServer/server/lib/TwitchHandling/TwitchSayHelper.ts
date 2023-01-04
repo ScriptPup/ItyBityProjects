@@ -43,6 +43,13 @@ export class TwitchSayHelper {
     this.isReady = this.connectTwitchClient(true);
   }
 
+  public async getBotAccount(): Promise<BotAccount> {
+    if (!this.verifyAuth()) {
+      await this.getOAuthToken();
+    }
+    return this.botAccount;
+  }
+
   /**
    * Queries twitch dev and gets a bearer token to use, automatically requests a new token a few seconds before expiration
    * The resultant token is saved to the botAccount.token property
