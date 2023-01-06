@@ -9,7 +9,7 @@ export type TwitchMessage = {
   emotes: TwitchMessageTagEmotes;
 };
 
-export type TwitchMessageTagEmotes = { [emoteid: string]: string[] };
+export type TwitchMessageTagEmotes = { [emoteid: string]: string[] } | never;
 
 export type TwitchMessageTagParsedEmotes = {
   name: string;
