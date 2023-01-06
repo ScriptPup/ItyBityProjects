@@ -26,7 +26,7 @@ const FRS: FancyRedemptionStorage = new FancyRedemptionStorage();
 const FRL: FancyRedemptionListener = new FancyRedemptionListener(io, FRS);
 
 // Configure basic twitch listener
-const TL: TwitchListener = new TwitchListener(FCL);
+const TL: TwitchListener = new TwitchListener(FCL, FRL);
 // Setup socket to listen for bot account commands and inform the TwitchListener when bot account information is changed
 FancyConfig(io, TL);
 

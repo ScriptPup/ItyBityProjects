@@ -16,6 +16,7 @@ import { MainLogger } from "../logging";
 import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 import { ChatUser } from "@twurple/chat";
 import { TwitchRedemptionHelper } from "./TwitchRedemptionHelper";
+import { FancyRedemptionListener } from "../FancyCommandExecutor/FancyRedemptionListener";
 
 const logger = MainLogger.child({ file: "TwitchHandling" });
 
@@ -43,11 +44,17 @@ export class TwitchListener {
    */
   private FCL: FancyCommandListener;
 
+  /**
+   * The FRL is FancyRedemptionListener, which must be passed through upon creation
+   */
+  private FRL: FancyRedemptionListener;
+
   private twitchSayClient?: TwitchSayHelper;
 
-  constructor(FCL: FancyCommandListener) {
+  constructor(FCL: FancyCommandListener, FRL: FancyRedemptionListener) {
     logger.debug("Creating TwitchListener class");
     this.FCL = FCL;
+    this.FRL = FRL;
     this.init();
   }
 
@@ -144,7 +151,7 @@ export class TwitchListener {
           message,
           msgObj,
         });
-        const msgKey = `${new Date().toString()}:${message.substring(0, 8)}`;
+        const msgKey = `${new Date().toISOString()}:${message.substring(0, 8)}`;
         logger.debug({ channel, message, msgKey }, "Twitch message recieved");
         // If a bot account isn't setup, then do nothing
         if (this.botAccount) {
@@ -231,7 +238,11 @@ export class TwitchListener {
       return;
     }
     try {
-      await TwitchRedemptionHelper(this.twitchSayClient);
+      const TRH: TwitchRedemptionHelper = new TwitchRedemptionHelper(
+        this.twitchSayClient,
+        this.FRL
+      );
+      await await TRH.init();
     } catch (err) {
       logger.error({ err }, "Failed to setup twitch redemptions");
     }
