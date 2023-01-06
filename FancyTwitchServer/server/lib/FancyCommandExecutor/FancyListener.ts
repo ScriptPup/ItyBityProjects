@@ -30,7 +30,7 @@ export class FancyListener<T extends FancyClientItemBase> {
    * @returns returns the FancyCommandListener class instance
    *
    */
-  public commands: Set<FancyCommand> = new Set<FancyCommand>();
+  public commands: Set<T> = new Set<T>();
 
   constructor(IO: Server, FS: FancyStorage<T>, testing: boolean = false) {
     this.IO = IO;
@@ -72,7 +72,7 @@ export class FancyListener<T extends FancyClientItemBase> {
           { cache: this.commands },
           "Database command has been removed, syncing internal cache"
         );
-        const cmd: FancyCommand = cmdRmvd.val();
+        const cmd: T = cmdRmvd.val();
         this.cache_remove_command(cmd);
         this.logger.debug(
           { cache: this.commands },
@@ -84,7 +84,7 @@ export class FancyListener<T extends FancyClientItemBase> {
     this.FS.db
       .ref(this.FS.dbPath)
       .on("child_changed", (cmdRmvd: DataSnapshot) => {
-        const cmd: FancyCommand = cmdRmvd.val();
+        const cmd: T = cmdRmvd.val();
         this.logger.debug(
           { cache: this.commands },
           "Database command has been changed, syncing internal cache"
@@ -107,8 +107,8 @@ export class FancyListener<T extends FancyClientItemBase> {
     });
   }
 
-  private cache_remove_command(cmd: FancyCommand) {
-    const rmvVal: FancyCommand | undefined = [...this.commands].find(
+  private cache_remove_command(cmd: T) {
+    const rmvVal: T | undefined = [...this.commands].find(
       (x) => x.name === cmd.name
     );
     this.logger.debug(
@@ -120,7 +120,7 @@ export class FancyListener<T extends FancyClientItemBase> {
     }
   }
 
-  private cache_add_command(cmd: FancyCommand) {
+  private cache_add_command(cmd: T) {
     this.cache_remove_command(cmd);
     this.commands.add(cmd);
   }
