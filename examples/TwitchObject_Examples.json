@@ -1,0 +1,123 @@
+[watch:server] [20:59:56.920] DEBUG (17812): Recieved pubsub message  
+file: "TwitchRedemptionHelper"
+topic: "channel-points-channel-v1.484503215"       
+message: {
+  "type": "reward-redeemed",
+  "data": {
+    "timestamp": "2023-01-06T01:59:58.825756284Z", 
+    "redemption": {
+      "id": "a048ea96-abd1-4de9-8668-d69d531556c9",
+      "user": {
+        "id": "167213902",
+        "login": "abidingphantom",
+        "display_name": "AbidingPhantom"
+      },
+      "channel_id": "484503215",
+      "redeemed_at": "2023-01-06T01:59:58.825756284Z",
+      "reward": {
+        "id": "76605a26-fe5c-4b61-948e-3b89726cb9e1",
+        "channel_id": "484503215",
+        "title": "Test",
+        "prompt": "This is just a test reward, it does nothing. Don't use it. ",
+        "cost": 1,
+        "is_user_input_required": false,
+        "is_sub_only": false,
+        "image": {
+          "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/484503215/76605a26-fe5c-4b61-948e-3b89726cb9e1/47f634ac-565c-4ab8-9b85-4b61575d6eac/custom-1.png",
+          "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/484503215/76605a26-fe5c-4b61-948e-3b89726cb9e1/47f634ac-565c-4ab8-9b85-4b61575d6eac/custom-2.png",
+          "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/484503215/76605a26-fe5c-4b61-948e-3b89726cb9e1/47f634ac-565c-4ab8-9b85-4b61575d6eac/custom-4.png"
+        },
+        "default_image": {
+          "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/default-1.png",
+          "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/default-2.png",
+          "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/default-4.png"
+        },
+        "background_color": "#1F69FF",
+        "is_enabled": true,
+        "is_paused": false,
+        "is_in_stock": true,
+        "max_per_stream": {
+          "is_enabled": false,
+          "max_per_stream": 0
+        },
+        "should_redemptions_skip_request_queue": false,
+        "template_id": null,
+        "updated_for_indicator_at": "2022-12-29T15:42:07.550686111Z",
+        "max_per_user_per_stream": {
+          "is_enabled": false,
+          "max_per_user_per_stream": 0
+        },
+        "global_cooldown": {
+          "is_enabled": false,
+          "global_cooldown_seconds": 0
+        },
+        "redemptions_redeemed_current_stream": null,
+        "cooldown_expires_at": null
+      },
+      "status": "UNFULFILLED"
+    }
+  }
+}
+
+
+[watch:server] [21:36:00.049] DEBUG (13740): Recieved pubsub message
+file: "TwitchRedemptionHelper"
+topic: "channel-points-channel-v1.484503215"
+message: {
+  "type": "reward-redeemed",
+  "data": {
+    "timestamp": "2023-01-06T02:36:01.747971453Z",
+    "redemption": {
+      "id": "6b41c9e1-0230-4a1a-bf67-ba316e297f92",
+      "user": {
+        "id": "167213902",
+        "login": "abidingphantom",
+        "display_name": "AbidingPhantom"
+      },
+      "channel_id": "484503215",
+      "redeemed_at": "2023-01-06T02:36:01.747971453Z",
+      "reward": {
+        "id": "67ec3569-1eb7-4250-8425-d6efc7533f6c",
+        "channel_id": "484503215",
+        "title": "Test2",
+        "prompt": "This is also a test, don't redeem it. You'll get nothing.",
+        "cost": 1,
+        "is_user_input_required": true,
+        "is_sub_only": false,
+        "image": {
+          "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/484503215/67ec3569-1eb7-4250-8425-d6efc7533f6c/253ab2fb-8325-46c0-a5d8-fdb6eae89dc8/custom-1.png",
+          "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/484503215/67ec3569-1eb7-4250-8425-d6efc7533f6c/253ab2fb-8325-46c0-a5d8-fdb6eae89dc8/custom-2.png",
+          "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/484503215/67ec3569-1eb7-4250-8425-d6efc7533f6c/253ab2fb-8325-46c0-a5d8-fdb6eae89dc8/custom-4.png"
+        },
+        "default_image": {
+          "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/default-1.png",
+          "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/default-2.png",
+          "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/default-4.png"
+        },
+        "background_color": "#451093",
+        "is_enabled": true,
+        "is_paused": false,
+        "is_in_stock": true,
+        "max_per_stream": {
+          "is_enabled": false,
+          "max_per_stream": 0
+        },
+        "should_redemptions_skip_request_queue": false,
+        "template_id": null,
+        "updated_for_indicator_at": "2023-01-06T02:35:45.868036198Z",
+        "max_per_user_per_stream": {
+          "is_enabled": false,
+          "max_per_user_per_stream": 0
+        },
+        "global_cooldown": {
+          "is_enabled": false,
+          "global_cooldown_seconds": 0
+        },
+        "redemptions_redeemed_current_stream": null,
+        "cooldown_expires_at": null
+      },
+      "user_input": "This is a test",
+      "status": "UNFULFILLED"
+    }
+  }
+}
