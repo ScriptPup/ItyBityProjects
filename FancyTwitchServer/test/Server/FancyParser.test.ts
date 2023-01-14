@@ -708,7 +708,10 @@ describe("FancyParser Middleware", () => {
   describe("FancyParser Pre", () => {
     it("Should apply changes before parsing", async () => {
       const FCP: FancyCommandParser = new FancyCommandParser(null, contextDB);
-      const testMiddleware = (context: { val: string }, next: Next): void => {
+      const testMiddleware = async (
+        context: { val: string },
+        next: Next
+      ): Promise<void> => {
         context.val = context.val.replace("brownies", "salad");
       };
       FCP.preParse(testMiddleware);

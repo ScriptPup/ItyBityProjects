@@ -14,8 +14,8 @@ export type Next = () => void;
 * Simple typing to explain the expected structure of a FancyMiddleware function or lambda
 *
 */
-export type FancyMiddleware = (context: VarBlock, next: Next, input?: any) => void;
-export type FancyPreBlockMiddleware = (context: {val: string}, next: Next, input?: any) => void;
+export type FancyMiddleware = (context: VarBlock, next: Next, input?: any) => Promise<void>;
+export type FancyPreBlockMiddleware = (context: {val: string}, next: Next, input?: any) => Promise<void>;
 
 /**
 * Invoker function for the VarBlockMiddleware which accepts any callable following the FancyMiddleware type
@@ -26,7 +26,7 @@ export type FancyPreBlockMiddleware = (context: {val: string}, next: Next, input
 * @returns void
 *
 */
-function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[], input?: any): void {
+async function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[], input?: any): Promise<void> {
   logger.debug(`Middleware evoke started with ${middlewares.length} to evaluate`);
   if (!middlewares.length) {
     logger.debug(`No middlewares provides, skipping evaluations`);
@@ -34,13 +34,13 @@ function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddleware[
   }
   const mw = middlewares[0];
   logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion starting...`);
-  return mw(context, () => {
+  return await mw(context, async () => {
       logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
-      invokeFancyMiddlewares(context, middlewares.slice(1));
+      await invokeFancyMiddlewares(context, middlewares.slice(1));
   }, input);
 }
 
-function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPreBlockMiddleware[], input?: any): void {
+async function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPreBlockMiddleware[], input?: any): Promise<void> {
   logger.debug(`Middleware evoke started with ${middlewares.length} to evaluate`);
   if (!middlewares.length) {
     logger.debug(`No middlewares provides, skipping evaluations`);
@@ -48,9 +48,9 @@ function invokeFancyPreMiddlewares(context: {val: string}, middlewares: FancyPre
   }
   const mw = middlewares[0];
   logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion starting...`);
-  return mw(context, () => {
+  return mw(context, async () => {
       logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
-      invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
+      await invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
   }, input);
 }
 
@@ -121,9 +121,9 @@ class VarBlockMiddleware {
   * @returns void
   *
   */
-  public dispatch(context: VarBlock, input?: any): void {
+  public async dispatch(context: VarBlock, input?: any): Promise<void> {
     if(this.middlewares.length > 0)
-    return invokeFancyMiddlewares(context, this.middlewares, input);
+    return await invokeFancyMiddlewares(context, this.middlewares, input);
   }
 }
 
@@ -173,10 +173,10 @@ class PreBlockMiddleware {
   * @returns void
   *
   */
-  public dispatch(context: {val: string}, input?: any): void {
+  public async dispatch(context: {val: string}, input?: any): Promise<void> {
     if(this.middlewares.length > 0) { 
       logger.debug({context, input},"Dispatching FancyPreMiddlewares");
-      return invokeFancyPreMiddlewares(context, this.middlewares, input);
+      return await invokeFancyPreMiddlewares(context, this.middlewares, input);
     }
   }
 }
@@ -275,7 +275,7 @@ export class FancyCommandParser {
     }
     const ctxt = {val: cmd};    
     if(input) logger.debug({input},`Parsing ${cmd} with input`);
-    try { this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
+    try { await this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
     cmd = ctxt.val;
     if(cmd==="BREAK"){
       return "";
@@ -312,7 +312,7 @@ export class FancyCommandParser {
         const varBlock: VarBlock = new VarBlock(vbStr);
         logger.debug({"block": varBlock},`Parsed VarBlock`);
         try { 
-          this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
+          await this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
         } catch (err) { logger.error({err},"use middleware(s) exited with a failure"); }
         logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
         await this.getVarFromBlock(varBlock);
