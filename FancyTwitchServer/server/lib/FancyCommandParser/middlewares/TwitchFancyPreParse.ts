@@ -20,11 +20,11 @@ const logger = MainLogger.child({ file: "TwitchFancyPrepParse" });
 export function TwitchFancyPreParser(
   FCP: FancyCommandParser
 ): FancyCommandParser {
-  const twitchFancyPreParse = (
+  const twitchFancyPreParse = async (
     context: { val: string },
     next: Next,
     tmsg: TwitchMessage
-  ): void => {
+  ): Promise<void> => {
     if (!tmsg) {
       // This is debug instead of error, as it seems a "blank" message fires every so often.
       // This doesn't appear to be a bug, just a weird quirk of tmi.js?
