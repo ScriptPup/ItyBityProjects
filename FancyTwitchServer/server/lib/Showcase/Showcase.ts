@@ -86,7 +86,7 @@ export class Showcase {
         .query(`art/works`)
         .take(1)
         .skip(pos)
-        .sort("redemption_time")
+        .sort("redemption_time", false)
         .get()
     ).getValues()[0];
     logger.debug({ artWork, pos }, "Got art showcase redemption");
