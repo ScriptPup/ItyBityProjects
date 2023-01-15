@@ -82,8 +82,14 @@ export class Showcase {
   public async getArtShowcaseRedeem(pos: number): Promise<ShowcaseItem | null> {
     await this.isReady;
     const artWork: ShowcaseItem | null = (
-      await showcaseDB.ref(`art/works[${pos}]`).get()
-    ).val();
+      await showcaseDB
+        .query(`art/works`)
+        .take(1)
+        .skip(pos)
+        .sort("redemption_time")
+        .get()
+    ).getValues()[0];
+    logger.debug({ artWork, pos }, "Got art showcase redemption");
     return artWork;
   }
 
@@ -107,7 +113,11 @@ export class Showcase {
       );
       return false;
     }
-    await showcaseDB.ref(`art/works`).push(art);
+    const savedObject = await showcaseDB.ref(`art/works`).push(art);
+    logger.debug(
+      { art, savedObject },
+      "Showcase art redemption pushed to database"
+    );
     return true;
   }
 }
