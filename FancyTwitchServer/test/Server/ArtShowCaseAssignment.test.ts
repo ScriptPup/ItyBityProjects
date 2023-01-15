@@ -25,15 +25,15 @@ describe("TwitchFancyPreParse Middleware", () => {
     before(async () => {
       FCP = ArtShowcaseAssignment(new FancyCommandParser(null, contextDB));
     });
-    afterEach(async () => {
-      await showcaseDB
-        .query(`art/works`)
-        .take(1)
-        .sort("redemption_time", false)
-        .remove();
-    });
 
     describe("Username redemptions", () => {
+      afterEach(async () => {
+        await showcaseDB
+          .query(`art/works`)
+          .take(1)
+          .sort("redemption_time", false)
+          .remove();
+      });
       it("Should add redemption for arts which exist via username redemption", async () => {
         let twitchMessage = createMock<TwitchMessage>();
         twitchMessage.channel = "scriptpup";
@@ -57,6 +57,13 @@ describe("TwitchFancyPreParse Middleware", () => {
     });
 
     describe("Paramater redemptions", () => {
+      afterEach(async () => {
+        await showcaseDB
+          .query(`art/works`)
+          .take(1)
+          .sort("redemption_time", false)
+          .remove();
+      });
       it("Should add redemption for arts which exist via paramater redemption", async () => {
         let twitchMessage = createMock<TwitchMessage>();
         twitchMessage.channel = "scriptpup";
