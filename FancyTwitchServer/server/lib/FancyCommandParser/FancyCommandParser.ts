@@ -47,9 +47,9 @@ async function invokeFancyPreMiddlewares(context: {val: string}, middlewares: Fa
     return;
   }
   const mw = middlewares[0];
-  logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion starting...`);
+  logger.debug({ "name": mw.name, context},`Middleware exectuion starting...`);
   return mw(context, async () => {
-      logger.debug({"definition": mw.toString(), "name": mw.name},`Middleware exectuion completed`);
+      logger.debug({"name": mw.name, context },`Middleware exectuion completed`);
       await invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
   }, input);
 }
