@@ -7,6 +7,8 @@ import {
 import { TwitchMessage } from "../../../shared/obj/TwitchObjects";
 import { MainLogger } from "../logging";
 import { Showcase } from "./Showcase";
+import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
+import { debug } from "console";
 
 const logger = MainLogger.child({ file: "ImgShowcaseAssignment" });
 const showcase: Showcase = new Showcase();
@@ -44,8 +46,31 @@ export function ArtShowcaseAssignment(
 
     const cmdContent: Array<string> = context.val.split(" ");
     context.val = "BREAK";
-
+    logger.debug(
+      { cmdContent, cmdContentLength: cmdContent.length },
+      "Command content from command split"
+    );
+    const newArtShowcaseItem: ShowcaseItem = {
+      redemption_time: new Date(),
+      redeemed_by: tmsg.userInfo.displayName,
+      // If a paramater is specified, then use that instead of the user displayname
+      redemption_name:
+        (cmdContent.length < 2
+          ? tmsg.userInfo.displayName.toLowerCase().replace(" ", "_")
+          : cmdContent[1]) + ".png",
+    };
     try {
+      const added: boolean = await showcase.addArtShowcaseRedeem(
+        newArtShowcaseItem
+      );
+      if (!added) {
+        context.val = `REJECT:Sorry, no art for ${newArtShowcaseItem.redemption_name} exists. Your bits have been refunded.`;
+      } else {
+        logger.debug(
+          { newArtShowcaseItem, added },
+          "Art redemption added to first position"
+        );
+      }
     } catch (err) {
       logger.error(
         { context, tmsg },
