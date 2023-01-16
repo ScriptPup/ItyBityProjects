@@ -18,8 +18,7 @@ export const startSimpleHTTP = (): http.Server => {
     const parsedUrl: url.UrlWithStringQuery = url.parse(req.url as string);
     // extract URL path
     let pathname: string = `.\\content\\${parsedUrl.pathname}`;
-
-    if (parsedUrl.pathname == "artshow") {
+    if (parsedUrl.pathname?.startsWith("/artshow")) {
       pathname = `.\\${parsedUrl.pathname}`;
     }
 
