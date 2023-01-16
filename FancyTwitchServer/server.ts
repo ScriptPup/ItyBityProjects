@@ -5,6 +5,7 @@ import { Server as httpServer } from "http";
 import { Server as socketServer } from "socket.io";
 import { ServeTwitchChat } from "./server/lib/WebServing/TwitchSocketServing";
 import { TwitchListener } from "./server/lib/TwitchHandling/TwitchHandling";
+import { showcaseListener } from "./server/lib/Showcase/ShowcaseListener";
 import { startSimpleHTTP } from "./server/lib/WebServing/SimpleHTTP";
 import { FancyCommandListener } from "./server/lib/FancyCommandExecutor/FancyCommandListener";
 import { FancyConfig } from "./server/lib/FancyConifg/FancyConfig";
@@ -29,6 +30,8 @@ const FRL: FancyRedemptionListener = new FancyRedemptionListener(io, FRS);
 const TL: TwitchListener = new TwitchListener(FCL, FRL);
 // Setup socket to listen for bot account commands and inform the TwitchListener when bot account information is changed
 FancyConfig(io, TL);
+// Setup socket to listen for showcase commands
+showcaseListener(io);
 
 // Start the server
 http.listen(port);
