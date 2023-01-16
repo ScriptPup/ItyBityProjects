@@ -16,6 +16,7 @@ import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { commandVarsDB } from "../DatabaseRef";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
 import { TwitchMessage } from "../../../shared/obj/TwitchObjects";
+import { ArtShowcaseAssignment } from "../Showcase/ArtShowcaseAssignment";
 
 const logger = MainLogger.child({ file: "TwitchRedemptionHelper" });
 
@@ -164,8 +165,10 @@ export class TwitchRedemptionHelper {
           `Processing command`
         );
         try {
-          const nCmdParser: FancyCommandParser = TwitchFancyPreParser(
-            new FancyCommandParser(cmd.command, commandVarsDB)
+          const nCmdParser: FancyCommandParser = ArtShowcaseAssignment(
+            TwitchFancyPreParser(
+              new FancyCommandParser(cmd.command, commandVarsDB)
+            )
           );
           const tmsg: TwitchMessage = {
             message: message.data.redemption.user_input || "",
