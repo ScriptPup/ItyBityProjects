@@ -71,7 +71,7 @@ export function TwitchFancyPreParser(
         logger.error({ tmsg, err }, `Failed to replace @${paramIX - 1}`);
       }
     }
-    next();
+    await next();
   };
   FCP.preParse(twitchFancyPreParse);
   return FCP;

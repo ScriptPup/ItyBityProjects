@@ -9,7 +9,7 @@ const logger = MainLogger.child({ file: "FancyCommandParser" });
 * Simple typing to explain the expected structure of a next() function
 *
 */
-export type Next = () => void;
+export type Next = () => Promise<void>;
 /**
 * Simple typing to explain the expected structure of a FancyMiddleware function or lambda
 *
@@ -36,7 +36,7 @@ async function invokeFancyMiddlewares(context: VarBlock, middlewares: FancyMiddl
   logger.debug({"name": mw.name, context},`Middleware exectuion starting...`);
   return await mw(context, async () => {
       logger.debug({"name": mw.name, context},`Middleware exectuion completed`);
-      await invokeFancyMiddlewares(context, middlewares.slice(1));
+      return await invokeFancyMiddlewares(context, middlewares.slice(1));
   }, input);
 }
 
@@ -48,9 +48,9 @@ async function invokeFancyPreMiddlewares(context: {val: string}, middlewares: Fa
   }
   const mw = middlewares[0];
   logger.debug({ "name": mw.name, context},`Middleware exectuion starting...`);
-  return mw(context, async () => {
+  return await mw(context, async () => {
       logger.debug({"name": mw.name, context },`Middleware exectuion completed`);
-      await invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
+      return await invokeFancyPreMiddlewares(context, middlewares.slice(1), input);
   }, input);
 }
 
@@ -276,6 +276,7 @@ export class FancyCommandParser {
     const ctxt = {val: cmd};    
     if(input) logger.debug({input},`Parsing ${cmd} with input`);
     try { await this.preMiddlewares.dispatch(ctxt, input); } catch (err) { logger.error({err}, "preParse middlewares(s) exited with a failure"); }
+    logger.debug({original_cmd: cmd, new_cmd: ctxt.val},"Pre middleware parsing complete");
     cmd = ctxt.val;
     if(cmd==="BREAK"){
       return "";
@@ -313,6 +314,7 @@ export class FancyCommandParser {
         logger.debug({"block": varBlock},`Parsed VarBlock`);
         try { 
           await this.middlewares.dispatch(varBlock); // Do whatever extra stuff we need to do BEFORE making variable replacements from the DB
+          logger.debug({original_cmd: cmd, new_cmd: ctxt.val},"Before variable replacement, post executions middleware parsing complete");
         } catch (err) { logger.error({err},"use middleware(s) exited with a failure"); }
         logger.debug({"varName": varBlock.name},`Get VarBlock execution result from DB`);
         await this.getVarFromBlock(varBlock);
@@ -339,7 +341,7 @@ export class FancyCommandParser {
     }
     ncmd = this.evaluateCommand(ncmd);
 
-    logger.debug(`Parse complete`);
+    logger.debug({ncmd},`Parse complete`);
     return ncmd;
   }
 
