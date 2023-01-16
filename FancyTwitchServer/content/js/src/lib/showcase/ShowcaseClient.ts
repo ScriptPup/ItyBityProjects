@@ -26,20 +26,31 @@ export class ShowcaseClient {
    */
   private showcasePos: Number;
 
+  /**
+   * debug is the property which determines whether debug-level logging is appropriate or not
+   */
+  private debug: boolean;
+
   constructor(
     showcaseContainer: HTMLElement,
     showcasePos: Number = 0,
+    deubg: boolean = false,
     socket?: Socket
   ) {
     this.showcaseContainer = showcaseContainer;
     this.showcasePos = showcasePos;
     this.isReady = this.init(socket);
+    this.debug = deubg;
+    this.setupPage();
   }
 
   // ************************ \\
   // BEGIN - PUBLIC methods
   // ************************ \\
   public getArtShowCase() {
+    if (this.debug) {
+      console.log(`Requesting art showcase at position ${this.showcasePos}`);
+    }
     if (!this.socket) {
       throw "Socket not available, cannot request art showcase";
     }
@@ -61,6 +72,9 @@ export class ShowcaseClient {
    *
    */
   private async init(socket?: Socket): Promise<void> {
+    if (this.debug) {
+      console.log(`Initializing ShowcaseClient`);
+    }
     $ = (await import("jquery")).default;
     const opts = { forceNew: false, reconnect: true };
     if (socket) {
@@ -69,6 +83,12 @@ export class ShowcaseClient {
       const io = (await import("socket.io-client")).default;
       this.socket = io(opts);
     }
+    if (this.debug) {
+      console.log(`ShowcaseClient initialized`);
+    }
+  }
+
+  private async setupPage(): Promise<void> {
     await this.join();
     await this.listenForShowcase();
   }
@@ -82,10 +102,16 @@ export class ShowcaseClient {
    */
   private async join(): Promise<void> {
     await this.isReady;
+    if (this.debug) {
+      console.log(`Joining the showcase socket.io room`);
+    }
     if (!this.socket) {
       throw "Socket not available, cannot join showcase room";
     }
     this.socket.emit("join-showcase", this.showcasePos);
+    if (this.debug) {
+      console.log(`Showcase channel join request sent`);
+    }
   }
 
   /**
@@ -95,10 +121,19 @@ export class ShowcaseClient {
    */
   private async listenForShowcase(): Promise<void> {
     await this.isReady;
+    if (this.debug) {
+      console.log(`Setting up showcase listeners`);
+    }
     if (!this.socket) {
       throw "Socket not available, cannot listen for showcase";
     }
     this.socket.on(`show-art-${this.showcasePos}`, (showcase: ShowcaseItem) => {
+      if (this.debug) {
+        console.log(
+          `show-art${this.showcasePos} fired! Making changes now.`,
+          showcase
+        );
+      }
       // Change the background-image for the element dedicated to containing the image
       const showcaseURL = `artshow/${showcase.redemption_name}`;
       let showcaseMsg = `Thanks to ${showcase.redeemed_by}!`;
@@ -110,6 +145,9 @@ export class ShowcaseClient {
       }
       $(this.showcaseContainer).find("#label").text(showcaseMsg);
     });
+    if (this.debug) {
+      console.log(`Showcase listeners setup`);
+    }
   }
 
   // ************************ \\
