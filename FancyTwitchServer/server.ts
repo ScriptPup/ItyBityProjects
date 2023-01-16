@@ -3,9 +3,9 @@
 "use strict";
 import { Server as httpServer } from "http";
 import { Server as socketServer } from "socket.io";
-import { ServeTwitchChat } from "./server/twitch_socket_server";
+import { ServeTwitchChat } from "./server/lib/WebServing/TwitchSocketServing";
 import { TwitchListener } from "./server/lib/TwitchHandling/TwitchHandling";
-import { startSimpleHTTP } from "./server/simple_static_filehost";
+import { startSimpleHTTP } from "./server/lib/WebServing/SimpleHTTP";
 import { FancyCommandListener } from "./server/lib/FancyCommandExecutor/FancyCommandListener";
 import { FancyConfig } from "./server/lib/FancyConifg/FancyConfig";
 import { FancyCommandExecutor } from "./server/lib/FancyCommandExecutor/FancyCommandExecutor";
