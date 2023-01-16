@@ -12,15 +12,11 @@ import "mocha";
 import { AceBase } from "acebase";
 import { createMock } from "ts-auto-mock";
 
-describe("TwitchFancyPreParse Middleware", () => {
+describe("TwitchFancyAndShowcase Interaction", () => {
   let contextDB: AceBase = new AceBase("test_variables", {
     sponsor: true,
     logLevel: "error",
   });
-  let twitchMessage = createMock<TwitchMessage>();
-  twitchMessage.channel = "scriptpup";
-  twitchMessage.message = "This is a test message";
-  twitchMessage.userInfo.displayName = "xx_somejerk_xx";
   let FCP: FancyCommandParser;
   let showcase: Showcase = new Showcase();
   before(async () => {
@@ -95,7 +91,7 @@ describe("TwitchFancyPreParse Middleware", () => {
       // Not filling in the message to avoid failures due to upstream replacements. In the "real" world,
       //  the message would be something like `anotheruser` or something, while the command would be something like `~showart @1`
       //  Using it that way will rely on the TwitchFancyRedemption which isn't really in the UnitTest spirit.
-      twitchMessage.message = "!showart anotheruser";
+      twitchMessage.message = "anotheruser";
       twitchMessage.userInfo.displayName = "TestUser";
       const command: string = "~showart @1";
       const res: string = await FCP.parse(command, twitchMessage);
