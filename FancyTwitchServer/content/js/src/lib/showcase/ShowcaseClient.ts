@@ -137,9 +137,12 @@ export class ShowcaseClient {
       // Change the background-image for the element dedicated to containing the image
       const showcaseURL = `artshow/${showcase.redemption_name}`;
       let showcaseMsg = `Thanks to ${showcase.redeemed_by}!`;
-      $(this.showcaseContainer)
-        .find("#img")
-        .css("backgraound-image", `url('${showcaseURL}')`);
+      const imageElem: JQuery<HTMLElement> = $(this.showcaseContainer).find(
+        "#img"
+      );
+
+      imageElem.css("background-image", `url('${showcaseURL}')`);
+      imageElem.attr("alt-text", showcase.redemption_name);
       if (showcase.redemption_thanks) {
         showcaseMsg = showcase.redemption_thanks;
       }
