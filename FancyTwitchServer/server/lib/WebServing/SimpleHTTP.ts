@@ -18,6 +18,11 @@ export const startSimpleHTTP = (): http.Server => {
     const parsedUrl: url.UrlWithStringQuery = url.parse(req.url as string);
     // extract URL path
     let pathname: string = `.\\content\\${parsedUrl.pathname}`;
+
+    if (parsedUrl.pathname == "artshow") {
+      pathname = `.\\${parsedUrl.pathname}`;
+    }
+
     // based on the URL path, extract the file extension. e.g. .js, .doc, ...
     const ext: string = path.parse(pathname).ext || ".html";
     // maps file extension to MIME typere
