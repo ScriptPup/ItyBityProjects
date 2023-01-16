@@ -2,7 +2,6 @@
 
 import type { Socket } from "socket.io-client";
 import type { FancyClientItemBase } from "../../../../shared/obj/FancyCommandTypes";
-import { UserTypes } from "../../../../shared/obj/FancyCommandTypes";
 
 /**
  * Simple typing to explain the expected structure of a next() function
