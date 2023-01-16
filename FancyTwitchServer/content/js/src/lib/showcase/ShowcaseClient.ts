@@ -89,9 +89,24 @@ export class ShowcaseClient {
   }
 
   private async setupPage(): Promise<void> {
+    // this.setupElementSizes();
     await this.join();
     await this.listenForShowcase();
   }
+
+  /**
+   * Configure the size of the image container, image, and 'thanks' message
+   *
+   *
+   */
+  //   private setupElementSizes(): void {
+  //     const params: URLSearchParams = new URLSearchParams(window.location.search);
+  //     const defaults: {container: string, image: string, thanks: string} = {
+  //         container: "1920x1080"
+  //         ,image: ""
+  //         ,thanks: ""
+  //     };
+  //   }
 
   /**
    * Join the socket.io room dedicated to showcase
@@ -141,7 +156,7 @@ export class ShowcaseClient {
         "#img"
       );
 
-      imageElem.css("background-image", `url('${showcaseURL}')`);
+      imageElem.attr("src", `${showcaseURL}`);
       imageElem.attr("alt-text", showcase.redemption_name);
       if (showcase.redemption_thanks) {
         showcaseMsg = showcase.redemption_thanks;
