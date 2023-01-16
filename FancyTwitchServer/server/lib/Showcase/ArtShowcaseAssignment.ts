@@ -60,11 +60,14 @@ export function ArtShowcaseAssignment(
           : cmdContent[1]) + ".png",
     };
     try {
+      logger.debug("Starting assignment showcase redemption");
       const added: boolean = await showcase.addArtShowcaseRedeem(
         newArtShowcaseItem
       );
+      logger.debug("Completed assignment showcase redemption");
       if (!added) {
         context.val = `REJECT:Sorry, no art for ${newArtShowcaseItem.redemption_name} exists. Your bits have been refunded.`;
+        logger.debug({ commandValue: context.val }, "Art redemption rejected.");
       } else {
         logger.debug(
           { newArtShowcaseItem, added },
@@ -77,7 +80,9 @@ export function ArtShowcaseAssignment(
         "Failed to assign image showcase priority"
       );
     }
-    next();
+    await next();
+    logger.debug("ArtShowcaseAssignment Completed, next called");
+    return;
   };
   FCP.preParse(artShowcasePreParse);
   return FCP;
