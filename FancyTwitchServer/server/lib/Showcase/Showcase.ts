@@ -6,6 +6,7 @@ import { cwd } from "process";
 import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
 import { showcaseDB } from "../DatabaseRef";
 import { MainLogger } from "../logging";
+import { DataSnapshot } from "acebase";
 
 const logger = MainLogger.child({ file: "Showcase.ts" });
 const artShowCasePath: string = path.join(cwd(), "artshow");
@@ -120,4 +121,18 @@ export class Showcase {
     );
     return true;
   }
+
+  public async onShowcaseAdd(cb: showCaseAddCB) {
+    showcaseDB.ref("art/works").off("child_added", cb);
+    showcaseDB.ref("art/works").on("child_added", cb);
+  }
 }
+
+/**
+ * Added type to describe usable callbacks for onShowcaseAdd
+ *
+ *
+ * @param ref - This is an acebase DataSnapshot which represents the added child
+ *
+ */
+type showCaseAddCB = (ref: DataSnapshot) => Promise<void>;

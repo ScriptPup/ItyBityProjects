@@ -85,7 +85,7 @@ export class ShowcaseClient {
     if (!this.socket) {
       throw "Socket not available, cannot join showcase room";
     }
-    this.socket.emit("join-showcase", true);
+    this.socket.emit("join-showcase", this.showcasePos);
   }
 
   /**
