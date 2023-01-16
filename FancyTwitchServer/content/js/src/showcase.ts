@@ -1,6 +1,6 @@
 /** @format */
 
-import { ShowcaseClient } from "./ShowcaseClient";
+import { ShowcaseClient } from "./lib/showcase/ShowcaseClient";
 
 const startShowcase = () => {
   const showcaseContainer: HTMLElement | null =
