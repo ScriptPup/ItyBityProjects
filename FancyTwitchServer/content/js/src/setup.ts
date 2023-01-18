@@ -1,5 +1,4 @@
 /** @format */
-import { readdir } from "fs";
 import type { Converter } from "showdown";
 import {
   FancyCommand,
