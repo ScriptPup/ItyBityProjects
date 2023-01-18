@@ -1,6 +1,6 @@
 /** @format */
 
-import { access } from "fs";
+import { access, readdir } from "fs/promises";
 import path from "path";
 import { cwd } from "process";
 import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
@@ -55,19 +55,35 @@ export class Showcase {
   public async verifyArtShowFile(filename: string): Promise<boolean> {
     await this.isReady;
     const artShowPath = path.join(artShowCasePath, filename);
-    return new Promise((resolve) => {
-      access(artShowPath, (err) => {
-        if (err) {
-          logger.info(
-            { filename, artShowPath },
-            "Art does not exist within artshow folder"
-          );
-          resolve(false);
-          return;
-        }
-        resolve(true);
-      });
-    });
+    try {
+      await access(artShowPath);
+      return true;
+    } catch (err) {
+      logger.info(
+        { filename, artShowPath },
+        "Art does not exist within artshow folder"
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Method which may be used to return a list of all available artworks for showcase
+   *
+   *
+   * @returns list of art file names
+   *
+   */
+  public async getArtShowFiles(): Promise<string[] | []> {
+    try {
+      return await readdir(artShowCasePath);
+    } catch (err) {
+      logger.error(
+        { artShowCasePath, err },
+        "Failed to find art showcase folder"
+      );
+    }
+    return [];
   }
 
   /**
