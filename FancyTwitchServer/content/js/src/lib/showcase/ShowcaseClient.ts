@@ -19,7 +19,7 @@ export class ShowcaseClient {
   /**
    * showcaseContainer is the HTMLElement which contains the art showcase image and other info
    */
-  private showcaseContainer: HTMLElement;
+  private showcaseContainer?: HTMLElement;
 
   /**
    * showcasePos is showcase position which this client is responsible for monitoring
@@ -32,7 +32,7 @@ export class ShowcaseClient {
   private debug: boolean;
 
   constructor(
-    showcaseContainer: HTMLElement,
+    showcaseContainer?: HTMLElement,
     showcasePos: Number = 0,
     deubg: boolean = false,
     socket?: Socket
@@ -47,6 +47,14 @@ export class ShowcaseClient {
   // ************************ \\
   // BEGIN - PUBLIC methods
   // ************************ \\
+
+  /**
+   * Request the art showcase given the position passed when creating the Showcase class (or 0)
+   *
+   *
+   * @returns Nothing, this function only requests the art showcase item. The listenForShowcase method sets up the actual actions for it
+   *
+   */
   public getArtShowCase() {
     if (this.debug) {
       console.log(`Requesting art showcase at position ${this.showcasePos}`);
@@ -55,6 +63,32 @@ export class ShowcaseClient {
       throw "Socket not available, cannot request art showcase";
     }
     this.socket.emit("show-art", this.showcasePos);
+  }
+
+  /**
+   * Requests and returns a promise which will resolve to the art filelist
+   *
+   * @remarks
+   * This isn't something that's going to be firing server-side, so no reason to create a new listener function or anything
+   *
+   * @returns Promise which will resolve to the art filelist on the server
+   *
+   */
+  public getAvailableArtShowcase(): Promise<string[] | []> {
+    if (!this.socket) {
+      throw "Socket not available, cannot request art showcase list";
+    }
+    const socket = this.socket;
+    return new Promise<string[] | []>((resolve, reject) => {
+      const timeout: NodeJS.Timeout = setTimeout(() => {
+        reject("Timed out waiting for available art redemptions from server");
+      }, 1000 * 8); // Wait 8 seconds, then timeout.
+      socket.once("get-art-redemptions-available", (files: string[] | []) => {
+        clearTimeout(timeout);
+        resolve(files);
+      });
+      socket.emit("get-art-redemptions-available");
+    });
   }
 
   // ************************ \\
@@ -91,7 +125,9 @@ export class ShowcaseClient {
   private async setupPage(): Promise<void> {
     // this.setupElementSizes();
     await this.join();
-    await this.listenForShowcase();
+    if (this.showcaseContainer) {
+      await this.listenForShowcase();
+    }
   }
 
   /**
@@ -136,6 +172,10 @@ export class ShowcaseClient {
    */
   private async listenForShowcase(): Promise<void> {
     await this.isReady;
+    if (!this.showcaseContainer) {
+      return;
+    } // If no HTMLElement is provided, then we don't need to listen for showcase redemptions
+    const showcaseContainer: HTMLElement = this.showcaseContainer;
     if (this.debug) {
       console.log(`Setting up showcase listeners`);
     }
@@ -152,16 +192,14 @@ export class ShowcaseClient {
       // Change the background-image for the element dedicated to containing the image
       const showcaseURL = `artshow/${showcase.redemption_name}`;
       let showcaseMsg = `Thanks to ${showcase.redeemed_by}!`;
-      const imageElem: JQuery<HTMLElement> = $(this.showcaseContainer).find(
-        "#img"
-      );
+      const imageElem: JQuery<HTMLElement> = $(showcaseContainer).find("#img");
 
       imageElem.attr("src", `${showcaseURL}`);
       imageElem.attr("alt-text", showcase.redemption_name);
       if (showcase.redemption_thanks) {
         showcaseMsg = showcase.redemption_thanks;
       }
-      $(this.showcaseContainer).find("#label").text(showcaseMsg);
+      $(showcaseContainer).find("#label").text(showcaseMsg);
     });
     if (this.debug) {
       console.log(`Showcase listeners setup`);

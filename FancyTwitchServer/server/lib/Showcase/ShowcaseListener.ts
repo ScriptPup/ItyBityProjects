@@ -16,6 +16,13 @@ export const showcaseListener = (IO: Server): Server => {
       socket.on("show-art", async () => {
         sendArt(pos, socket);
       });
+      socket.on("add-art-redemption", async (artRedemption: ShowcaseItem) => {
+        showcase.addArtShowcaseRedeem(artRedemption);
+      });
+      socket.on("get-art-redemptions-available", async () => {
+        const arts: string[] | [] = await showcase.getArtShowFiles();
+        socket.emit("get-art-redemptions-available", arts);
+      });
     });
   });
   return IO;
