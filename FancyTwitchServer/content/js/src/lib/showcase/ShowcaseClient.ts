@@ -74,7 +74,8 @@ export class ShowcaseClient {
    * @returns Promise which will resolve to the art filelist on the server
    *
    */
-  public getAvailableArtShowcase(): Promise<string[] | []> {
+  public async getAvailableArtShowcase(): Promise<string[] | []> {
+    await this.isReady;
     if (!this.socket) {
       throw "Socket not available, cannot request art showcase list";
     }
