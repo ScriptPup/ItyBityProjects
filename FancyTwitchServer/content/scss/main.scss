@@ -34,7 +34,29 @@ body {
   }
 }
 
-
+button {
+    &:hover {
+        box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+        -webkit-box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+        -moz-box-shadow: 0px 0px 15px 3px rgba(66,66,66,0.67) inset;
+        cursor: pointer;
+    }
+    color: pallete.$main-font-color;
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    column-gap: 8px;
+    border-radius: 4px;
+    line-height: 1.35;
+    border-style: solid;
+    background-color: pallete.$button-background;
+    border-color: pallete.$button-background;
+    box-shadow: none;
+    padding: 5px;
+    padding-right: 8px;
+    font-size: large; 
+}
 
 .main {
     background-color: pallete.$background-accent;

@@ -8,6 +8,7 @@ module.exports = {
     chat_relay: "./content/js/src/chat_relay.ts",
     setup: "./content/js/src/setup.ts",
     showcase: "./content/js/src/showcase.ts",
+    showcase_setup: "./content/js/src/showcase_setup.ts",
   },
   performance: {
     maxAssetSize: 1000000,
