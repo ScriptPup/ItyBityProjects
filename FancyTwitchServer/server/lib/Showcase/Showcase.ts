@@ -109,7 +109,9 @@ export class Showcase {
         .skip(start)
         .sort("redemption_time", false)
         .get()
-    ).getValues();
+    ).map((snap: DataSnapshot): ShowcaseItem => {
+      return { key: snap.key, ...snap.val() };
+    });
     return artWorks;
   }
 

@@ -26,6 +26,7 @@ export const showcaseListener = (IO: Server): Server => {
 
       // Listen for client requests to add showcase redemptions
       socket.on("add-art-redemption", async (artRedemption: ShowcaseItem) => {
+        logger.debug({ artRedemption }, "Requested to add art redemption");
         showcase.addArtShowcaseRedeem(artRedemption);
       });
 
@@ -39,21 +40,11 @@ export const showcaseListener = (IO: Server): Server => {
       socket.on(
         "replay-redemption-item-added",
         async ({ start, end }: { start: number; end: number }) => {
-          const redemptions: ShowcaseItem[] | [] =
-            await showcase.getArtShowcaseRedemptions(start, end);
-
           showcase.onShowcaseAdd(async (ref: DataSnapshot) => {
-            const newRedemptionItem: ShowcaseItem = ref.val();
-            socket.emit("redemption-item-added", newRedemptionItem);
+            const newRedemptionItem: ShowcaseItem & { key: string } = ref.val();
+            newRedemptionItem["key"] = ref.key;
+            socket.emit("redemption-item-added", [newRedemptionItem]);
           });
-
-          if (redemptions.length < 1) {
-            logger.info(
-              "No redemptions found when replay requested, returning nothing"
-            );
-            return;
-          }
-          socket.emit("redemption-item-added", redemptions);
         }
       );
     });
