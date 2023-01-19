@@ -8,7 +8,10 @@ h1 {
     margin-left: 20px;
     
 }
-.avail-art-item {
+article {
+    overflow-y: scroll;
+}
+.avail-art-item, .redeemed-shocase-item {
     display: flex;
     justify-content: space-evenly;
     justify-items: center;

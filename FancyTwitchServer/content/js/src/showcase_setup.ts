@@ -33,12 +33,13 @@ const getTemplateContents = async () => {
       },
     }
   ).then((res) => {
+    console.log("Art availability item template set");
     return res.text().then((txt) => {
       availableArtItemTemplate = txt;
       return;
     });
   });
-  const redeemedItemTemplate: Promise<void | Response> = fetch(
+  const redeemedItm: Promise<void | Response> = fetch(
     "/html_templates/redeemed-showcase-item.html",
     {
       headers: {
@@ -46,12 +47,13 @@ const getTemplateContents = async () => {
       },
     }
   ).then((res) => {
+    console.log("Redemption item template set");
     return res.text().then((txt) => {
-      availableArtItemTemplate = txt;
+      redeemedItemTemplate = txt;
       return;
     });
   });
-  return Promise.all([artAvailItm, redeemedItemTemplate]);
+  return Promise.all([artAvailItm, redeemedItm]);
 };
 
 const getArtAvailItems = async () => {
@@ -66,15 +68,28 @@ const getArtAvailItems = async () => {
     await showcase.getAvailableArtShowcase();
   for (const availShowcase of availableShowcases) {
     const newItemRAW: string = localAvailArtItemTemplate
-      .replace("{ART_NAME}", availShowcase.split(".")[0])
-      .replace("{ART_FILE}", availShowcase);
+      .replaceAll("{ART_NAME}", availShowcase.split(".")[0])
+      .replaceAll("{ART_FILE}", availShowcase);
     const domContent: JQuery.Node[] = $.parseHTML(newItemRAW);
+    $(domContent)
+      .find("button.redeem-art")
+      .on("click", () => {
+        handleRedeemNow(domContent);
+      });
     $("#available-redemptions").append(domContent);
   }
 };
 
+const handleRedeemNow = async (itemElem: JQuery.Node[]) => {
+  const redeem_thanks: string | undefined =
+    $(itemElem).find("input[name='thanks-msg']").val()?.toString() || undefined;
+  const redeem_name: string = $(itemElem).find(".art-name").text() + ".png";
+  showcase.addRedemption(redeem_name, redeem_thanks);
+};
+
 const getRedemptionItems = async () => {
   if (!redeemedItemTemplate) {
+    console.log("Redemption Item Template", redeemedItemTemplate);
     throw new Error(
       "Cannot create new available art items list, because the template is missing!"
     );
@@ -82,19 +97,17 @@ const getRedemptionItems = async () => {
   const localredeemedItemTemplate: string = redeemedItemTemplate;
 
   const handleRedemptionItemIncoming = (items: ShowcaseItem[]): void => {
+    console.log("Recieved redemption items", items);
     for (const item of items) {
-      const redemptionTime: string = `${item.redemption_time.getFullYear()}-${
-        item.redemption_time.getMonth
-      }-${item.redemption_time.getDate} ${item.redemption_time.getHours}:${
-        item.redemption_time.getMinutes
-      }`;
+      const redeemed_timestamp: Date = new Date(item.redemption_time);
+      const redemptionTime: string = `${redeemed_timestamp.getFullYear()}-${redeemed_timestamp.getMonth()}-${redeemed_timestamp.getDate()} ${redeemed_timestamp.getHours()}:${redeemed_timestamp.getMinutes()}`;
       const newItemRAW: string = localredeemedItemTemplate
-        .replace("{ART_NAME}", item.redemption_name)
-        .replace("{ART_FILE}", item.redemption_name + ".png")
-        .replace("{REDEEMED_AT}", redemptionTime)
-        .replace("{REDEEMED_BY}", item.redeemed_by);
+        .replaceAll("{ART_NAME}", item.redemption_name.split(".")[0])
+        .replaceAll("{ART_FILE}", item.redemption_name)
+        .replaceAll("{REDEEMED_AT}", redemptionTime)
+        .replaceAll("{REDEEMED_BY}", item.redeemed_by);
       const domContent: JQuery.Node[] = $.parseHTML(newItemRAW);
-      $("#recent-redemptions").prepend(domContent);
+      $("#recent-redemption-items").prepend(domContent);
     }
   };
   showcase.subscribeRedemptionItems(handleRedemptionItemIncoming);
