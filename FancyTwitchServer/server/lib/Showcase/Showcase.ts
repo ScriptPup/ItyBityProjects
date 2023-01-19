@@ -87,6 +87,33 @@ export class Showcase {
   }
 
   /**
+   * Returns a promise containing a collection of art showcase redemptions from position start-end
+   *
+   *
+   *
+   * @param start - the start position of art showcase to return
+   * @param end - the end position of art showcase to return
+   * @returns Promise of an array of showcase items
+   *
+   * @alpha
+   */
+  public async getArtShowcaseRedemptions(
+    start: number,
+    end: number
+  ): Promise<ShowcaseItem[] | []> {
+    await this.isReady;
+    const artWorks: ShowcaseItem[] | [] = (
+      await showcaseDB
+        .query(`art/works`)
+        .take(end)
+        .skip(start)
+        .sort("redemption_time", false)
+        .get()
+    ).getValues();
+    return artWorks;
+  }
+
+  /**
    * Returns a promise containing the nth redeemed art showcase
    *
    *
@@ -97,17 +124,11 @@ export class Showcase {
    * @alpha
    */
   public async getArtShowcaseRedeem(pos: number): Promise<ShowcaseItem | null> {
-    await this.isReady;
-    const artWork: ShowcaseItem | null = (
-      await showcaseDB
-        .query(`art/works`)
-        .take(1)
-        .skip(pos)
-        .sort("redemption_time", false)
-        .get()
-    ).getValues()[0];
-    logger.debug({ artWork, pos }, "Got art showcase redemption");
-    return artWork;
+    const showcaseItems: ShowcaseItem[] | [] =
+      await this.getArtShowcaseRedemptions(0, pos);
+    const showcaseItem: ShowcaseItem | null =
+      showcaseItems.length < 1 ? null : showcaseItems[0];
+    return showcaseItem;
   }
 
   /**

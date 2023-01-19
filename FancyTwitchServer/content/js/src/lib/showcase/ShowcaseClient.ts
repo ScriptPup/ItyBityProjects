@@ -1,6 +1,7 @@
 /** @format */
 
 import { Socket } from "socket.io-client";
+import internal from "stream";
 import type { ShowcaseItem } from "../../../../../shared/obj/ShowcaseTypes";
 
 let $: JQueryStatic;
@@ -90,6 +91,29 @@ export class ShowcaseClient {
       });
       socket.emit("get-art-redemptions-available");
     });
+  }
+
+  /**
+   * Provides a convenience method to add a listener to the 'redemption-item-added' socket.io event & request previous items be sent
+   *
+   *
+   *
+   * @param action - function which should be called when a new item is pushed
+   * @returns nada
+   *
+   */
+  public async subscribeRedemptionItems(
+    action: (res: ShowcaseItem[]) => void,
+    start: number = 0,
+    end: number = 100
+  ): Promise<void> {
+    await this.isReady;
+    if (!this.socket) {
+      throw "Socket not available, cannot listen for redemptions or request existing ones";
+    }
+    this.socket.off("redemption-item-added", action);
+    this.socket.on("redemption-item-added", action);
+    this.socket.emit("replay-redemption-item-added", { start, end });
   }
 
   // ************************ \\
