@@ -1,3 +1,7 @@
+# Stop tracking images used for testing
+anotheruser.png
+testuser.png
+
 # Database files
 *.db
 # Built client files
