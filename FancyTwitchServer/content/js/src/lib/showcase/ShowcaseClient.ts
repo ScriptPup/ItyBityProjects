@@ -116,6 +116,33 @@ export class ShowcaseClient {
     this.socket.emit("replay-redemption-item-added", { start, end });
   }
 
+  /**
+   * Manually add a new redemption, redeemed_by will always be 'streamer' using this method
+   *
+   * @remarks
+   * additional details
+   *
+   * @param redemption_name - The name of the redeemed item (the filename minus .png)
+   * @param redemption_thanks - An optional message which will be displayed under (default) the redeemed art
+   * @returns noooope
+   *
+   */
+  public async addRedemption(
+    redemption_name: string,
+    redemption_thanks?: string
+  ) {
+    if (!this.socket) {
+      throw "Socket not available, cannot add new art redemption";
+    }
+    const newRedemption: ShowcaseItem = {
+      redeemed_by: "streamer",
+      redemption_time: new Date(),
+      redemption_name: redemption_name,
+      redemption_thanks: redemption_thanks,
+    };
+    this.socket.emit("add-art-redemption", newRedemption);
+  }
+
   // ************************ \\
   // END - PUBLIC methods
   // ************************ \\
@@ -154,20 +181,6 @@ export class ShowcaseClient {
       await this.listenForShowcase();
     }
   }
-
-  /**
-   * Configure the size of the image container, image, and 'thanks' message
-   *
-   *
-   */
-  //   private setupElementSizes(): void {
-  //     const params: URLSearchParams = new URLSearchParams(window.location.search);
-  //     const defaults: {container: string, image: string, thanks: string} = {
-  //         container: "1920x1080"
-  //         ,image: ""
-  //         ,thanks: ""
-  //     };
-  //   }
 
   /**
    * Join the socket.io room dedicated to showcase
