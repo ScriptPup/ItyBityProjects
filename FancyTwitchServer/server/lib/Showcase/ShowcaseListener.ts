@@ -13,19 +13,29 @@ export const showcaseListener = (IO: Server): Server => {
   IO.on("connection", (socket: Socket): void => {
     socket.on("join-showcase", (pos: number) => {
       socket.join("showcase");
+
+      // When new showcase redemptions occur, send it to the subscribed client
       showcase.onShowcaseAdd(async () => {
         sendArt(pos, socket);
       });
+
+      // Listen for client requests to get the most recent redemption data
       socket.on("show-art", async () => {
         sendArt(pos, socket);
       });
+
+      // Listen for client requests to add showcase redemptions
       socket.on("add-art-redemption", async (artRedemption: ShowcaseItem) => {
         showcase.addArtShowcaseRedeem(artRedemption);
       });
+
+      // Listen for client requests to get available redemption files
       socket.on("get-art-redemptions-available", async () => {
         const arts: string[] | [] = await showcase.getArtShowFiles();
         socket.emit("get-art-redemptions-available", arts);
       });
+
+      // Listen for client requests to show past redemptions
       socket.on(
         "replay-redemption-item-added",
         async ({ start, end }: { start: number; end: number }) => {
