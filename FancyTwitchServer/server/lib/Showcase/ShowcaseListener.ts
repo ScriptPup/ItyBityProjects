@@ -3,8 +3,11 @@
 import { Server, Socket } from "socket.io";
 import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
 import { Showcase } from "./Showcase";
+import { MainLogger } from "../logging";
+import { DataSnapshot } from "acebase";
 
 const showcase = new Showcase();
+const logger = MainLogger.child({ file: "ShowcaseListener" });
 
 export const showcaseListener = (IO: Server): Server => {
   IO.on("connection", (socket: Socket): void => {
@@ -23,6 +26,26 @@ export const showcaseListener = (IO: Server): Server => {
         const arts: string[] | [] = await showcase.getArtShowFiles();
         socket.emit("get-art-redemptions-available", arts);
       });
+      socket.on(
+        "replay-redemption-item-added",
+        async ({ start, end }: { start: number; end: number }) => {
+          const redemptions: ShowcaseItem[] | [] =
+            await showcase.getArtShowcaseRedemptions(start, end);
+
+          showcase.onShowcaseAdd(async (ref: DataSnapshot) => {
+            const newRedemptionItem: ShowcaseItem = ref.val();
+            socket.emit("redemption-item-added", newRedemptionItem);
+          });
+
+          if (redemptions.length < 1) {
+            logger.info(
+              "No redemptions found when replay requested, returning nothing"
+            );
+            return;
+          }
+          socket.emit("redemption-item-added", redemptions);
+        }
+      );
     });
   });
   return IO;
