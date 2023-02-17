@@ -291,7 +291,7 @@ export class FancyCommandParser {
     
       // Run through all replacements
     logger.debug(`Start parsing varblocks`);
-    const repReady = [];
+    const repReady: Array<{start: number, end: number, block: VarBlock}> = [];
     for (let rawMatch of toRepl) {
       try {      
         const vbStr: string = rawMatch.groups?.varblock || "";

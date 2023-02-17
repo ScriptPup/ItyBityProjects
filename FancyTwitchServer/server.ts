@@ -35,6 +35,9 @@ showcaseListener(io);
 
 // Start the server
 http.listen(port);
+http.on("close", () => {
+  console.log("Goodbye!");
+});
 console.log(`Server listening on port ${port} test`);
 console.log(
   `Unless you're hosting somewhere, just go to http://localhost:${port}/ to use the server `

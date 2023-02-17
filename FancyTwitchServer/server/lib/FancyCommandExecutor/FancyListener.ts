@@ -12,8 +12,8 @@ import { FancyStorage } from "./FancyStorage";
 
 export class FancyListener<T extends FancyClientItemBase> {
   protected evtPrefix: string = "undefined";
-  private logger = MainLogger.child({ file: this.constructor.name });
-  private IO: Server;
+  protected logger = MainLogger.child({ file: this.constructor.name });
+  protected IO: Server;
   /**
    * FS is the FancyCommandExecutor used internally by the event server
    * This property is exposed for testing purposes since AceBase doesn't have thread saftey

@@ -1,0 +1,23 @@
+@import "_pallete.scss";
+
+#bot-svg { 
+    g { 
+        path:nth-child(1) {
+            fill: $button-background;
+        }   
+        path:nth-child(2) {
+            fill: $tertiary-font-color;
+        }
+    }
+    &.button {
+        &:hover {
+            path:nth-child(1) {
+                fill: $tertiary-font-color;
+            }   
+            path:nth-child(2) {
+                fill: $button-background;
+            }
+        }
+        cursor: pointer;
+    }
+}
