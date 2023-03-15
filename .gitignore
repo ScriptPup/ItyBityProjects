@@ -1,3 +1,6 @@
+# Ignore electron build
+FancyTwitchServer-win*
+
 # Stop tracking images used for testing
 anotheruser.png
 testuser.png
