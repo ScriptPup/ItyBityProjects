@@ -1,7 +1,7 @@
 /** @format */
 
 import type { Socket } from "socket.io-client";
-import type { FancyClientItemBase } from "../../../../../shared/obj/FancyCommandTypes";
+import type { FancyClientItemBase } from "../../shared/obj/FancyCommandTypes";
 
 /**
  * Simple typing to explain the expected structure of a next() function
@@ -64,7 +64,7 @@ export abstract class FancyBaseClient<T extends FancyClientItemBase> {
     if (socket) {
       this.socket = socket;
     } else {
-      this.socket = io(opts);
+      this.socket = io("http://localhost", opts);
     }
     this.addNewCommandsToLocalCache();
     this.removeNewCommandsFromLocalCache();

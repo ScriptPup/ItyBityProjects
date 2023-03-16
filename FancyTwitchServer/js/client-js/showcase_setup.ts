@@ -1,6 +1,6 @@
 /** @format */
 
-import { ShowcaseItem } from "../../../../shared/obj/ShowcaseTypes";
+import { ShowcaseItem } from "../shared/obj/ShowcaseTypes";
 import { ShowcaseClient } from "./lib/showcase/ShowcaseClient";
 
 const showcase: ShowcaseClient = new ShowcaseClient();

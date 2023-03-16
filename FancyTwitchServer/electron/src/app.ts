@@ -43,8 +43,8 @@ export default class Main {
         // preload: path.join(__dirname, "preloads.js"),
       },
     });
-    // Main.mainWindow.loadURL("http://localhost:9000/");
-    Main.mainWindow.loadFile("client/content/index.html");
+    Main.mainWindow.loadURL("http://localhost:9000/");
+    // Main.mainWindow.loadFile("client/content/index.html");
   }
 
   static main(app: Electron.App, browserWindow: typeof BrowserWindow) {

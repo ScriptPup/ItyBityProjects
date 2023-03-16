@@ -9,7 +9,7 @@
     "build-server": "tsc -p tsconfig.json --pretty",
     "build-electron": "tsc -p electron",
     "_build-client": "npx webpack",
-    "build-client": "tsc -p client/content",
+    "build-client": "tsc -p js/tsconfig.client.json",
     "copy-client-win": "xcopy .\\client .\\electron /sD && del /S .\\electron\\content\\*.ts",
     "build": "npm-run-all run build; ",
     "package": "electron-packager . FancyTwitchServer --platform=win32 --arch=x64 --overwrite",

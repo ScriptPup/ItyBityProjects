@@ -4,7 +4,7 @@ import {
   TwitchMessageTagEmotes,
   TwitchMessageTagParsedEmotes,
   TwitchMessage,
-} from "../../../../shared/obj/TwitchObjects";
+} from "../shared/obj/TwitchObjects";
 
 import type { io, Socket } from "socket.io-client";
 
@@ -290,7 +290,7 @@ const createChatRecord = (twitchMessage: TwitchMessage) => {
  */
 const setupSockets = async (): Promise<void> => {
   const { io } = await import("socket.io-client");
-  const socket: Socket = io("http://localhost:9000");
+  const socket: Socket = io("http://localhost");
   const client = socket.on("connect", () => {
     console.log("connected and listening for messages");
   });

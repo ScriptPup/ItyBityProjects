@@ -17,7 +17,7 @@ export const startSimpleHTTP = (): http.Server => {
     // Cast to string after verifying above that the property isn't undefined
     const parsedUrl: url.UrlWithStringQuery = url.parse(req.url as string);
     // extract URL path
-    let pathname: string = `.\\content\\${parsedUrl.pathname}`;
+    let pathname: string = `.\\client\\content\\${parsedUrl.pathname}`;
     if (parsedUrl.pathname?.startsWith("/artshow")) {
       pathname = `.\\${parsedUrl.pathname}`;
     }

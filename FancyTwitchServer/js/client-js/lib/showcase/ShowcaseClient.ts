@@ -2,7 +2,7 @@
 
 import { Socket } from "socket.io-client";
 import internal from "stream";
-import type { ShowcaseItem } from "../../../../../../shared/obj/ShowcaseTypes";
+import type { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
 
 let $: JQueryStatic;
 
@@ -167,7 +167,7 @@ export class ShowcaseClient {
       this.socket = socket;
     } else {
       const io = (await import("socket.io-client")).default;
-      this.socket = io(opts);
+      this.socket = io("http://localhost", opts);
     }
     if (this.debug) {
       console.log(`ShowcaseClient initialized`);
@@ -228,7 +228,7 @@ export class ShowcaseClient {
         );
       }
       // Change the background-image for the element dedicated to containing the image
-      const showcaseURL = `artshow/${showcase.redemption_name}`;
+      const showcaseURL = `/artshow/${showcase.redemption_name}`;
       let showcaseMsg = `Thanks to ${showcase.redeemed_by}!`;
       const imageElem: JQuery<HTMLElement> = $(showcaseContainer).find("#img");
 

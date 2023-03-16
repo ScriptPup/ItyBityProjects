@@ -4,9 +4,9 @@ import {
   FancyCommand,
   FancyRedemption,
   getUserType,
-} from "../../../../shared/obj/FancyCommandTypes";
-import { UserTypes } from "../../../../shared/obj/FancyCommandTypes";
-import { BotAccount } from "../../../../shared/obj/TwitchObjects";
+} from "../shared/obj/FancyCommandTypes";
+import { UserTypes } from "../shared/obj/FancyCommandTypes";
+import { BotAccount } from "../shared/obj/TwitchObjects";
 import { FancyCommandClient } from "./lib/FancyCommandClient";
 import { FancyRedemptionClient } from "./lib/FancyRedemptionClient";
 
