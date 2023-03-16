@@ -4,7 +4,7 @@ import {
   FancyCommand,
   FancyClientItemBase,
   getUserType,
-} from "../../../shared/obj/FancyCommandTypes";
+} from "../../../js/shared/obj/FancyCommandTypes";
 import { Server, Socket } from "socket.io";
 import { DataReference, DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";

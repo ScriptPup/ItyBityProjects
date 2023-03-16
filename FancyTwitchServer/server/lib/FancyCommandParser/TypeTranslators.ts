@@ -1,11 +1,9 @@
 /** @format */
 
-import { PubSubRedemptionMessageUserData } from "@twurple/pubsub/lib/messages/PubSubRedemptionMessage.external";
 import {
   FancyCommand,
   FancyRedemption,
-} from "../../../shared/obj/FancyCommandTypes";
-import { TwitchUserInfo } from "../../../shared/obj/TwitchObjects";
+} from "../../../js/shared/obj/FancyCommandTypes";
 
 export const CastFancyRedemptionToCommand = (
   fancyRedemption: FancyRedemption

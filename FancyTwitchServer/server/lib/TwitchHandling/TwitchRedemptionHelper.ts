@@ -7,15 +7,12 @@ import { TwitchSayHelper } from "./TwitchSayHelper";
 import { got } from "got-cjs";
 import { MainLogger } from "../logging";
 import { FancyRedemptionListener } from "../FancyCommandExecutor/FancyRedemptionListener";
-import { FancyRedemption } from "../../../shared/obj/FancyCommandTypes";
-import {
-  PubSubRedemptionMessageData,
-  PubSubRedemptionMessageRedemptionData,
-} from "@twurple/pubsub/lib/messages/PubSubRedemptionMessage.external";
+import { FancyRedemption } from "../../../js/shared/obj/FancyCommandTypes";
+import { PubSubRedemptionMessageData } from "@twurple/pubsub/lib/messages/PubSubRedemptionMessage.external";
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { commandVarsDB } from "../DatabaseRef";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
-import { TwitchMessage } from "../../../shared/obj/TwitchObjects";
+import { TwitchMessage } from "../../../js/shared/obj/TwitchObjects";
 import { ArtShowcaseAssignment } from "../Showcase/ArtShowcaseAssignment";
 
 const logger = MainLogger.child({ file: "TwitchRedemptionHelper" });

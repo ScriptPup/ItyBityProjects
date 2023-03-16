@@ -5,8 +5,11 @@ import {
   BotAccount,
   getTwitchMessageObject,
   TwitchMessage,
-} from "../../../shared/obj/TwitchObjects";
-import { FancyCommand, UserTypes } from "../../../shared/obj/FancyCommandTypes";
+} from "../../../js/shared/obj/TwitchObjects";
+import {
+  FancyCommand,
+  UserTypes,
+} from "../../../js/shared/obj/FancyCommandTypes";
 import { configDB, commandVarsDB } from "../DatabaseRef";
 import { FancyCommandListener } from "../FancyCommandExecutor/FancyCommandListener";
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";

@@ -6,7 +6,7 @@
 import { AceBase, DataReference, DataSnapshotsArray } from "acebase";
 import { commandDB } from "../DatabaseRef";
 import { QueryRemoveResult } from "acebase-core/dist/types/data-reference";
-import { FancyClientItemBase } from "../../../shared/obj/FancyCommandTypes";
+import { FancyClientItemBase } from "../../../js/shared/obj/FancyCommandTypes";
 import { MainLogger } from "../logging";
 
 export abstract class FancyStorage<T extends FancyClientItemBase> {

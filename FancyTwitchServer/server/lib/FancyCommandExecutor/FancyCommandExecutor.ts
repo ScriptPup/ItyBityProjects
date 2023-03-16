@@ -4,7 +4,7 @@
 
 */
 import { DataReference } from "acebase";
-import { FancyCommand } from "../../../shared/obj/FancyCommandTypes";
+import { FancyCommand } from "../../../js/shared/obj/FancyCommandTypes";
 import { FancyStorage } from "./FancyStorage";
 
 export class FancyCommandExecutor extends FancyStorage<FancyCommand> {

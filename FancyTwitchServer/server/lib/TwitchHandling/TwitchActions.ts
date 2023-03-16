@@ -1,6 +1,6 @@
 /** @format */
 
-import { FancyRedemption } from "../../../shared/obj/FancyCommandTypes";
+import { FancyRedemption } from "../../../js/shared/obj/FancyCommandTypes";
 import { TwitchSayHelper } from "./TwitchSayHelper";
 import { got, OptionsOfTextResponseBody, Response } from "got-cjs";
 import {
@@ -9,7 +9,7 @@ import {
   TwitchCustomChannelRewards,
   TwitchUserEntities,
   TwitchUserEntity,
-} from "../../../shared/obj/TwitchObjects";
+} from "../../../js/shared/obj/TwitchObjects";
 import { MainLogger } from "../logging";
 
 const logger = MainLogger.child({ file: "TwitchActions" });
