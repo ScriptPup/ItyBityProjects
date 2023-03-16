@@ -12,7 +12,7 @@ import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMe
 import {
   getTwitchMessageObject,
   TwitchMessage,
-} from "../../../shared/obj/TwitchObjects";
+} from "../../../js/shared/obj/TwitchObjects";
 import { MainLogger } from "../logging";
 
 const logger = MainLogger.child({ file: "twitch_socket_server" });

@@ -1,14 +1,14 @@
 /** @format */
 
 import { FancyCommandParser } from "../../server/lib/FancyCommandParser/FancyCommandParser";
-import { TwitchMessage } from "../../shared/obj/TwitchObjects";
+import { TwitchMessage } from "../../js/shared/obj/TwitchObjects";
 import { ArtShowcaseAssignment } from "../../server/lib/Showcase/ArtShowcaseAssignment";
 import { showcaseDB } from "../../server/lib/DatabaseRef";
 import { expect } from "chai";
 import "mocha";
 import { AceBase } from "acebase";
 import { createMock } from "ts-auto-mock";
-import { ShowcaseItem } from "../../shared/obj/ShowcaseTypes";
+import { ShowcaseItem } from "../../js/shared/obj/ShowcaseTypes";
 import { Showcase } from "../../server/lib/Showcase/Showcase";
 
 describe("TwitchFancyPreParse Middleware", () => {

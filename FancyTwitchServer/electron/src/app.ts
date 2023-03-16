@@ -39,7 +39,7 @@ export default class Main {
       width: 1080,
       height: 760,
       webPreferences: {
-        nodeIntegration: true,
+        nodeIntegration: false,
         // preload: path.join(__dirname, "preloads.js"),
       },
     });

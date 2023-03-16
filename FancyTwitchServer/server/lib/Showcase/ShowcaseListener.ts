@@ -1,7 +1,7 @@
 /** @format */
 
 import { Server, Socket } from "socket.io";
-import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
+import { ShowcaseItem } from "../../../js/shared/obj/ShowcaseTypes";
 import { Showcase } from "./Showcase";
 import { MainLogger } from "../logging";
 import { DataSnapshot } from "acebase";

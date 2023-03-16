@@ -1,7 +1,7 @@
 /** @format */
 
 import { FancyCommandExecutor } from "../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
-import { FancyCommand, UserTypes } from "../../shared/obj/FancyCommandTypes";
+import { FancyCommand, UserTypes } from "../../js/shared/obj/FancyCommandTypes";
 
 import { expect } from "chai";
 import "mocha";

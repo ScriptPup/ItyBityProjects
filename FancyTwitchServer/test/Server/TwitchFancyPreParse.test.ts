@@ -1,7 +1,7 @@
 /** @format */
 
 import { FancyCommandParser } from "../../server/lib/FancyCommandParser/FancyCommandParser";
-import { TwitchMessage } from "../../shared/obj/TwitchObjects";
+import { TwitchMessage } from "../../js/shared/obj/TwitchObjects";
 import { TwitchFancyPreParser } from "../../server/lib/FancyCommandParser/middlewares/TwitchFancyPreParse";
 import { expect } from "chai";
 import "mocha";

@@ -11,7 +11,7 @@ import {
   ClientFancyCommand,
   FancyCommand,
   UserTypes,
-} from "../../shared/obj/FancyCommandTypes";
+} from "../../js/shared/obj/FancyCommandTypes";
 import { FancyCommandExecutor } from "../../server/lib/FancyCommandExecutor/FancyCommandExecutor";
 import { TestLogger } from "../logging";
 

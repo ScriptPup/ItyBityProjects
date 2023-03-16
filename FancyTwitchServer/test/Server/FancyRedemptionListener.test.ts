@@ -11,7 +11,7 @@ import {
   FancyClientItemBase,
   FancyRedemption,
   UserTypes,
-} from "../../shared/obj/FancyCommandTypes";
+} from "../../js/shared/obj/FancyCommandTypes";
 import { FancyRedemptionListener } from "../../server/lib/FancyCommandExecutor/FancyRedemptionListener";
 import { FancyRedemptionStorage } from "../../server/lib/FancyCommandExecutor/FancyRedemptionStorage";
 

@@ -1,8 +1,8 @@
 /** @format */
 
 import { FancyCommandParser } from "../../server/lib/FancyCommandParser/FancyCommandParser";
-import { TwitchMessage } from "../../shared/obj/TwitchObjects";
-import { ShowcaseItem } from "../../shared/obj/ShowcaseTypes";
+import { TwitchMessage } from "../../js/shared/obj/TwitchObjects";
+import { ShowcaseItem } from "../../js/shared/obj/ShowcaseTypes";
 import { TwitchFancyPreParser } from "../../server/lib/FancyCommandParser/middlewares/TwitchFancyPreParse";
 import { ArtShowcaseAssignment } from "../../server/lib/Showcase/ArtShowcaseAssignment";
 import { Showcase } from "../../server/lib/Showcase/Showcase";

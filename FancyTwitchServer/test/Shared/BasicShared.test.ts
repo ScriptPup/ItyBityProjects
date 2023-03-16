@@ -3,7 +3,7 @@
 import {} from "../../server/lib/FancyCommandParser/FancyCommandParser";
 import { expect } from "chai";
 import "mocha";
-import { UserTypes, getUserType } from "../../shared/obj/FancyCommandTypes";
+import { UserTypes, getUserType } from "../../js/shared/obj/FancyCommandTypes";
 
 describe("UserType Parsing", () => {
   describe("Convert numeric position to type", () => {

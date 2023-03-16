@@ -3,7 +3,7 @@
 import { access, readdir } from "fs/promises";
 import path from "path";
 import { cwd } from "process";
-import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
+import { ShowcaseItem } from "../../../js/shared/obj/ShowcaseTypes";
 import { showcaseDB } from "../DatabaseRef";
 import { MainLogger } from "../logging";
 import { DataSnapshot } from "acebase";

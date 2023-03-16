@@ -1,7 +1,7 @@
 /** @format */
 
 import { Next, FancyCommandParser } from "../FancyCommandParser";
-import { TwitchMessage } from "../../../../shared/obj/TwitchObjects";
+import { TwitchMessage } from "../../../../js/shared/obj/TwitchObjects";
 import { MainLogger } from "../../logging";
 
 const logger = MainLogger.child({ file: "TwitchFancyPrepParse" });

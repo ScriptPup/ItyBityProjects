@@ -4,10 +4,10 @@ import {
   Next,
   FancyCommandParser,
 } from "../FancyCommandParser/FancyCommandParser";
-import { TwitchMessage } from "../../../shared/obj/TwitchObjects";
+import { TwitchMessage } from "../../../js/shared/obj/TwitchObjects";
 import { MainLogger } from "../logging";
 import { Showcase } from "./Showcase";
-import { ShowcaseItem } from "../../../shared/obj/ShowcaseTypes";
+import { ShowcaseItem } from "../../../js/shared/obj/ShowcaseTypes";
 import { debug } from "console";
 
 const logger = MainLogger.child({ file: "ImgShowcaseAssignment" });

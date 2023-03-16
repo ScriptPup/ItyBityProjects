@@ -1,6 +1,6 @@
 /** @format */
 
-import { FancyRedemption } from "../../../shared/obj/FancyCommandTypes";
+import { FancyRedemption } from "../../../js/shared/obj/FancyCommandTypes";
 import { FancyListener } from "./FancyListener";
 // import type { Server, Socket } from "socket.io";
 // import type { FancyStorage } from "./FancyStorage";

@@ -3,7 +3,7 @@
 // import { Client } from "tmi.js";
 import { StaticAuthProvider } from "@twurple/auth";
 import { ChatClient } from "@twurple/chat";
-import { BotAccount } from "../../../shared/obj/TwitchObjects";
+import { BotAccount } from "../../../js/shared/obj/TwitchObjects";
 import { got } from "got-cjs";
 import { MainLogger } from "../logging";
 import { configDB } from "../DatabaseRef";

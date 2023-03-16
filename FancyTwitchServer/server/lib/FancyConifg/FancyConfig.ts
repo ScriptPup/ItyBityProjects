@@ -5,7 +5,7 @@ import { Server, Socket } from "socket.io";
 import { DataSnapshot } from "acebase";
 import { MainLogger } from "../logging";
 import { TwitchListener } from "../TwitchHandling/TwitchHandling";
-import { BotAccount } from "../../../shared/obj/TwitchObjects";
+import { BotAccount } from "../../../js/shared/obj/TwitchObjects";
 
 const logger = MainLogger.child({ file: "FancyConfig" });
 
