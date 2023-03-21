@@ -46,6 +46,15 @@ export const startServer = (): Promise<ChildProcessWithoutNullStreams> => {
 export const killServer = async (
   server: ChildProcessWithoutNullStreams
 ): Promise<void> => {
+  if (process.platform !== "win32") {
+    server.kill();
+    if (!server.exitCode) {
+      server.kill(0);
+    }
+    if (!server.exitCode) {
+      console.log("Failed to kill the server process, sorry");
+    }
+  }
   return new Promise((resolve, reject) => {
     console.log("Killing server");
     if (!server.pid) {
