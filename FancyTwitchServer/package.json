@@ -1,9 +1,10 @@
 {
-  "name": "obs-local-server",
+  "name": "fancy-twitch-server-builder",
   "version": "1.0.0",
-  "description": "Provides a quick and easy way to server up data to my local OBS",
-  "main": "electron/app.js",
+  "description": "Provides an easy way to build FancyTwitchServer, or run various other operations from the top level",
+  "main": "app/electron/app.js",
   "scripts": {
+    "pack": "electron-builder",
     "start-electron": "electron .",
     "clean": "rimraf dist",
     "clean-tests": "rimraf test_variables.acebase",
@@ -14,19 +15,19 @@
     "watch:build-server": "tsc -p tsconfig.json --watch",
     "watch:build-client": "npx webpack --watch --progress",
     "watch:build": "npm-run-all --parallel watch:build-server watch:build-client",
-    "server-start": "node ./server.js",
+    "server-start": "node ./app/server.js",
     "server": "npm-run-all clean build-server server-start",
     "server-watch": "nodemon --watch",
     "watch:server": "npm-run-all --parallel watch:build-server server-watch",
     "start": "npm-run-all clean --parallel watch:build watch:server --print-label",
     "run-tests": "mocha --require './register.ts-auto-mock.js' --watch-extensions ts,tsx 'test/**/*.test.{ts,tsx}'",
     "test": "npm-run-all clean-tests run-tests clean-tests",
-    "server-logs": "Type .\\logs\\Server.log | pino-pretty",
-    "listener-logs": "Type .\\server\\logs\\FancyCommandListener.log | pino-pretty",
-    "test-logs": "Type .\\test\\logs\\FancyCommandListener.test.log | pino-pretty",
-    "clear-logs": "rimraf .\\server\\logs\\FancyCommandParser.log",
+    "server-logs": "Type .\\app\\logs\\Server.log | pino-pretty",
+    "listener-logs": "Type .\\app\\server\\logs\\FancyCommandListener.log | pino-pretty",
+    "test-logs": "Type .\\app\\test\\logs\\FancyCommandListener.test.log | pino-pretty",
+    "clear-logs": "rimraf .\\app\\server\\logs\\FancyCommandParser.log",
     "build-test": "npm-run-all build-server clear-logs test",
-    "build-css": "sass content/scss:content/style"
+    "build-css": "sass app/content/scss:app/content/style"
   },
   "repository": {
     "type": "git",
@@ -45,16 +46,9 @@
   },
   "homepage": "https://github.com/ScriptPup/ItyBityProjects#readme",
   "devDependencies": {
-    "@types/chai": "^4.3.3",
-    "@types/jquery": "^3.5.14",
-    "@types/mocha": "^10.0.0",
-    "@types/node": "^18.11.10",
-    "@types/request": "^2.48.8",
-    "@types/showdown": "^2.0.0",
-    "@types/socket.io": "^3.0.2",
-    "@types/webpack": "^5.28.0",
     "chai": "^4.3.6",
     "electron": "^23.1.4",
+    "electron-builder": "^23.6.0",
     "mocha": "^10.1.0",
     "nodemon": "^2.0.20",
     "npm-run-all": "^4.1.5",
@@ -67,18 +61,5 @@
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4",
     "webpack-cli": "^5.0.0"
-  },
-  "dependencies": {
-    "@twurple/api": "^5.3.0",
-    "@twurple/auth": "^5.3.0",
-    "@twurple/chat": "^5.3.0",
-    "@twurple/eventsub-ws": "^5.3.0",
-    "@twurple/pubsub": "^5.3.0",
-    "acebase": "^1.25.1",
-    "got-cjs": "^12.5.4",
-    "jquery": "^3.6.1",
-    "pino": "^8.7.0",
-    "showdown": "^2.1.0",
-    "socket.io": "^4.5.2"
   }
 }

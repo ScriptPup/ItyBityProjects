@@ -1,0 +1,41 @@
+# @format
+
+appId: scriptpup.twitchhelpers.fancytwitchserver
+productName: FancyTwitchServer
+directories:
+  app: ./app
+  buildResources: ./build-resources
+  output: ./dist
+electronVersion: 23.1.4
+artifactName: "${productName}-${os}-${version}.${ext}"
+files:
+  - "*"
+  - "!*.acebase/*"
+  - "!*.acebase"
+  - "!*.ts"
+  - "!logs/*"
+  - "!test/*"
+  - "!*-auto-mock*"
+  - "!TODO"
+  - "!tsconfig.json"
+  - "!webpack.config.js"
+win:
+  target: [nsis]
+  icon: "./"
+msi:
+  shortcutName: "FancyTwitchServer"
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+nsis:
+  include: "./installer.nsh"
+  installerIcon: "./icon.ico"
+  uninstallerIcon: "./icon.ico"
+  packElevateHelper: true
+  allowToChangeInstallationDirectory: true
+  perMachine: true
+  oneClick: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "FancyTwitchServer - ${version}"
+  guid: "c1f6aa65-e347-49e8-a094-85b1037237bf"
+npmRebuild: true
