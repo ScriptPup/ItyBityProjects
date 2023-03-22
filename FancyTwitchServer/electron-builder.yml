@@ -9,7 +9,8 @@ directories:
 electronVersion: 23.1.4
 artifactName: "${productName}-${os}-${version}.${ext}"
 files:
-  - "*"
+  - "artshow/*"
+  - "**/*"
   - "!*.acebase/*"
   - "!*.acebase"
   - "!*.ts"
@@ -21,15 +22,14 @@ files:
   - "!webpack.config.js"
 win:
   target: [nsis]
-  icon: "./"
+  icon: "_icons/icon.ico"
 msi:
   shortcutName: "FancyTwitchServer"
   createDesktopShortcut: true
   createStartMenuShortcut: true
 nsis:
-  include: "./installer.nsh"
-  installerIcon: "./icon.ico"
-  uninstallerIcon: "./icon.ico"
+  installerIcon: "_icons/icon.ico"
+  uninstallerIcon: "_icons/icon.ico"
   packElevateHelper: true
   allowToChangeInstallationDirectory: true
   perMachine: true

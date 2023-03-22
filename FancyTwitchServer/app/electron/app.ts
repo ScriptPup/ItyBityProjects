@@ -2,6 +2,7 @@
 
 import { app, BrowserWindow } from "electron";
 import { startServer, killServer } from "./preload";
+import unhandled from "electron-unhandled";
 
 import type { ChildProcessWithoutNullStreams } from "child_process";
 
@@ -41,3 +42,5 @@ if (app != undefined) {
     startSelf();
   });
 }
+
+unhandled();
