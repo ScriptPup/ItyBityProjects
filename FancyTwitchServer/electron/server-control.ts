@@ -4,10 +4,13 @@
 
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 
-export const startServer = (): Promise<ChildProcessWithoutNullStreams> => {
+export const startServer = (
+  log: any
+): Promise<ChildProcessWithoutNullStreams> => {
+  log.info("Start server called");
   return new Promise((resolve) => {
-    console.log("Trying to start server!");
-    console.log(`Process execution path: ${process.cwd()}`);
+    log.info("Trying to start server!");
+    log.info(`Process execution path: ${process.cwd()}`);
     let scriptOutput: string;
     const child: ChildProcessWithoutNullStreams = spawn(
       //   "npm",
@@ -24,7 +27,7 @@ export const startServer = (): Promise<ChildProcessWithoutNullStreams> => {
       if (data.toString().startsWith("Server listening on port 9000")) {
         resolve(child);
       }
-      console.log(`SERVER LOG: ${data}`);
+      log.info(`SERVER LOG: ${data}`);
       data = data.toString();
       scriptOutput += data;
     });
@@ -36,15 +39,16 @@ export const startServer = (): Promise<ChildProcessWithoutNullStreams> => {
     });
     child.on("close", (code) => {
       //Here you can get the exit code of the script
-      console.log("closing code: " + code);
-      console.log("Full output of script: ", scriptOutput);
+      log.info("closing code: " + code);
+      log.info("Full output of script: ", scriptOutput);
     });
-    console.log(`Started server on PID ${child.pid}!`);
+    log.info(`Started server on PID ${child.pid}!`);
   });
 };
 
 export const killServer = async (
-  server: ChildProcessWithoutNullStreams
+  server: ChildProcessWithoutNullStreams,
+  log: any
 ): Promise<void> => {
   if (process.platform !== "win32") {
     server.kill();
@@ -52,11 +56,11 @@ export const killServer = async (
       server.kill(0);
     }
     if (!server.exitCode) {
-      console.log("Failed to kill the server process, sorry");
+      log.info("Failed to kill the server process, sorry");
     }
   }
   return new Promise((resolve, reject) => {
-    console.log("Killing server");
+    log.info("Killing server");
     if (!server.pid) {
       console.error(
         `Server is already stopped? Looks like it probably crashed or something. SMH, what a crap program.`
@@ -71,12 +75,12 @@ export const killServer = async (
     ]);
 
     kill_cmd.stdout.on("data", (data: string) => {
-      console.log(`Taskkill: ${data}`);
+      log.info(`Taskkill: ${data}`);
     });
 
     kill_cmd.on("close", () => {
-      console.log("Kill command completed");
-      console.log(`Server stopped with exit code ${server.exitCode}`);
+      log.info("Kill command completed");
+      log.info(`Server stopped with exit code ${server.exitCode}`);
       resolve();
     });
     return;

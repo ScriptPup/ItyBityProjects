@@ -25,6 +25,7 @@ const createWindow = (
   win.loadFile("electron/preload.html");
 
   serverProc.then(() => {
+    log.info("Server started");
     win.loadURL("http://localhost:9000");
     console.log("Window loaded");
   });
@@ -35,7 +36,7 @@ const terminateAndClose = async (
   app: Electron.App,
   serverProc: ChildProcessWithoutNullStreams
 ) => {
-  await killServer(serverProc);
+  await killServer(serverProc, log);
   log.info("Server killed");
   app.quit();
   log.info("App terminated");
@@ -43,8 +44,7 @@ const terminateAndClose = async (
 
 const startSelf = async () => {
   log.info("Starting server");
-  const serverProc: Promise<ChildProcessWithoutNullStreams> = startServer();
-  log.info("Server started");
+  const serverProc: Promise<ChildProcessWithoutNullStreams> = startServer(log);
   console.log("Server process called");
   log.info("Creating window");
   const win: BrowserWindow = createWindow(serverProc);
