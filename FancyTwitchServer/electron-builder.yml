@@ -1,0 +1,7 @@
+# @format
+
+appId: scriptpup.twitchhelper.fancytwitchserver
+productName: FancyTwitchServer
+win:
+  target: [nsis]
+  icon: "build/icon.ico"
