@@ -17,7 +17,7 @@ export const TestLogger = pino(
   pino.destination({
     mkdir: true,
     writable: true,
-    dest: `${__dirname}/../logs/tests.log`,
+    dest: `${process.env.PWD}/logs/tests.log`,
     append: false,
   })
 );

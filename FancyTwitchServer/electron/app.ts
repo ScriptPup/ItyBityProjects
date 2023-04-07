@@ -1,20 +1,27 @@
 /** @format */
 
 import { app, BrowserWindow } from "electron";
-import { startServer, killServer } from "./server-control";
+// import { startServer, killServer } from "./server-control";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
 import path from "path";
 
-import type { ChildProcessWithoutNullStreams } from "child_process";
+// Create log folder if it doesn't exist
+import { startServer } from "../server";
 
 unhandled();
 log.initialize({ preload: true });
 log.transports.file.resolvePathFn = () => path.join("logs/main.log");
 
-const createWindow = (
-  serverProc: Promise<ChildProcessWithoutNullStreams>
-): BrowserWindow => {
+log.info(`Started with arguments (${process.argv.length}) ${process.argv}`);
+for (const arg in process.argv) {
+  if (arg == "debug") {
+    process.env.NODE_ENV = "development";
+  }
+}
+
+const createWindow = (): // serverProc: Promise<ChildProcessWithoutNullStreams>
+BrowserWindow => {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -24,19 +31,20 @@ const createWindow = (
   });
   win.loadFile("electron/preload.html");
 
-  serverProc.then(() => {
-    log.info("Server started");
-    win.loadURL("http://localhost:9000");
-    console.log("Window loaded");
-  });
+  // serverProc.then(() => {
+  //   log.info("Server started");
+  //   win.loadURL("http://localhost:9000");
+  //   console.log("Window loaded");
+  // });
+  win.loadURL("http://localhost:9000");
   return win;
 };
 
 const terminateAndClose = async (
-  app: Electron.App,
-  serverProc: ChildProcessWithoutNullStreams
+  app: Electron.App
+  // serverProc: ChildProcessWithoutNullStreams
 ) => {
-  await killServer(serverProc, log);
+  // await killServer(serverProc, log);
   log.info("Server killed");
   app.quit();
   log.info("App terminated");
@@ -44,10 +52,11 @@ const terminateAndClose = async (
 
 const startSelf = async () => {
   log.info("Starting server");
-  const serverProc: Promise<ChildProcessWithoutNullStreams> = startServer(log);
+  startServer();
+  // const serverProc: Promise<ChildProcessWithoutNullStreams> = startServer(log);
   console.log("Server process called");
   log.info("Creating window");
-  const win: BrowserWindow = createWindow(serverProc);
+  const win: BrowserWindow = createWindow();
   log.info("Window created");
 
   log.info("Setting up close event");

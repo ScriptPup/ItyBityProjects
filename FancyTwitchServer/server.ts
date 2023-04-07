@@ -33,9 +33,11 @@ FancyConfig(io, TL);
 // Setup socket to listen for showcase commands
 showcaseListener(io);
 
-// Start the server
-http.listen(port);
-console.log(`Server listening on port ${port} test`);
-console.log(
-  `Unless you're hosting somewhere, just go to http://localhost:${port}/ to use the server `
-);
+export const startServer = () => {
+  // Start the server
+  http.listen(port);
+  console.log(`Server listening on port ${port} test`);
+  console.log(
+    `Unless you're hosting somewhere, just go to http://localhost:${port}/ to use the server `
+  );
+};
