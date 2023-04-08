@@ -506,8 +506,6 @@ font-variation-settings:
     .link-changer {
         display: block;
         margin-top: 5px;
-        padding-left: 10px;
-
         .field {        
             position: relative;
             &::after {
@@ -556,7 +554,7 @@ font-variation-settings:
     }
 }
 
-#relay-link {
+#relay-link, #showcase-link {
     position: absolute;
     top: 38;
     margin-left: 10px; 

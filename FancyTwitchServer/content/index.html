@@ -22,45 +22,51 @@
           ><span id="relay-link-title">Chat Relay</span>
           <span style="margin-top: 25px;" class="sub">Use this link to go to a web-page which will simply spit all chats out.
             <br /><br />
-            Use the paramaters (or fill in the boxes below): ?channel=[mychannel]&fade=[fade_timeout]&swipe=[true|false] to control behavior            
+            Use the paramaters (or fill in the boxes below and use the link under the section title): ?channel=[mychannel]&fade=[fade_timeout]&swipe=[true|false] to control behavior            
+            <br />
+            <ul>
+              <li>Channel = The Twitch channel you wish to monitor</li>
+              <li>Fade Timeout = The time (in seconds) to keep messages before fading them away</li>
+              <li>Swipe = When enabled fading messages will be removed from the screen with a subtle "swipe" effect</li>
+            </ul>
         </span class="sub">
         </a>        
         <div class="link-changer">
           <span class="field" subtitle="Channel Name">
-            <input type="text" name="channel" id="link-channel" />
+            <input class="relay-params" type="text" name="channel" id="link-channel" />
           </span>
           <span class="field" subtitle="Fade Timeout">
-            <input type="number" name="fade" id="link-fade"  />
+            <input class="relay-params" type="number" name="fade" id="link-fade"  />
           </span>
           <span class="field" subtitle="Swipe Away">
             <span class="bool">
-              <input type="checkbox" name="swipe" id="link-swipe"  />
+              <input class="relay-params" type="checkbox" name="swipe" id="link-swipe"  />
             </span>            
           </span>
         </div>
         
       </div>
       <div class="frontLink">
-        <a href="/showcase" target="_blank"
-          ><span>Showcase</span>
-          <span class="sub">Use this link to go to a web-page which will display whatever art work was last (default) redeemed
+        <div id="showcase-link"><span id="link">http://localhost:9000</span><a href="" id="open-external"></a></div>
+        <a id="actual-showcase-link" href="/showcase" target="_blank"
+          ><span >Showcase</span>
+          <span style="margin-top: 25px;" class="sub">Use this link to go to a web-page which will display whatever art work was last (default) redeemed
             <br /><br />
-            Use the paramaters: ?pos=[number] to determine which redemption to gather (starts at 0 and goes UP to get redemptions further in the past. 0 if most recent, 1 is one before most recent, etc.)
-            <br /><br />
-            In the future, may add some helper pop-up before redirecting to make this more convenient.
+            Use the paramaters (or fill in the boxe below and use the link under the section title): ?pos=[number] to determine which redemption to gather (starts at 0 and goes UP to get redemptions further in the past. 0 if most recent, 1 is one before most recent, etc.)
+            
         </span class="sub">
         </a>
+        <div class="link-changer">
+          <span class="field" subtitle="Image Position">
+            <input class="showcase-params" min="0" type="number" name="image_pos" id="link-showcase-pos" value="0"/>
+          </span>
+        </div>
       </div>
       <div class="frontLink">
         <a href="/showcase/setup" 
           ><span>Showcase Setup</span>
-          <span class="sub">This link will bring you to the showcase setup page. Here you can view past redemptions, and manually redeem something yourself (without using channel points )
-            <br /><br />
-            Use the paramaters: ?pos=[number] to determine which redemption to gather (starts at 0 and goes UP to get redemptions further in the past. 0 if most recent, 1 is one before most recent, etc.)
-            <br /><br />
-            In the future, may add some helper pop-up before redirecting to make this more convenient.
-        </span class="sub">
-        </a>
+          <span class="sub">This link will bring you to the showcase setup page. Here you can view past redemptions, and manually redeem something yourself (without using channel points )</span class="sub">
+        </a>        
       </div>
     </article>
     <footer id="content-foot">

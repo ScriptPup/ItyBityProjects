@@ -10,7 +10,8 @@
  */
 const setupPage = async () => {
   const $: JQueryStatic = (await import("jquery")).default;
-  const updateLink = (): void => {
+
+  const updateRelayLink = (): void => {
     let linkTo = new URL("chatrelay", window.location.origin);
     let channel: string | undefined = $("#link-channel").val() as
       | string
@@ -35,8 +36,28 @@ const setupPage = async () => {
     $("#relay-link #link").text(linkTo.toString());
   };
 
-  $(".field input").on("change", updateLink);
-  updateLink();
+  const updateShowcaseLink = (): void => {
+    let linkTo = new URL("showcase", window.location.origin);
+    let position: string | undefined = $("#link-showcase-pos").val() as
+      | string
+      | undefined;
+
+    if (position) {
+      linkTo.searchParams.append("pos", position);
+    }
+    // $("#relay-link").text(linkTo.toString());
+    $("#actual-showcase-link").attr("href", linkTo.toString());
+    $("#showcase-link #open-external").attr(
+      "href",
+      linkTo.toString() + "#route-external"
+    );
+    $("#showcase-link #link").text(linkTo.toString());
+  };
+
+  $(".field input.relay-params").on("change", updateRelayLink);
+  $(".field input.showcase-params").on("change", updateShowcaseLink);
+  updateRelayLink();
+  updateShowcaseLink();
 };
 
 document.addEventListener("DOMContentLoaded", function () {
