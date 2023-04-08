@@ -130,6 +130,7 @@ button {
   &-main {
       border-radius: 8px;
       min-width: 600px;
+      overflow-y: auto;
   }
 
   &-head, &-foot {
@@ -144,8 +145,17 @@ button {
       display: flex;
       align-items: center;
       align-content: space-between;
+      justify-content: space-around;
       span:nth-child(1) {
           flex: 0.9 0;
+      }
+      &::after {
+        content: "";
+        width: 60px;
+        height: 60px;
+        background-image: url("/img/FancyTwitch.png");
+        background-repeat: no-repeat;
+        background-size: contain;
       }
   }
   &-foot {
@@ -431,8 +441,9 @@ font-variation-settings:
 }
 
 .frontLink {
-    min-height: 50px;
-    width: 50%;
+    min-height: fit-content;
+    min-width: 580px;
+    width: 80%;
     align-items: center;
     display: flex;
     justify-items: center;        
