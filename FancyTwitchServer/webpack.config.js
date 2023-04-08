@@ -9,6 +9,7 @@ module.exports = {
     setup: "./content/js/src/setup.ts",
     showcase: "./content/js/src/showcase.ts",
     showcase_setup: "./content/js/src/showcase_setup.ts",
+    index: "./content/js/src/index.ts",
   },
   performance: {
     maxAssetSize: 1000000,

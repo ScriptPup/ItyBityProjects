@@ -1,6 +1,6 @@
 /** @format */
 
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, shell } from "electron";
 // import { startServer, killServer } from "./server-control";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
@@ -29,6 +29,14 @@ BrowserWindow => {
       preload: path.join(__dirname, "preload.js"),
     },
   });
+
+  win.webContents.on("will-navigate", function (e, url) {
+    if (url.endsWith("#route-external")) {
+      e.preventDefault();
+      shell.openExternal(url.replace("#route-external", ""));
+    }
+  });
+
   win.loadFile("electron/preload.html");
 
   // serverProc.then(() => {

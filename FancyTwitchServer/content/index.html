@@ -3,6 +3,7 @@
   <head>
     <link rel="shortcut icon" href="#" />
     <link rel="stylesheet" href="../style/main.css" />
+    <script src="/js/dist/index.js"></script>
   </head>
   <body>
     <header id="content-head">
@@ -16,15 +17,28 @@
         </a>
       </div>
       <div class="frontLink">
-        <a href="/chatrelay" target="_blank"
-          ><span>Chat Relay</span>
-          <span class="sub">Use this link to go to a web-page which will simply spit all chats out.
+        <div id="relay-link"><span id="link">http://localhost:9000</span><a href="" id="open-external"></a></div>
+        <a id="actual-relay-link" href="/chatrelay" target="_blank"
+          ><span id="relay-link-title">Chat Relay</span>
+          <span style="margin-top: 25px;" class="sub">Use this link to go to a web-page which will simply spit all chats out.
             <br /><br />
-            Use the paramaters: ?channel=[mychannel]&fade=[fade_timeout]&swipe=[true|false] to control behavior
-            <br /><br />
-            In the future, may add some helper pop-up before redirecting to make this more convenient (like kapchat does).
+            Use the paramaters (or fill in the boxes below): ?channel=[mychannel]&fade=[fade_timeout]&swipe=[true|false] to control behavior            
         </span class="sub">
-        </a>
+        </a>        
+        <div class="link-changer">
+          <span class="field" subtitle="Channel Name">
+            <input type="text" name="channel" id="link-channel" />
+          </span>
+          <span class="field" subtitle="Fade Timeout">
+            <input type="number" name="fade" id="link-fade"  />
+          </span>
+          <span class="field" subtitle="Swipe Away">
+            <span class="bool">
+              <input type="checkbox" name="swipe" id="link-swipe"  />
+            </span>            
+          </span>
+        </div>
+        
       </div>
       <div class="frontLink">
         <a href="/showcase" target="_blank"
