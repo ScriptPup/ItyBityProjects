@@ -5,6 +5,15 @@ productName: FancyTwitchServer
 win:
   target: [nsis]
   icon: "build/icon.ico"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
 extraFiles:
-  - content
-  - artshow
+  - "content"
+  - "artshow"
+  - "!content/js/src"
+  - "!content/scss"
+  - "!content/tsconfig.json"
+  - "!content/chatbox_test.html"
+  - "!artshow/anothuser.png"
+  - "!artshow/testuser.png"

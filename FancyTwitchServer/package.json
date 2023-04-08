@@ -1,5 +1,5 @@
 {
-  "name": "obs-local-server",
+  "name": "fancy-twitch-server",
   "version": "1.0.0",
   "description": "Provides a quick and easy way to server up data to my local OBS",
   "main": "electron/app.js",
