@@ -28,6 +28,7 @@ BrowserWindow => {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
+    icon: path.resolve(__dirname, "icon.ico"),
   });
 
   win.webContents.on("will-navigate", function (e, url) {
