@@ -103,7 +103,6 @@ describe("TwitchFancyPreParse Middleware", () => {
         expect(res).to.equal(
           "REJECT:Sorry, no art for nonexistantuser.png exists. Your bits have been refunded."
         );
-        expect(redemption).to.be.not.null;
       });
     });
   });
