@@ -15,24 +15,131 @@ on:
   pull_request:
     branches: ["main"]
 
+# Workflow is:
+#   check if new release is needed & create draft release if so
+#     -> build, test, and upload packaged binaries to draft release
+#     --> publish draft release
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  # If the version number of the package.json file is different with this push than the last push
+  #   then create a draft release
+  #   also share the draft release id and the version to following steps so we don't have to re-run these checks
+  setup-draft-release:
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [16.x, 18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
+        node-version: [18.x]
+    outputs:
+      new-version: ${{ steps.version-check.outputs.changed  == true || steps.last-status.outputs.last_status == 'failure' }}
+      draft-release: ${{ steps.create_release.outputs.upload_url }}
+      release-id: ${{ steps.create_release.outputs.id }}
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
-      - run: echo ${cwd}
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
           cache-dependency-path: FancyTwitchServer/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
+      - name: Get previous workflow status
+        uses: Mercymeilya/last-workflow-status@v0.3.3
+        id: last-status
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check if version updated
+        id: version-check
+        uses: EndBug/version-check@v2
+        with:
+          diff-search: true
+          file-name: FancyTwitchServer/package.json
+          file-url: ::before
+          static-checking: localIsNew
+      - name: Checkout the version
+        if: steps.version-check.outputs.changed == 'true' || steps.last-status.outputs.last_status == 'failure'
+        id: get-version
+        uses: beaconbrigade/package-json-version@v0.3
+        with:
+          path: FancyTwitchServer/
+      - name: Create Draft Release
+        if: steps.version-check.outputs.changed == 'true' || steps.last-status.outputs.last_status == 'failure'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: win-fts-${{  steps.get-version.outputs.version  }}
+          release_name: Fancy Twitch Server ${{  steps.get-version.outputs.version  }}
+          draft: true
+          prerelease: false
+
+  # # I want to add linux and maybe mac to this later
+  # # But I'm just not feeling it tonight so... Here's what we got
+  build-and-publish:
+    runs-on: windows-2022
+    needs: setup-draft-release
+    strategy:
+      matrix:
+        node-version: [18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: FancyTwitchServer/package-lock.json
+      - name: Install npm dependancies matching dev environment lock
+        run: npm ci
+      - name: Build the server & client packages
+        run: npm run build
+      - name: Run tests
+        run: npm test
+
+      # Conditionally build and deploy new release(s)
+      - name: Build SASS to CSS
+        if: needs.setup-draft-release.outputs.new-version == 'true'
+        run: npm run build-css
+      - name: Package electron
+        if: needs.setup-draft-release.outputs.new-version == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run pack
+      - name: Rename release
+        if: needs.setup-draft-release.outputs.new-version == 'true'
+        run: |
+          mv '.\dist\FancyTwitchServer Setup ${{ needs.setup-draft-release.outputs.version }}.exe' .\dist\FancyTwitchServer.exe
+      - name: Upload release binary
+        if: needs.setup-draft-release.outputs.new-version == 'true'
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.setup-draft-release.outputs.draft-release }}
+          asset_path: FancyTwitchServer/dist/FancyTwitchServer.exe
+          asset_name: FancyTwitchServer.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+  # Assuming there was a new version, publish the new release
+  # This is split out from the upload step so that in the future I can add support for additional platform builds all together
+  publish-draft-release:
+    runs-on: ubuntu-22.04
+    needs: [setup-draft-release, build-and-publish]
+    if: needs.setup-draft-release.outputs.new-version == 'true'
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: FancyTwitchServer/package-lock.json
+      - name: Publish release
+        uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ needs.setup-draft-release.outputs.release-id }}
