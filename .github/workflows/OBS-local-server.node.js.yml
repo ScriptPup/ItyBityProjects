@@ -26,13 +26,52 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - run: echo ${cwd}
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
           cache-dependency-path: FancyTwitchServer/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
+      - name: Install npm dependancies matching dev environment lock
+        run: npm ci
+      - name: Build the server & client packages
+        run: npm run build
+      - name: Run tests
+        run: npm test
+      - name: Build SASS to CSS
+        run: npm run build-css
+      - name: Build electron ts to js
+        run: npm run build-electron
+      - name: Package electron
+        run: npm run pack
+      - name: Rename release
+        run: |
+          ls
+          cd dist
+          mv "FancyTwitchServer Setup 1.0.0.exe" "FancyTwitchServer.exe"
+      - name: Create Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+      - name: Upload release binary
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/FancyTwitchServer.exe
+          asset_name: FancyTwitchServer.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Publish release
+        uses: eregon/publish-release@v1
+          env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
+      
