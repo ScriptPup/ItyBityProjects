@@ -12,7 +12,7 @@ So instead I ended up making my own thing...
 
 Later on, the PR creator and a maintainer both replied and there is now an available binary for the browser plugin with javascript injection available. That's probably better, but this was already done.
 
-I was HEAVILY inspired by a lot of the kapchat style decisions.
+I was HEAVILY inspired by a lot of the kapchat style decisions. 
 
 After that, I had some ideas about more advanced actions I wanted to be able to enable using twitch commands (via `!command` style chats). While I found plenty of providers, none of them really provided EVERYTHING I was looking for... And in particular they didn't provide a way to create custom bits/channel point reward actions or anything like that AND good command support. Lastly, none of the ones that were close were fully local, which drastically decreased the options available.
 
