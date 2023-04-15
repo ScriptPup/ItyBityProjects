@@ -5,6 +5,22 @@
 1. Deletes don't always update for some reason
 2. Updates don't always update for some reason
 
+## Bot account viability
+
+Need to split out redemption authorization & bot account authorization.
+
+For some reason Twitch doesn't allow `channel-points-channel.v1.<userid>` to be listened to via a moderator or editor account. They require that ONLY the creator can listen to the topic.
+This means in order to actually listen for redemptions, the streamer needs to be logged in.
+
+Currently, I use one account for everything. This means that the streamer has to be the one to authenticate - otherwise the entire thing fails when the pub-sub tries to start up.
+I want to let the user choose to either use the streamer account for everything, OR to authenticate a seprate bot account. The seprate bot account will allow said channel to be used as the chat replier and such - while the channel owner account can continue to be used for the channel redemption pub/sub along with creating custom redemptions and such.
+
+Ideally, permission to create and listen to channel redemptions should be something that can be granted to other channels so it's not so complicated...But I guess that's not going to happen any time soon, considering this is an issue from 2020.
+
+**Ref**
+- https://discuss.dev.twitch.tv/t/only-getting-err-badauth-from-listen-pubsub-request/23598/8
+- https://discuss.dev.twitch.tv/t/introducing-the-channel-points-redemption-pubsub-topic/23489/5
+
 # Additional Features needed:
 
 ## Redemptions
