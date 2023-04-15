@@ -1,7 +1,6 @@
 /** @format */
 
 import { pino } from "pino";
-const LOGGING_LEVEL = process.env.NODE_ENV === "development" ? "debug" : "info";
 
 const transport = pino.transport({
   targets: [
@@ -34,7 +33,7 @@ const logDestination =
 
 export const MainLogger = pino(
   {
-    level: LOGGING_LEVEL,
+    level: "debug",
     redact: [
       "*.password",
       "twitchClient.opts.identity.password",
