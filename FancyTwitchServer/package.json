@@ -16,7 +16,7 @@
     "watch:build-server": "tsc -p tsconfig.json --watch",
     "watch:build-client": "npx webpack --watch --progress",
     "watch:build": "npm-run-all --parallel watch:build-server watch:build-client",
-    "server-start": "node ./server.js",
+    "server-start": "node -e \"require('./server').startServer()\"",
     "server": "npm-run-all clean build-server server-start",
     "server-watch": "nodemon --watch",
     "watch:server": "npm-run-all --parallel watch:build-server server-watch",
