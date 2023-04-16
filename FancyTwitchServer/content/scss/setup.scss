@@ -42,4 +42,32 @@
     &:hover #btn-new-opts {
         display: block;
     }
+    
+}
+
+.authorizations {
+    margin-bottom: 10px;
+    button {
+        margin-bottom: 2px;        
+        margin-left: 10px;
+        font-size: medium;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        font-weight: normal;
+        font-family: Arial, Helvetica, sans-serif;
+        width: 170px;
+
+        &.unauthorized {
+            background-image: url('/img/ex.png');
+            background-position: 96% center;
+            background-repeat: no-repeat;
+            background-size: 18px;
+        }
+        &.authorized {
+            background-image: url('/img/check.png');
+            background-position: 96% center;
+            background-repeat: no-repeat;
+            background-size: 18px;
+        }
+    }        
 }
