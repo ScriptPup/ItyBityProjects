@@ -501,51 +501,75 @@ const showBotTemplate = async () => {
   if (null === bot_form_template) {
     await getBotTemplateContents();
   }
+  const saveFormData = (newModal: JQuery<JQuery.Node[]>) => {
+    if (newModal) {
+    }
+    const formserializeArray = newModal.find("form").serializeArray();
+    const jsonObj: { [key: string]: string } = {};
+    $.map(formserializeArray, function (n, i) {
+      jsonObj[n.name] = n.value;
+    });
+    const botAccount: BotAccount = {
+      channel: jsonObj["channel"],
+      client_id: jsonObj["client_id"],
+      client_secret: jsonObj["client_secret"],
+      username: jsonObj["username"],
+      // auth_code?: string
+    };
+    localStorage.setItem("auth-verify-cache", JSON.stringify(botAccount));
+    return botAccount;
+  };
+  const requestAuthorization = (
+    whomst: string,
+    scopes: string[],
+    botData: BotAccount
+  ): void => {
+    const state = Math.random().toString(16).substr(2, 8);
+    const _scopes: string = scopes.join("+");
+    localStorage.setItem("auth-verify-code", JSON.stringify({ state, whomst }));
+    const twitchAuthURI = new URL(`https://id.twitch.tv/oauth2/authorize`);
+    twitchAuthURI.searchParams.append("response_type", "code");
+    twitchAuthURI.searchParams.append("client_id", botData.client_id);
+    twitchAuthURI.searchParams.append(
+      "redirect_uri",
+      "http://localhost:9000/setup"
+    );
+    // twitchAuthURI.searchParams.append("scope", scopes);
+    twitchAuthURI.searchParams.append("token_type", "bearer");
+    twitchAuthURI.searchParams.append("state", state);
+
+    // window.open(twitchAuthURI.toString() + "&scope=" + _scopes, "_blank");
+    $(window).attr("location", twitchAuthURI.toString() + "&scope=" + _scopes);
+  };
+
   // The if is unecissary because of the above, but typescript insists on wasting cycles
   if (bot_form_template) {
     const newModalHTML = $.parseHTML(bot_form_template);
     const newModal = $(newModalHTML);
     $("body").append(newModalHTML);
-    newModal.find("#modal-submit").on("click", (e: Event) => {
-      e.preventDefault();
-      const formserializeArray = newModal.find("form").serializeArray();
-      const jsonObj: { [key: string]: string } = {};
-      $.map(formserializeArray, function (n, i) {
-        jsonObj[n.name] = n.value;
-      });
-      const botAccount: BotAccount = {
-        channel: jsonObj["channel"],
-        client_id: jsonObj["client_id"],
-        client_secret: jsonObj["client_secret"],
-        username: jsonObj["username"],
-        // auth_code?: string
-      };
-      const state = Math.random().toString(16).substr(2, 8);
-      localStorage.setItem("auth-verify-code", state);
-      localStorage.setItem("auth-verify-cache", JSON.stringify(botAccount));
 
+    // Request owner authorization
+    newModal.find("#authorize-owner").on("click", (e: Event) => {
+      e.preventDefault();
+      const botData: BotAccount = saveFormData(newModal);
+      const scopes = ["channel:read:redemptions"];
+      requestAuthorization("owner", scopes, botData);
+    });
+
+    // Request chatbot authorization
+    newModal.find("#authorize-bot").on("click", (e: Event) => {
+      e.preventDefault();
+      const botData: BotAccount = saveFormData(newModal);
       const scopes = [
-        "channel:read:redemptions",
         "chat:read",
         "chat:edit",
-        "channel:moderate",
         "whispers:read",
         "whispers:edit",
-      ].join("+");
-
-      const twitchAuthURI = new URL(`https://id.twitch.tv/oauth2/authorize`);
-      twitchAuthURI.searchParams.append("response_type", "code");
-      twitchAuthURI.searchParams.append("client_id", botAccount.client_id);
-      twitchAuthURI.searchParams.append(
-        "redirect_uri",
-        "http://localhost:9000/setup"
-      );
-      // twitchAuthURI.searchParams.append("scope", scopes);
-      twitchAuthURI.searchParams.append("token_type", "bearer");
-      twitchAuthURI.searchParams.append("state", state);
-
-      $(window).attr("location", twitchAuthURI.toString() + "&scope=" + scopes);
+        "channel:moderate",
+      ];
+      requestAuthorization("owner", scopes, botData);
     });
+
     newModal.find("#modal-cancel").on("click", () => {
       newModal.remove();
     });
@@ -582,7 +606,7 @@ const authorizedApplication = async () => {
   if (!botCode) {
     return;
   }
-  const state = localStorage.getItem("auth-verify-code");
+  const _state = localStorage.getItem("auth-verify-code");
   const rawBotData = localStorage.getItem("auth-verify-cache");
   if (!rawBotData) {
     console.error(
@@ -590,7 +614,9 @@ const authorizedApplication = async () => {
     );
     return;
   }
-  const botAccount = JSON.parse(rawBotData);
+  const botAccount: BotAccount = JSON.parse(rawBotData);
+  const stateData: { state: string; whomst: string } = JSON.parse(_state || "");
+  const { state, whomst } = stateData;
 
   try {
     const stateVerify = parsedURLParams.get("state");
@@ -601,8 +627,9 @@ const authorizedApplication = async () => {
     }
 
     // If we've verified everything satisfactorially, then send the botAccount data to the server
-    botAccount["auth_code"] = botCode;
-    if (!botAccount.auth_code) {
+    const auth_code = whomst === "owner" ? "owner_auth_code" : "bot_auth_code";
+    botAccount[auth_code] = botCode;
+    if (!botAccount[auth_code]) {
       throw new Error("Somehow the authorization code doesn't exist!");
     }
 

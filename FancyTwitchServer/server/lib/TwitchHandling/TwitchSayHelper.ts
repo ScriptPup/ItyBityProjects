@@ -80,7 +80,7 @@ export class TwitchSayHelper {
 
   /**
    * Uses the authorization code to request a bearer token. The authorization token can get revoked if the user re-submits/reconnects with the rediret URL still in the banner.
-   *
+   * TODO: Convert this code to have authorizations for both bot AND channel owner
    */
   private async OAuthTokenRequest(
     grant_type: "refresh_token" | "authorization_code"

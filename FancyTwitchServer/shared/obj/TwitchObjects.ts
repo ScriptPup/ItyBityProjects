@@ -23,19 +23,23 @@ export type TwitchUserInfo = {
   color?: string;
 };
 
+type OAuthToken = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  access_timestamp?: Date;
+};
+
 export type BotAccount = {
   channel: string;
   client_id: string;
   client_secret: string;
   username: string;
-  auth_code?: string;
-  token?: {
-    access_token: string;
-    refresh_token: string;
-    expires_in: number;
-    token_type: string;
-    access_timestamp?: Date;
-  };
+  owner_auth_code?: string;
+  bot_auth_code?: string;
+  owner_token?: OAuthToken;
+  bot_token?: OAuthToken;
 };
 
 export const getTwitchMessageObject = ({

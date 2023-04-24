@@ -90,8 +90,11 @@ const sendTwitchBotConfig = (socket: Socket) => {
           f_acct["client_secret"] = "*****";
         }
       }
-      if ("auth_code" in f_acct) {
-        delete f_acct["auth_code"];
+      if ("owner_auth_code" in f_acct) {
+        delete f_acct["owner_auth_code"];
+      }
+      if ("bot_auth_code" in f_acct) {
+        delete f_acct["bot_auth_code"];
       }
     }
     logger.debug(
