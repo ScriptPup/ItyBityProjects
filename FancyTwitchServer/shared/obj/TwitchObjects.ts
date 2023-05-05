@@ -1,6 +1,7 @@
 /** @format */
 
 import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
+import { AccessToken } from "@twurple/auth";
 
 export type TwitchMessage = {
   message: string;
@@ -31,6 +32,15 @@ type OAuthToken = {
   access_timestamp?: Date;
 };
 
+export type TwitchAuthorization = {
+  channel: string;
+  clientId: string;
+  clientSecret: string;
+  username: string;
+  auth_code?: string;
+  token?: AccessToken;
+};
+
 export type BotAccount = {
   channel: string;
   client_id: string;
@@ -38,8 +48,8 @@ export type BotAccount = {
   username: string;
   owner_auth_code?: string;
   bot_auth_code?: string;
-  owner_token?: OAuthToken;
-  bot_token?: OAuthToken;
+  owner_token?: AccessToken;
+  bot_token?: AccessToken;
 };
 
 export const getTwitchMessageObject = ({
