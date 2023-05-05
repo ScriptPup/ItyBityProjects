@@ -14,10 +14,16 @@ import {
  *
  */
 export class TwitchAuthHelper {
+  /**
+   * botAccount returns a promise which will resolve to the TwitchAuthorization object for the bot
+   */
   get botAccount() {
     return this.getAuthProvider(this._botAccount, "bot");
   }
 
+  /**
+   * ownerAccount returns as promise which will resolve to the TwitchAuthorization object for the streamer (channel owner)
+   */
   get ownerAccount() {
     return this.getAuthProvider(this._ownerAccount, "owner");
   }
