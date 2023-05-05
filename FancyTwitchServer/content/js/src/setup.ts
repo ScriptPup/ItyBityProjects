@@ -6,7 +6,10 @@ import {
   getUserType,
 } from "../../../shared/obj/FancyCommandTypes";
 import { UserTypes } from "../../../shared/obj/FancyCommandTypes";
-import { BotAccount } from "../../../shared/obj/TwitchObjects";
+import {
+  BotAccount,
+  TwitchAuthorization,
+} from "../../../shared/obj/TwitchObjects";
 import { FancyCommandClient } from "./lib/FancyCommandClient";
 import { FancyRedemptionClient } from "./lib/FancyRedemptionClient";
 
@@ -478,19 +481,22 @@ const getBotTemplateContents = async () => {
  *
  *
  */
-const saveBotData = async (data: BotAccount) => {
+const saveBotData = async (
+  data: TwitchAuthorization,
+  whomst: "owner" | "bot"
+) => {
   if (!FCC.socket) {
     throw new Error("Socket not connected, cannot send data to server");
   }
   if (
     data["username"] === "" &&
-    data["client_id"] === "" &&
-    data["client_secret"] === ""
+    data["clientId"] === "" &&
+    data["clientSecret"] === ""
   ) {
     FCC.socket.emit("update-bot-acct", null);
     return;
   }
-  FCC.socket.emit("update-bot-acct", data);
+  FCC.socket.emit("update-bot-acct", { auth: data, whomst });
 };
 
 /**
@@ -567,7 +573,7 @@ const showBotTemplate = async () => {
         "whispers:edit",
         "channel:moderate",
       ];
-      requestAuthorization("owner", scopes, botData);
+      requestAuthorization("bot", scopes, botData);
     });
 
     newModal.find("#modal-cancel").on("click", () => {
@@ -614,8 +620,10 @@ const authorizedApplication = async () => {
     );
     return;
   }
-  const botAccount: BotAccount = JSON.parse(rawBotData);
-  const stateData: { state: string; whomst: string } = JSON.parse(_state || "");
+  const botAccount: TwitchAuthorization = JSON.parse(rawBotData);
+  const stateData: { state: string; whomst: "bot" | "owner" } = JSON.parse(
+    _state || ""
+  );
   const { state, whomst } = stateData;
 
   try {
@@ -627,13 +635,8 @@ const authorizedApplication = async () => {
     }
 
     // If we've verified everything satisfactorially, then send the botAccount data to the server
-    const auth_code = whomst === "owner" ? "owner_auth_code" : "bot_auth_code";
-    botAccount[auth_code] = botCode;
-    if (!botAccount[auth_code]) {
-      throw new Error("Somehow the authorization code doesn't exist!");
-    }
-
-    saveBotData(botAccount);
+    botAccount["auth_code"] = botCode;
+    saveBotData(botAccount, whomst);
   } finally {
     // Remove query string from navigation, we don't want the user to refresh the page and end up invalidating their token
     window.history.replaceState(
