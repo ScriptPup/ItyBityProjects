@@ -2,7 +2,7 @@
 
 import { BasicPubSubClient } from "@twurple/pubsub";
 import { PubSubMessageData } from "@twurple/pubsub/lib/messages/PubSubMessage";
-import { StaticAuthProvider } from "@twurple/auth";
+import { RefreshingAuthProvider, StaticAuthProvider } from "@twurple/auth";
 import { TwitchSayHelper } from "./TwitchSayHelper";
 import { got } from "got-cjs";
 import { MainLogger } from "../logging";
@@ -15,8 +15,12 @@ import {
 import { FancyCommandParser } from "../FancyCommandParser/FancyCommandParser";
 import { commandVarsDB } from "../DatabaseRef";
 import { TwitchFancyPreParser } from "../FancyCommandParser/middlewares/TwitchFancyPreParse";
-import { TwitchMessage } from "../../../shared/obj/TwitchObjects";
+import {
+  TwitchAuthorization,
+  TwitchMessage,
+} from "../../../shared/obj/TwitchObjects";
 import { ArtShowcaseAssignment } from "../Showcase/ArtShowcaseAssignment";
+import { TwitchAuthHelper, getAuthorizationFor } from "./TwitchAuthHelper";
 
 const logger = MainLogger.child({ file: "TwitchRedemptionHelper" });
 
@@ -37,10 +41,13 @@ type MessageRedemptionFindResult = {
  *
  */
 export class TwitchRedemptionHelper {
+  private TAH: TwitchAuthHelper;
   private TSH: TwitchSayHelper;
   private FRL: FancyRedemptionListener;
+  private ownerAuth?: TwitchAuthorization;
 
   constructor(TSH: TwitchSayHelper, FRL: FancyRedemptionListener) {
+    this.TAH = TSH.twitchAuthHelper;
     this.TSH = TSH;
     this.FRL = FRL;
   }
@@ -51,20 +58,29 @@ export class TwitchRedemptionHelper {
     );
     await this.TSH.isReady;
     logger.debug("Starting redemption helper setup");
-    if (!this.TSH.botAccount.token) {
+    // Double check scopes are saved appropriately
+    const authProvider: RefreshingAuthProvider | null = await this.TAH
+      .ownerAccount;
+    if (!authProvider) {
       logger.error(
-        "Cannot setup redemptions due to botAccount access token not existing"
+        "Cannot setup redemptions due to the authentication provider not being available"
       );
       return;
     }
     const pubSub: BasicPubSubClient = new BasicPubSubClient();
-    const userId: string = await this.getChannelUserId(this.TSH);
-
-    const authProvider: StaticAuthProvider = new StaticAuthProvider(
-      this.TSH.botAccount.client_id,
-      this.TSH.botAccount.token.access_token,
-      ["channel:read:redemptions"]
+    const userId: string = await this.getChannelUserId();
+    const _ownerAuth: TwitchAuthorization | null = await getAuthorizationFor(
+      "owner"
     );
+    if (!_ownerAuth) {
+      logger.error(
+        "Auth provider appears to be ready, but no authorization data is available. Cannot proceed, canceling."
+      );
+      return;
+    }
+    const ownerAuth: TwitchAuthorization = _ownerAuth as TwitchAuthorization;
+    this.ownerAuth = ownerAuth;
+
     const redemption_topic: string = `channel-points-channel-v1.${userId}`;
     logger.debug({ redemption_topic }, "Setting up redemption lisenter");
     pubSub.listen(redemption_topic, authProvider, "channel:read:redemptions");
@@ -106,15 +122,15 @@ export class TwitchRedemptionHelper {
         }
         logger.debug({ msgKey, msg }, "Sending reply based on command parsing");
         try {
-          await this.TSH.twitchClient.say(this.TSH.botAccount.channel, msg);
+          await this.TSH.twitchClient.say(ownerAuth.channel, msg);
         } catch (err) {
           logger.error(
             { err },
-            `Failed to 'say' ${msg} in ${this.TSH.botAccount.channel} chat, reconnecting and trying again`
+            `Failed to 'say' ${msg} in ${ownerAuth.channel} chat, reconnecting and trying again`
           );
           this.TSH.connectTwitchClient().then(() => {
             try {
-              this.TSH.twitchClient?.say(this.TSH.botAccount.channel, msg);
+              this.TSH.twitchClient?.say(ownerAuth.channel, msg);
             } catch (err) {
               logger.fatal(
                 { err },
@@ -152,6 +168,12 @@ export class TwitchRedemptionHelper {
   ): Promise<string[]> {
     logger.debug({ cmds }, `Starting processMessageCommands`);
     const msgRes: Promise<string>[] = [];
+    const _ownerAuth: TwitchAuthorization | undefined = this.ownerAuth;
+    if (!_ownerAuth) {
+      throw "Owner authorization not available, cannot process redemptions!";
+    }
+    const ownerAuth = _ownerAuth as TwitchAuthorization;
+
     cmds.forEach((findRes: MessageRedemptionFindResult) => {
       let parsedCmd: Promise<string> = new Promise<string>((res) =>
         res(
@@ -172,7 +194,7 @@ export class TwitchRedemptionHelper {
           );
           const tmsg: TwitchMessage = {
             message: message.data.redemption.user_input || "",
-            channel: this.TSH.botAccount.channel,
+            channel: ownerAuth.channel,
             userInfo: {
               displayName: message.data.redemption.user.display_name,
             },
@@ -275,20 +297,23 @@ export class TwitchRedemptionHelper {
    * @returns a promise containing the userID string (when resolved)
    *
    */
-  private getChannelUserId(TSH: TwitchSayHelper): Promise<string> {
-    if (!TSH.botAccount.token?.access_token) {
+  private async getChannelUserId(): Promise<string> {
+    const ownerAuth: TwitchAuthorization | null = await getAuthorizationFor(
+      "owner"
+    );
+    if (!ownerAuth?.token?.accessToken) {
       throw "No access token set, cannot retrieve user channel ID";
     }
     const options = {
       headers: {
-        Authorization: `Bearer ${TSH.botAccount.token.access_token}`,
-        "Client-Id": TSH.botAccount.client_id,
+        Authorization: `Bearer ${ownerAuth?.token?.accessToken}`,
+        "Client-Id": ownerAuth.clientId,
       },
     };
     return new Promise((resolve, reject) => {
       got
         .get(
-          `https://api.twitch.tv/helix/users?login=${TSH.botAccount.channel}`,
+          `https://api.twitch.tv/helix/users?login=${ownerAuth.clientId}`,
           options
         )
         .json()

@@ -5,7 +5,7 @@ import { RefreshingAuthProvider } from "@twurple/auth";
 import { ChatClient } from "@twurple/chat";
 import { MainLogger } from "../logging";
 import { TwitchAuthorization } from "../../../shared/obj/TwitchObjects";
-import { TwitchAuthHelper } from "./TwitchAuthHelper";
+import { TwitchAuthHelper, getAuthorizationFor } from "./TwitchAuthHelper";
 
 const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
@@ -18,12 +18,11 @@ export class TwitchSayHelper {
   /**
    * botAccount is the property which contains information relevant to the bot used to communicate with twitch
    */
-  public botAccount: TwitchAuthorization;
-  /**
-   * streamerAccount is the property which contains information relevant to the bot used to subscribe to redemptions
-   */
-  public streamerAccount: TwitchAuthorization;
+  public botAccount: TwitchAuthorization | null = null;
 
+  /**
+   * twitchAuthHelper is an instance of TwitchAuthHelper which will help create providers, pulling cached data from the DB if it's available
+   */
   public twitchAuthHelper: TwitchAuthHelper;
 
   /**
@@ -37,18 +36,12 @@ export class TwitchSayHelper {
 
   public STATUS: "READY" | "PENDING" | "ERROR" | "NOT STARTED" = "NOT STARTED";
 
-  constructor(botAccount: TwitchAuthorization) {
+  constructor() {
     // I know this is the same as setTwitchAuthorization()...
     // However, typescript insists on having the constructor DIRECTLY set the properties which are not optional
     // Therefore the same code has to be maintained twice. I'm sorry :(
     this.twitchAuthHelper = new TwitchAuthHelper();
-    this.botAccount = botAccount;
-    this.isReady = this.connectTwitchClient(true);
-  }
-  public setTwitchAuthorization(botAccount: TwitchAuthorization): void {
-    this.botAccount = botAccount;
-    // Call a connection immediately upon setting the bot account, don't check if the auth token is valid
-    this.isReady = this.connectTwitchClient(true);
+    this.isReady = this.connectTwitchClient();
   }
 
   /**
@@ -61,13 +54,9 @@ export class TwitchSayHelper {
    * @returns void promise
    *
    */
-  public async connectTwitchClient(
-    skipAuthCheck: boolean = false
-  ): Promise<void> {
-    logger.debug(
-      { skipAuthCheck },
-      "Setting up a new authenticated twitch client"
-    );
+  public async connectTwitchClient(): Promise<void> {
+    logger.debug("Setting up a new authenticated twitch client");
+    this.botAccount = await getAuthorizationFor("bot");
     return new Promise<void>(async (resolve, reject) => {
       if (this.botAccount == null) {
         logger.info(

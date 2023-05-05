@@ -7,6 +7,8 @@ import {
   AccessToken,
   exchangeCode,
 } from "@twurple/auth";
+import { MainLogger } from "../logging";
+const logger = MainLogger.child({ file: "TwitchAuthHelper" });
 
 /**
  * Authorization helper class, will automatically pull from configDB as needed
@@ -41,13 +43,11 @@ export class TwitchAuthHelper {
   constructor() {}
 
   private async getAuthProvider(
-    authorization: TwitchAuthorization | undefined,
+    authorization: TwitchAuthorization | undefined | null,
     forWhomst: "owner" | "bot"
   ): Promise<RefreshingAuthProvider | null> {
     if (!authorization) {
-      authorization = (
-        await configDB.ref(`twitch-${forWhomst}-acct`).get()
-      ).val();
+      authorization = await getAuthorizationFor(forWhomst);
     }
     if (!authorization) {
       return null;
@@ -88,18 +88,28 @@ const saveAuthTokenToDB = async (
   token: AccessToken,
   forWhomst: "owner" | "bot"
 ): Promise<void> => {
+  let acct: TwitchAuthorization | null = await getAuthorizationFor(forWhomst);
+  if (!acct) {
+    logger.error(
+      `Failed to save token for ${forWhomst} due to not being able to find an existing authorization config`
+    );
+    return;
+  }
+  acct["token"] = token;
+  await configDB.ref(`twitch-${forWhomst}-acct`).set([acct]);
+};
+
+export const getAuthorizationFor = async (
+  whomst: "owner" | "bot"
+): Promise<TwitchAuthorization | null> => {
   let acct: TwitchAuthorization[] | TwitchAuthorization = (
-    await configDB.ref("twitch-bot-acct").get()
+    await configDB.ref(`twitch-${whomst}-acct`).get()
   ).val();
-  let nacct: TwitchAuthorization;
+  if (!acct) {
+    return null;
+  }
   if (typeof acct === typeof [])
     if ((acct as TwitchAuthorization[]).length > 0)
       acct = (acct as TwitchAuthorization[])[0];
-  nacct = acct as TwitchAuthorization;
-  nacct["token"] = token;
-  if (forWhomst === "bot") {
-    await configDB.ref("twitch-bot-acct").set([acct]);
-  } else if (forWhomst === "owner") {
-    await configDB.ref("twitch-owner-acct").set([acct]);
-  }
+  return acct as TwitchAuthorization;
 };
