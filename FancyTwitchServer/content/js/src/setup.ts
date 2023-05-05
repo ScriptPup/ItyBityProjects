@@ -22,6 +22,12 @@ let $: JQueryStatic;
 let FCC: FancyCommandClient;
 let FRC: FancyRedemptionClient;
 
+// TODO: I need to change authorization workflow
+// The workflow should go... Is Form Filled?
+//  N -> Validation failed, prompt user to fill in the form before authorizing
+//  Y -> When authorize bot or owner is clicked, do auth flor
+//        -> Save authorization results & form config to config for that type
+
 /**
  * Simple function to resize textarea to fit contents better. Why this isn't builtin to the HTML spec, no idea
  * https://stackoverflow.com/questions/995168/textarea-to-resize-based-on-content-length
