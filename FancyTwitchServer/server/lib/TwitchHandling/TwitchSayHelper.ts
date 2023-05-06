@@ -5,7 +5,11 @@ import { RefreshingAuthProvider } from "@twurple/auth";
 import { ChatClient } from "@twurple/chat";
 import { MainLogger } from "../logging";
 import { TwitchAuthorization } from "../../../shared/obj/TwitchObjects";
-import { TwitchAuthHelper, getAuthorizationFor } from "./TwitchAuthHelper";
+import {
+  twitchAuthHelper,
+  TwitchAuthHelper,
+  getAuthorizationFor,
+} from "./TwitchAuthHelper";
 
 const logger = MainLogger.child({ file: "TwitchSayHelper" });
 
@@ -23,7 +27,7 @@ export class TwitchSayHelper {
   /**
    * twitchAuthHelper is an instance of TwitchAuthHelper which will help create providers, pulling cached data from the DB if it's available
    */
-  public twitchAuthHelper: TwitchAuthHelper;
+  public twitchAuthHelper: TwitchAuthHelper = twitchAuthHelper;
 
   /**
    * The TwitchSayHelper is provided to avoid race conditions when multiple messages come in on top of eachother
@@ -40,7 +44,6 @@ export class TwitchSayHelper {
     // I know this is the same as setTwitchAuthorization()...
     // However, typescript insists on having the constructor DIRECTLY set the properties which are not optional
     // Therefore the same code has to be maintained twice. I'm sorry :(
-    this.twitchAuthHelper = new TwitchAuthHelper();
     this.isReady = this.connectTwitchClient();
   }
 
@@ -86,15 +89,6 @@ export class TwitchSayHelper {
         return;
       }
 
-      if (!this.botAccount.token) {
-        logger.debug(
-          {
-            acct: this.botAccount,
-          },
-          "Bot token doesn't exist, so can't proceed!"
-        );
-        return;
-      }
       // const tokenPass = `${this.botAccount.token.token_type} ${this.botAccount.token.access_token}`;
       const authProvider: RefreshingAuthProvider | null = await this
         .twitchAuthHelper.botAccount;
@@ -114,7 +108,11 @@ export class TwitchSayHelper {
 
       this.twitchClient.onDisconnect((reason) => {
         logger.debug(
-          { reason, connected_status: this.twitchClient?.isConnected },
+          {
+            reason,
+            connected_status: this.twitchClient?.isConnected,
+            connectedTo: this.botAccount?.channel,
+          },
           "Twitch Client Disconnected"
         );
       });
@@ -147,7 +145,7 @@ export class TwitchSayHelper {
    */
   public async say(channel: string, message: string): Promise<void> {
     new Promise<void>((resolve, reject) => {
-      if (this.STATUS === "READY") {
+      if (this.STATUS !== "READY") {
         this.isReady = this.connectTwitchClient();
       }
 

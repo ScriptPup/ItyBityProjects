@@ -65,8 +65,8 @@ export class TwitchListener {
    */
   private async init() {
     logger.debug("Initializing TwitchListener");
-    await this.getAndListenForAccounts();
-    logger.debug("");
+    await this.getAndListenForAccounts(); // This is never completing, although it should. All of the internal logic is being completed.
+    logger.debug("TwitchListener initialized!");
     if (!this.botAccount) {
       logger.error(
         { acct: this.botAccount },
@@ -94,7 +94,7 @@ export class TwitchListener {
    *
    */
   public async getAndListenForAccounts(): Promise<void> {
-    return configDB
+    const getted = configDB
       .ref("twitch-bot-acct")
       .get()
       .then(async (ss: DataSnapshot) => {
@@ -111,11 +111,21 @@ export class TwitchListener {
         );
 
         this.twitchSayClient = new TwitchSayHelper();
-        return await this.twitchSayClient.isReady;
-      })
-      .catch((err) => {
-        logger.error({ err }, "Failed to getAndListenForAccounts");
+        logger.debug(
+          "Created new TwitchSayHelper class, waiting for it to be ready"
+        );
+        await this.twitchSayClient.isReady;
+        logger.debug(
+          "twitchSayClient is ready to go, finished getAndListenForAccounts!"
+        );
+        return;
       });
+
+    getted.catch((err) => {
+      logger.error({ err }, "Failed to getAndListenForAccounts");
+    });
+
+    return getted;
   }
 
   /**

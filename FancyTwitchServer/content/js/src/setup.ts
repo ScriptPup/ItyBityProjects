@@ -499,10 +499,10 @@ const saveBotData = async (
     data["clientId"] === "" &&
     data["clientSecret"] === ""
   ) {
-    FCC.socket.emit("update-bot-acct", null);
+    FCC.socket.emit("update-bot-acct", { acct: null, whomst });
     return;
   }
-  FCC.socket.emit("update-bot-acct", { auth: data, whomst });
+  FCC.socket.emit("update-bot-acct", { acct: data, whomst });
 };
 
 /**
@@ -654,6 +654,7 @@ const authorizedApplication = async () => {
 
     // If we've verified everything satisfactorially, then send the botAccount data to the server
     botAccount["auth_code"] = botCode;
+    console.log("Data recieved: ", { botAccount, whomst });
     saveBotData(botAccount, whomst);
   } finally {
     // Remove query string from navigation, we don't want the user to refresh the page and end up invalidating their token
@@ -663,9 +664,12 @@ const authorizedApplication = async () => {
       window.location.toString().split("?")[0]
     );
 
+    // Re-open the settings dialog so they can see their authorization states
+    showBotTemplate();
+
     // Clear the temporary data storage used
-    localStorage.removeItem("auth-verify-code");
-    localStorage.removeItem("auth-verify-cache");
+    // localStorage.removeItem("auth-verify-code");
+    // localStorage.removeItem("auth-verify-cache");
   }
 };
 
