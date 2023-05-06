@@ -6,16 +6,16 @@
     <div><p id="bot-template-error"></p></div>
     <form>
       <span class="modal-field" subtitle="Channel Name"
-        ><input name="channel"
+        ><input name="channel" autocomplete="twitch-channel-name"
       /></span>
       <span class="modal-field" subtitle="Bot Client ID"
-        ><input name="client_id" autocomplete="username-alt"
+        ><input name="client_id" autocomplete="username-alt" autocomplete="twitch-bot-client-id"
       /></span>
       <span class="modal-field" subtitle="Bot Client Secret"
         ><input name="client_secret" autocomplete="current-password" type="password"
       /></span>
       <span class="modal-field" subtitle="Bot Username"
-        ><input name="username" autocomplete="username"
+        ><input name="username" autocomplete="twitch-bot-username"
       /></span>
       <div class="authorizations">
         <button id="authorize-bot" class="unauthorized" type="button" title="Click this button to authorize the account you'd like to use to reply to user chats">Auth Chat</button>        
