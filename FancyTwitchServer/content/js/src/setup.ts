@@ -521,10 +521,10 @@ const showBotTemplate = async () => {
     $.map(formserializeArray, function (n, i) {
       jsonObj[n.name] = n.value;
     });
-    const botAccount: BotAccount = {
+    const botAccount: TwitchAuthorization = {
       channel: jsonObj["channel"],
-      client_id: jsonObj["client_id"],
-      client_secret: jsonObj["client_secret"],
+      clientId: jsonObj["client_id"],
+      clientSecret: jsonObj["client_secret"],
       username: jsonObj["username"],
       // auth_code?: string
     };
@@ -534,14 +534,26 @@ const showBotTemplate = async () => {
   const requestAuthorization = (
     whomst: string,
     scopes: string[],
-    botData: BotAccount
+    botData: TwitchAuthorization
   ): void => {
+    if (
+      !botData.channel ||
+      !botData.clientId ||
+      !botData.clientSecret ||
+      !botData.username
+    ) {
+      $("#bot-template-error").text(
+        "Please fill in entire form before trying to authorize."
+      );
+      return;
+    }
+
     const state = Math.random().toString(16).substr(2, 8);
     const _scopes: string = scopes.join("+");
     localStorage.setItem("auth-verify-code", JSON.stringify({ state, whomst }));
     const twitchAuthURI = new URL(`https://id.twitch.tv/oauth2/authorize`);
     twitchAuthURI.searchParams.append("response_type", "code");
-    twitchAuthURI.searchParams.append("client_id", botData.client_id);
+    twitchAuthURI.searchParams.append("client_id", botData.clientId);
     twitchAuthURI.searchParams.append(
       "redirect_uri",
       "http://localhost:9000/setup"
@@ -563,7 +575,7 @@ const showBotTemplate = async () => {
     // Request owner authorization
     newModal.find("#authorize-owner").on("click", (e: Event) => {
       e.preventDefault();
-      const botData: BotAccount = saveFormData(newModal);
+      const botData: TwitchAuthorization = saveFormData(newModal);
       const scopes = ["channel:read:redemptions"];
       requestAuthorization("owner", scopes, botData);
     });
@@ -571,7 +583,7 @@ const showBotTemplate = async () => {
     // Request chatbot authorization
     newModal.find("#authorize-bot").on("click", (e: Event) => {
       e.preventDefault();
-      const botData: BotAccount = saveFormData(newModal);
+      const botData: TwitchAuthorization = saveFormData(newModal);
       const scopes = [
         "chat:read",
         "chat:edit",
