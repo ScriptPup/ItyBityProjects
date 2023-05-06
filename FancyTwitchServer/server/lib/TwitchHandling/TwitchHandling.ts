@@ -110,7 +110,7 @@ export class TwitchListener {
           "Pulled bot account info from twitch-bot-acct"
         );
 
-        this.twitchSayClient = new TwitchSayHelper(botAcct);
+        this.twitchSayClient = new TwitchSayHelper();
         return await this.twitchSayClient.isReady;
       })
       .catch((err) => {

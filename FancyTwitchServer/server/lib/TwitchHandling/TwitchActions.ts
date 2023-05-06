@@ -4,7 +4,7 @@ import { FancyRedemption } from "../../../shared/obj/FancyCommandTypes";
 import { TwitchSayHelper } from "./TwitchSayHelper";
 import { got, OptionsOfTextResponseBody, Response } from "got-cjs";
 import {
-  BotAccount,
+  TwitchAuthorization,
   TwitchCustomChannelReward,
   TwitchCustomChannelRewards,
   TwitchUserEntities,
@@ -104,7 +104,7 @@ export class TwitchActions {
     const url = `https://api.twitch.tv/helix/channel_points/custom_rewards`;
     const form: OptionsOfTextResponseBody = {
       form: {
-        login: this.TSH.botAccount.channel,
+        login: this.TSH.botAccount?.channel,
       },
     };
     const res: Response = await this.getTwitch(url, form);
@@ -134,10 +134,14 @@ export class TwitchActions {
     options: OptionsOfTextResponseBody
   ): Promise<Response> {
     const form: OptionsOfTextResponseBody = options;
-    const token: BotAccount = await this.TSH.getBotAccount();
+    const token: TwitchAuthorization | null = this.TSH.botAccount;
+    if (!token) {
+      logger.error({ form, account_info: token });
+      throw "Failed to execute requested twitch POST operation due to missing account details";
+    }
     form.headers = {
-      Authorization: `Bearer ${token.token?.access_token}`,
-      "Client-Id": token.client_id,
+      Authorization: `Bearer ${token.token?.accessToken}`,
+      "Client-Id": token.clientId,
     };
     return new Promise((resolve, reject) => {
       got
@@ -166,10 +170,14 @@ export class TwitchActions {
     options: OptionsOfTextResponseBody
   ): Promise<Response> {
     const form: OptionsOfTextResponseBody = options;
-    const token: BotAccount = await this.TSH.getBotAccount();
+    const token: TwitchAuthorization | null = this.TSH.botAccount;
+    if (!token) {
+      logger.error({ form, account_info: token });
+      throw "Failed to execute requested twitch GET operation due to missing account details";
+    }
     form.headers = {
-      Authorization: `Bearer ${token.token?.access_token}`,
-      "Client-Id": token.client_id,
+      Authorization: `Bearer ${token.token?.accessToken}`,
+      "Client-Id": token.clientId,
     };
     return new Promise((resolve, reject) => {
       got
