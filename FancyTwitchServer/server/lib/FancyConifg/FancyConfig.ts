@@ -42,9 +42,12 @@ export const FancyConfig = (IO: Server, TL?: TwitchListener): Server => {
             configDB.ref(`twitch-${whomst}-acct[0]`).remove();
             return;
           }
-
           let oldAcct: TwitchAuthorization | null = await getAuthorizationFor(
             whomst
+          );
+          logger.debug(
+            { acct, oldAcct },
+            "Comparing old acct and new account password info"
           );
           if (acct.clientSecret === "*****") {
             if (oldAcct) {
