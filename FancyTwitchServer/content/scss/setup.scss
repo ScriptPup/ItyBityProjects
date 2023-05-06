@@ -2,6 +2,10 @@
 @import "./main.scss";  
 @import "./markdown.scss";  
 
+#bot-template-error {
+    color: red;
+}
+
 .panel-button {
     &.new-panel-button {
         min-width: 100px;
