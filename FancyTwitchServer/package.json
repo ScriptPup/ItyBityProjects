@@ -17,6 +17,7 @@
     "watch:build-client": "npx webpack --watch --progress",
     "watch:build": "npm-run-all --parallel watch:build-server watch:build-client",
     "server-start": "node -e \"require('./server').startServer()\"",
+    "preserver-start": "tsc -p tsconfig.json --pretty",
     "server": "npm-run-all clean build-server server-start",
     "server-watch": "nodemon --watch",
     "watch:server": "npm-run-all --parallel watch:build-server server-watch",
@@ -56,7 +57,7 @@
     "@types/showdown": "^2.0.0",
     "@types/socket.io": "^3.0.2",
     "@types/webpack": "^5.28.0",
-    "chai": "^4.3.6",
+    "chai": "^4.3.10",
     "electron": "^23.1.4",
     "electron-builder": "^23.6.0",
     "mocha": "^10.1.0",
@@ -84,8 +85,8 @@
     "got-cjs": "^12.5.4",
     "jquery": "^3.6.1",
     "pino": "^8.7.0",
+    "pino-pretty": "^9.4.0",
     "showdown": "^2.1.0",
-    "socket.io": "^4.5.2",
-    "pino-pretty": "^9.4.0"
+    "socket.io": "^4.5.2"
   }
 }

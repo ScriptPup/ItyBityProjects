@@ -25,30 +25,37 @@ class TwitchBadges {
     "https://badges.twitch.tv/v1/badges/global/display?language=en";
   private badge_lkp: any = {};
   constructor() {
-    const self = this;
+      const self = this;
 
-    badgeDataReadyEvt.on("update", () => {
-      if (globalData.hasOwnProperty("badges")) {
-        self.badge_lkp = JSON.parse(globalData.badges as string);
-        delete globalData.badges;
-      }
-    });
+      // badgeDataReadyEvt.on("update", () => {
+      //   if (globalData.hasOwnProperty("badges")) {
+      //     self.badge_lkp = JSON.parse(globalData.badges as string);
+      //     delete globalData.badges;
+      //   }
+      // });
 
-    httpsGet(this.badge_lkp_api, (res) => {
-      let rawBadgeData: string = "";
-      res.on("data", (chunk) => {
-        rawBadgeData += chunk;
-      });
-      res.on("end", () => {
-        if (!rawBadgeData) {
-          console.error("Data returned from badge API is blank.");
-          return;
-        }
-        rawBadgeData = rawBadgeData.trim();
-        globalData.badges = rawBadgeData;
-        badgeDataReadyEvt.emit("update");
-      });
-    });
+      // httpsGet(this.badge_lkp_api, (res) => {
+      //   let rawBadgeData: string = "";
+      //   res.on("data", (chunk) => {
+      //     rawBadgeData += chunk;
+      //   });
+      //   res.on("end", () => {
+      //     if (!rawBadgeData) {
+      //       console.error("Data returned from badge API is blank.");
+      //       return;
+      //     } 
+      //     rawBadgeData = rawBadgeData.trim();
+      //     globalData.badges = rawBadgeData;
+      //     badgeDataReadyEvt.emit("update");
+      //   });
+      //   res.on("error", () =>{ 
+      //     console.error("Failed badge lookup");
+      //   return;
+      //   });
+      // });
+
+      self.badge_lkp = {};
+    
   }
 
   public getBadgeURI = (badgeName: string, version: string): string => {

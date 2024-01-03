@@ -14,7 +14,7 @@ import { FancyRedemptionStorage } from "./server/lib/FancyCommandExecutor/FancyR
 import { FancyRedemptionListener } from "./server/lib/FancyCommandExecutor/FancyRedemptionListener";
 
 console.log(`Starting in env ${process.env.NODE_ENV}`);
-
+console.log("Disabled stuff");
 // Setup root server modules
 const port: number = Number.parseInt(process.argv[2]) || 9000;
 const http: httpServer = startSimpleHTTP();
@@ -23,15 +23,17 @@ const io: socketServer = ServeTwitchChat(http);
 const FCE: FancyCommandExecutor = new FancyCommandExecutor();
 const FCL: FancyCommandListener = new FancyCommandListener(io, FCE);
 // Setup a redemption listener which will handle incoming requests to modify redemptions stored in the local DB
-const FRS: FancyRedemptionStorage = new FancyRedemptionStorage();
-const FRL: FancyRedemptionListener = new FancyRedemptionListener(io, FRS);
+// const FRS: FancyRedemptionStorage = new FancyRedemptionStorage();
+// const FRL: FancyRedemptionListener = new FancyRedemptionListener(io, FRS);
 
 // Configure basic twitch listener
+const FRL = null;
+// @ts-ignore
 const TL: TwitchListener = new TwitchListener(FCL, FRL);
 // Setup socket to listen for bot account commands and inform the TwitchListener when bot account information is changed
 FancyConfig(io, TL);
 // Setup socket to listen for showcase commands
-showcaseListener(io);
+// showcaseListener(io);
 
 export const startServer = () => {
   // Start the server

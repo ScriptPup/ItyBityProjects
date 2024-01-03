@@ -231,6 +231,10 @@ export class TwitchListener {
   }
 
   private async handleTwitchRedemptions(): Promise<void> {
+    if(!this.FRL){
+      logger.error("No twitch redemption listener passed, not setting it up.");
+      return;
+    }
     if (!this.twitchSayClient) {
       logger.error(
         "Failed to setup twitch redemptions due to twitchSayClient not existing"
